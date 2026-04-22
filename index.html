@@ -3740,59 +3740,87 @@ function renderStatsSection(){
   const zDir=z!==null&&z>0?' ↑':z!==null&&z<0?' ↓':'';
   const zBarPct=z!==null?Math.min(100,Math.round((zAbs/3)*100)):0;
 
-  // ── 2. Trend (regressie) + R² betrouwbaarheid ─────────────────────────
+  // ── 2. Trend — enkel tonen als R² voldoende betrouwbaar ───────────────
   const histRev=[...histSpent].reverse();
   const reg=linReg(histRev);
   const trendAmt=Math.round(reg.slope);
   const r2=Math.round((reg.r2||0)*100);
+  const trendReliable=r2>=40&&stats.n>=4;
   const trendColor=trendAmt>10?'var(--r)':trendAmt<-10?'var(--g)':'var(--n2)';
-  const trendText=Math.abs(trendAmt)<5?'Stabiel':trendAmt>0?'Stijgend':'Dalend';
-  const r2Label=r2>=70?`R²${r2}% — betrouwbaar`:r2>=40?`R²${r2}% — matig`:stats.n>=3?`R²${r2}% — weinig data`:'';
+  // Waarde: enkel slope tonen als betrouwbaar, anders tekst
+  const trendVal=trendReliable
+    ?(trendAmt>0?'+':'')+fmt(Math.abs(trendAmt))
+    :'—';
+  const trendSub=!stats.n||stats.n<4
+    ?'Niet genoeg data'
+    :!trendReliable
+      ?'Patroon te wisselend'
+      :r2>=70?'Betrouwbare trend'
+      :'Matig betrouwbaar';
 
-  // ── 3. Budget succes-rate (% maanden op budget) ────────────────────────
+  // ── 3. Budget succes-rate ──────────────────────────────────────────────
   const completedMonths=hist.filter(h=>h.spent>0);
   const onBudgetMonths=budget>0?completedMonths.filter(h=>h.spent<=budget):[];
-  const successRate=completedMonths.length>0&&budget>0
+  const successRate=completedMonths.length>=3&&budget>0
     ?Math.round(onBudgetMonths.length/completedMonths.length*100):null;
   const srColor=successRate===null?'var(--n3)':successRate>=80?'var(--g)':successRate>=50?'var(--w)':'var(--r)';
-  const srText=successRate===null?'—':onBudgetMonths.length+' van '+completedMonths.length+' mnd';
+  const srText=successRate===null
+    ?(completedMonths.length<3?'Min. 3 maanden nodig':'—')
+    :onBudgetMonths.length+' van '+completedMonths.length+' mnd';
 
-  // ── 4. Maandvergelijking: deze maand vs. eigen historisch gemiddelde ──────
-  // Vergelijkt wat je tot nu toe uitgeeft (op paceRatio-basis) met je gemiddelde
-  // op hetzelfde punt in de maand — geen seizoensindex met 2 datapunten
-  let seasonIdx=null,siVal='—',siText='Geen historische data',siColor='var(--n3)';
-  if(stats.n>=3&&pace.pctElapsed>0.05){
-    // Verwachte stand op dit punt o.b.v. historisch gemiddelde
+  // ── 4. Huidig tempo ────────────────────────────────────────────────────
+  let seasonIdx=null,siVal='—',siText='',siColor='var(--n3)';
+  if(!isCurrentMonth){
+    siText='Enkel voor lopende maand';
+  } else if(stats.n>=3&&pace.pctElapsed>0.05){
     const expectedNow=stats.mean*pace.pctElapsed;
-    const actualNow=curSpent;
     if(expectedNow>0){
-      seasonIdx=Math.round((actualNow/expectedNow-1)*100);
+      seasonIdx=Math.round((curSpent/expectedNow-1)*100);
       siVal=(seasonIdx>0?'+':'')+seasonIdx+'%';
       siColor=Math.abs(seasonIdx)<15?'var(--n2)':seasonIdx>0?'var(--w)':'var(--g)';
-      siText=Math.abs(seasonIdx)<15?'Op verwacht tempo':
-        seasonIdx>0?`${Math.abs(seasonIdx)}% sneller dan normaal`:
-                    `${Math.abs(seasonIdx)}% trager dan normaal`;
+      siText=Math.abs(seasonIdx)<15?'Op verwacht tempo'
+        :seasonIdx>0?`${Math.abs(seasonIdx)}% sneller dan normaal`
+                    :`${Math.abs(seasonIdx)}% trager dan normaal`;
     }
+  } else {
+    siText='Niet genoeg data';
   }
 
-  // ── 5. Vrije kasstroom: na vaste kosten + gemiddeld variabel ───────────
-  const fixed=getFixedCosts();
-  const freeflow=income>0?income-fixed-(stats.mean||0):null;
-  const ffColor=freeflow===null?'var(--n3)':freeflow>0?'var(--g)':'var(--r)';
-  const ffText=freeflow===null?'—':freeflow>0?'Buffer na alle kosten':'Tekort na alle kosten';
+  // ── 5. Volatiliteit (CV + std in euro) ────────────────────────────────
+  const stdEuro=stats.std>0?Math.round(stats.std):0;
+  const cvPct=stats.cv>0?Math.round(stats.cv*100):0;
+  const volVal=cvPct>0?cvPct+'%':'—';
+  const volSub=stdEuro>0
+    ?`Typisch ±${fmt(stdEuro)} rond gem.`
+    :'Stabiel patroon';
+  const volColor=stats.cv>0.4?'var(--r)':stats.cv>0.2?'var(--w)':'var(--g)';
 
-  // ── 6. Brandsnelheid: dagen tot budget op bij huidig tempo ─────────────
-  let burnDays=null,burnColor='var(--n3)',burnText='';
-  if(budget>0&&curSpent>0&&pace.isCurrentMonth&&pace.dayOfMonth>0){
-    const dailyRate=curSpent/pace.dayOfMonth;
-    const remaining=budget-curSpent;
-    if(remaining>0&&dailyRate>0){
-      burnDays=Math.round(remaining/dailyRate);
-      burnColor=burnDays>pace.daysLeft?'var(--g)':burnDays>pace.daysLeft*0.5?'var(--w)':'var(--r)';
-      burnText=burnDays>pace.daysLeft?'Budget houdt maand vol':`Budget op in ~${burnDays} dag${burnDays!==1?'en':''}`;
-    } else if(remaining<=0){
-      burnDays=0;burnColor='var(--r)';burnText='Budget al overschreden';
+  // ── 6. Mediaan vs gemiddelde ───────────────────────────────────────────
+  // Verschil onthult uitschieters: grote gap = je patroon is vertekend door piekmaanden
+  const sortedSpent=[...histSpent].filter(v=>v>0).sort((a,b)=>a-b);
+  let medVal='—',medSub='',medColor='var(--n3)';
+  if(sortedSpent.length>=3){
+    const mid=Math.floor(sortedSpent.length/2);
+    const median=sortedSpent.length%2===0
+      ?(sortedSpent[mid-1]+sortedSpent[mid])/2
+      :sortedSpent[mid];
+    const diff=Math.round(stats.mean-median);
+    medVal=fmt(Math.round(median));
+    const absDiff=Math.abs(diff);
+    if(absDiff<50){
+      medSub='Gem. ≈ mediaan — geen uitschieters';
+      medColor='var(--g)';
+    } else if(diff>0){
+      // Gemiddelde hoger dan mediaan: piekmaanden trekken omhoog
+      medSub=`Gem. is ${fmt(absDiff)} hoger — piekmaanden vertekenen`;
+      medColor='var(--w)';
+    } else {
+      // Gemiddelde lager dan mediaan: zeldzame goedkope maanden
+      medSub=`Gem. is ${fmt(absDiff)} lager — incidenteel goedkope maand`;
+      medColor='var(--n2)';
     }
+  } else {
+    medSub='Min. 3 maanden nodig';
   }
 
   function statCard(lbl,val,sub,color,fullWidth=false){
@@ -3816,9 +3844,9 @@ function renderStatsSection(){
           <div class="fc-zscore-fill" style="background:${zColor};${z<0?`right:50%;left:${Math.max(0,50-zBarPct/2)}%`:`left:50%;width:${Math.min(50,zBarPct/2)}%`}"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:3px">
-          <span style="font-size:7px;color:var(--n3)">laag</span>
+          <span style="font-size:7px;color:var(--n3)">minder</span>
           <span style="font-size:7px;color:var(--n3)">normaal</span>
-          <span style="font-size:7px;color:var(--n3)">hoog</span>
+          <span style="font-size:7px;color:var(--n3)">meer</span>
         </div>
       </div>
       <div style="text-align:right;flex-shrink:0;padding-left:8px">
@@ -3829,18 +3857,12 @@ function renderStatsSection(){
     </div>`:''}
 
     <div class="fc-stat-grid">
-      ${statCard('Gem. p/maand', stats.n>0?fmt(Math.round(stats.mean)):'—', 'over '+stats.n+' maanden','var(--n3)')}
+      ${statCard('Gem. p/maand', stats.n>0?fmt(Math.round(stats.mean)):'—', 'over '+stats.n+' maanden', 'var(--n3)')}
       ${statCard('Budget succes', successRate!==null?successRate+'%':'—', srText, srColor)}
-      ${statCard('Trend p/maand', trendAmt===0?'±€0':(trendAmt>0?'+':'')+fmt(Math.abs(trendAmt)), r2Label||trendText, trendColor)}
-      ${statCard('Volatiliteit', stats.cv>0?Math.round(stats.cv*100)+'%':'—',
-        stats.cv>0.4?'Hoge variatie':stats.cv>0.2?'Matige variatie':'Stabiel patroon',
-        stats.cv>0.4?'var(--r)':stats.cv>0.2?'var(--w)':'var(--g)')}
+      ${statCard('Trend p/maand', trendVal, trendSub, trendReliable?trendColor:'var(--n3)')}
+      ${statCard('Volatiliteit', volVal, volSub, volColor)}
       ${statCard('Huidig tempo', siVal, siText, siColor)}
-      ${burnDays!==null
-        ?statCard('Resterende dagen', burnDays+'d', burnText, burnColor)
-        :freeflow!==null
-          ?statCard('Vrije kasstroom', fmt(Math.round(freeflow)), ffText, ffColor)
-          :''}
+      ${statCard('Mediaan', medVal, medSub, medColor)}
     </div>`;
 }
 
