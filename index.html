@@ -1128,8 +1128,8 @@ function initAnalyticsTabs(){
       setAnTab(anTabIdx+(dx<0?1:-1));
     }
   },{passive:true});
-  $('an-yr-prev').addEventListener('click',()=>{anYear--;updateYearChart(anYear);updateYearStats(anYear);const _yl1=$('an-year-label');if(_yl1)_yl1.textContent=anYear;const _yn1=$('an-yr-next');if(_yn1)_yn1.disabled=false;const _yp1=$('an-yr-prev');if(_yp1)_yp1.disabled=anYear<=getEarliestYear();});
-  $('an-yr-next').addEventListener('click',()=>{anYear++;if(anYear>=new Date().getFullYear())$('an-yr-next').disabled=true;updateYearChart(anYear);updateYearStats(anYear);const _yl2=$('an-year-label');if(_yl2)_yl2.textContent=anYear;const _yp2=$('an-yr-prev');if(_yp2)_yp2.disabled=anYear<=getEarliestYear();});
+  $('an-yr-prev').addEventListener('click',()=>{anYear--;yrActiveCat=null;updateYearChart(anYear);updateYearStats(anYear);const _yl1=$('an-year-label');if(_yl1)_yl1.textContent=anYear;const _yn1=$('an-yr-next');if(_yn1)_yn1.disabled=false;const _yp1=$('an-yr-prev');if(_yp1)_yp1.disabled=anYear<=getEarliestYear();});
+  $('an-yr-next').addEventListener('click',()=>{anYear++;yrActiveCat=null;if(anYear>=new Date().getFullYear())$('an-yr-next').disabled=true;updateYearChart(anYear);updateYearStats(anYear);const _yl2=$('an-year-label');if(_yl2)_yl2.textContent=anYear;const _yp2=$('an-yr-prev');if(_yp2)_yp2.disabled=anYear<=getEarliestYear();});
   // Analytics month nav (reuses viewMonth, same as dashboard)
   $('an-prev').addEventListener('click',()=>{viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-1,1);updateAnalytics()});
   $('an-next').addEventListener('click',()=>{const now=new Date();if(viewMonth.getMonth()===now.getMonth()&&viewMonth.getFullYear()===now.getFullYear())return;viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1);updateAnalytics()});
@@ -2753,6 +2753,16 @@ function updateAnomalyBoard(){
   }).join('');
 }
 
+let yrActiveCat=null;
+function setYrCat(catId){
+  yrActiveCat=(yrActiveCat===catId)?null:catId;
+  // Re-render chart and chips for current year
+  const lbl=$('an-year-label');
+  const y=lbl?parseInt(lbl.textContent)||new Date().getFullYear():new Date().getFullYear();
+  updateYearChart(y);
+  updateYearCats(y);
+}
+
 function updateYearChart(y){
   const ctx=$('chart-year');if(!ctx)return;
   const budget=getMonthBudget();
@@ -2763,6 +2773,13 @@ function updateYearChart(y){
   const completedVals=data.filter((v,i)=>v>0&&i!==curMonth);
   const avg=completedVals.length>0?Math.round(completedVals.reduce((s,v)=>s+v,0)/completedVals.length):0;
 
+  // Actieve categorie overlay
+  const activeCat=yrActiveCat?S.categories.find(c=>c.id===yrActiveCat):null;
+  const catData=activeCat
+    ?MONTHS_S.map((_,i)=>getCatSpent(activeCat.id,y+'-'+String(i+1).padStart(2,'0'))||null)
+    :null;
+  const clrActive=activeCat?col(activeCat.color):null;
+
   // YoY vorig jaar ghost bars
   const prevY=y-1;
   const prevData=MONTHS_S.map((_,i)=>getMonthSpent(prevY+'-'+String(i+1).padStart(2,'0'))||null);
@@ -2772,13 +2789,15 @@ function updateYearChart(y){
     const isFut=y===now.getFullYear()&&i>curMonth;
     const isCur=i===curMonth;
     if(v===0)return isFut?'rgba(0,0,0,.03)':'rgba(0,0,0,.05)';
+    // Dim hoofdbars als categorie actief is
+    if(activeCat)return isCur?'rgba(0,0,0,.05)':'rgba(0,0,0,.08)';
     if(isCur)return 'rgba(0,0,0,.10)';
     if(!hasBudget||v<=budget*0.8)return 'rgba(22,163,74,0.70)';
     if(v<=budget)return 'rgba(217,119,6,0.72)';
     return 'rgba(220,38,38,0.75)';
   });
   const borderColors=data.map((v,i)=>{
-    if(v===0||i===curMonth)return 'transparent';
+    if(v===0||i===curMonth||activeCat)return 'transparent';
     if(!hasBudget||v<=budget*0.8)return 'rgba(22,163,74,0.9)';
     if(v<=budget)return 'rgba(217,119,6,0.9)';
     return 'rgba(220,38,38,0.9)';
@@ -2794,19 +2813,60 @@ function updateYearChart(y){
   if(hasPrevData){
     datasets.push({label:String(prevY),data:prevData,
       backgroundColor:'rgba(0,0,0,.065)',borderColor:'rgba(0,0,0,.08)',
-      borderWidth:1,borderRadius:4,borderSkipped:'bottom',order:3,datalabels:{display:false}});
+      borderWidth:1,borderRadius:4,borderSkipped:'bottom',order:3,
+      stack:'prev',  // eigen stack zodat het niet meegestapeld wordt
+      datalabels:{display:false}});
   }
-  datasets.push({label:String(y),data,
-    backgroundColor:barColors,borderColor:borderColors,
-    borderWidth:1,borderRadius:6,borderSkipped:'bottom',order:2,
-    datalabels:{
-      display:(ctx)=>{const v=ctx.dataset.data[ctx.dataIndex];return !!(v>0&&ctx.dataIndex!==curMonth);},
-      formatter:(v)=>hasBudget?Math.round(v/budget*100)+'%':fmt(Math.round(v)),
-      color:(ctx)=>labelColor(ctx.dataset.data[ctx.dataIndex]),
-      anchor:'end',align:'end',font:{size:7.5,weight:'700'},offset:1,clamp:true
-    }
-  });
-  // Labels rechts op de referentielijnen — zelfde techniek als trends-grafiek
+
+  if(activeCat&&catData){
+    const hx=clrActive.c.replace('#','');
+    const rr=parseInt(hx.slice(0,2),16),gg=parseInt(hx.slice(2,4),16),bb=parseInt(hx.slice(4,6),16);
+    const restData=data.map((v,i)=>{
+      if(i===curMonth)return null;
+      const cat=catData[i]||0;
+      return Math.max(0,(v||0)-cat)||null;
+    });
+    const catDataClean=catData.map((v,i)=>i===curMonth?null:(v||null));
+
+    // Categorie-deel (onderaan stack) — label gecentreerd erin
+    datasets.push({label:'__cat__',data:catDataClean,
+      backgroundColor:catDataClean.map(v=>v?`rgba(${rr},${gg},${bb},0.82)`:'transparent'),
+      borderColor:'transparent',borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
+      datalabels:{
+        display:(ctx)=>{
+          const v=ctx.dataset.data[ctx.dataIndex];
+          const tot=data[ctx.dataIndex];
+          return !!(v&&v>0&&tot>0&&ctx.dataIndex!==curMonth);
+        },
+        formatter:(v,ctx)=>{
+          const tot=data[ctx.dataIndex];
+          return tot>0?Math.round(v/tot*100)+'%':'';
+        },
+        color:`rgba(${rr},${gg},${bb},1)`,
+        anchor:'center',align:'center',
+        font:{size:7.5,weight:'700'},clamp:true
+      }
+    });
+    // Rest (bovenaan stack) — geen label
+    datasets.push({label:String(y),data:restData,
+      backgroundColor:restData.map(v=>v?'rgba(0,0,0,.08)':'transparent'),
+      borderColor:'transparent',borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
+      datalabels:{display:false}
+    });
+  } else {
+    datasets.push({label:String(y),data,
+      backgroundColor:barColors,borderColor:borderColors,
+      borderWidth:1,borderRadius:6,borderSkipped:'bottom',order:2,stack:'main',
+      datalabels:{
+        display:(ctx)=>{const v=ctx.dataset.data[ctx.dataIndex];return !!(v>0&&ctx.dataIndex!==curMonth);},
+        formatter:(v)=>hasBudget?Math.round(v/budget*100)+'%':fmt(Math.round(v)),
+        color:(ctx)=>labelColor(data[ctx.dataIndex]),
+        anchor:'end',align:'end',font:{size:7.5,weight:'700'},offset:1,clamp:true
+      }
+    });
+  }
+
+  // Labels rechts op de referentielijnen
   const avgLabel=avg>0&&completedVals.length>=2?('\u2300 '+fmt(avg)):'';
   const budLabel=hasBudget&&hasData?fmt(budget):'';
   const maxLblLen=Math.max(avgLabel.length,budLabel.length);
@@ -2847,7 +2907,7 @@ function updateYearChart(y){
     type:'bar',
     data:{labels:MONTHS_S,datasets},
     options:{
-      responsive:true,maintainAspectRatio:false,animation:{duration:400},
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
       layout:{padding:{right:54}},
       plugins:{
         legend:{display:false},
@@ -2862,8 +2922,9 @@ function updateYearChart(y){
             label:(c)=>{
               const v=c.raw;if(!v)return null;
               if(c.dataset.label==='Budget')return 'Budget: '+fmt(budget);
-              if(c.dataset.label==='⌀ p/maand')return '⌀ p/mnd: '+fmt(Math.round(v));
+              if(c.dataset.label==='\u2300 p/maand')return '\u2300 p/mnd: '+fmt(Math.round(v));
               if(c.dataset.label===String(prevY))return prevY+': '+fmt(Math.round(v));
+              if(c.dataset.label==='__cat__')return (activeCat?.name||'')+': '+fmt(Math.round(v));
               const p=hasBudget?Math.round(v/budget*100):null;
               return y+': '+fmt(v)+(p?' ('+p+'%)':'');
             }
@@ -2871,22 +2932,24 @@ function updateYearChart(y){
         }
       },
       scales:{
-        x:{grid:{display:false},border:{display:false},
+        x:{stacked:true,grid:{display:false},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'},padding:4}},
-        y:{min:0,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
+        y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:8},padding:8,callback:v=>fmt(v),maxTicksLimit:5}}
       }
     }
   });
 
+  // Legenda: enkel gemiddelde- en budgetlijn tonen indien aanwezig — OK/Bijna/Over weg
   const leg=$('.yr-legend');
   if(leg){
     leg.innerHTML=
-      `<span class="yr-leg-item"><span class="yr-leg-dot" style="background:rgba(22,163,74,0.7)"></span>OK</span>`+
-      `<span class="yr-leg-item"><span class="yr-leg-dot" style="background:rgba(217,119,6,0.72)"></span>Bijna</span>`+
-      `<span class="yr-leg-item"><span class="yr-leg-dot" style="background:rgba(220,38,38,0.75)"></span>Over</span>`+
+      (activeCat&&clrActive
+        ?`<span class="yr-leg-item"><span class="yr-leg-dot" style="background:${clrActive.c}"></span>${esc(activeCat.name)}</span>`+
+          `<span class="yr-leg-item"><span class="yr-leg-dot" style="background:rgba(0,0,0,.09)"></span>Overig</span>`
+        :`<span class="yr-leg-item"><span class="yr-leg-dot" style="background:rgba(220,38,38,0.75)"></span>Over budget</span>`)+
       (hasBudget?`<span class="yr-leg-item"><span class="yr-leg-dash"></span>Budget</span>`:'')+
-      (avg>0&&completedVals.length>=2?`<span class="yr-leg-item"><span style="display:inline-block;width:14px;height:2px;background:rgba(233,30,140,0.55);border-radius:1px;vertical-align:middle;margin-right:4px"></span>\u2300 p/mnd</span>`:'')+
+      (avg>0&&completedVals.length>=2?`<span class="yr-leg-item"><span style="display:inline-block;width:14px;height:2px;background:rgba(233,30,140,0.55);border-radius:1px;vertical-align:middle;margin-right:4px"></span>Gem.</span>`:'')+
       (hasPrevData?`<span class="yr-leg-item"><span class="yr-leg-dot" style="background:rgba(0,0,0,.10);border:1px solid rgba(0,0,0,.15)"></span>${prevY}</span>`:'');
   }
 }
@@ -3337,37 +3400,21 @@ function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worst
 
 function updateYearCats(y){
   const el=$('yr-cats');if(!el)return;
-  const now=new Date();
-  const curMonthIdx=y===now.getFullYear()?now.getMonth():-1;
   const cats=S.categories.filter(c=>c.type==='monthly');
   if(!cats.length){el.innerHTML='';return;}
 
-  // Bereken jaartotaal per categorie (huidige maand buiten beschouwing)
-  const rows=cats.map(cat=>{
-    const total=MONTHS_S.reduce((s,_,i)=>
-      s+(i===curMonthIdx?0:getCatSpent(cat.id,y+'-'+String(i+1).padStart(2,'0'))),0);
-    return{cat,total};
-  }).filter(r=>r.total>0).sort((a,b)=>b.total-a.total);
-
-  if(!rows.length){el.innerHTML='';return;}
-
-  const grandTotal=rows.reduce((s,r)=>s+r.total,0);
-
   el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:14px">
-  ${rows.map(({cat,total})=>{
+  ${cats.map(cat=>{
     const clr=col(cat.color);
-    const pct=grandTotal>0?Math.round(total/grandTotal*100):0;
-    const cyb=cat.budget*12;
-    const isOver=cyb>0&&total>cyb;
-    const isWarn=cyb>0&&!isOver&&total>cyb*0.85;
-    const borderColor=isOver?'var(--r)':isWarn?'var(--w)':clr.c;
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px 5px;border-radius:10px;background:var(--s1);border:1.5px solid ${isOver||isWarn?borderColor:'var(--l1)'}">
-      <div style="width:32px;height:32px;border-radius:var(--r6);background:${clr.bg};color:${clr.c};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">${IC[cat.icon]||IC.folder}</svg>
+    const isActive=yrActiveCat===cat.id;
+    const isDimmed=yrActiveCat&&!isActive;
+    return `<button class="evo-chip yr-chip" data-yrcid="${cat.id}" onclick="setYrCat('${cat.id}')"
+      style="background:${isActive?clr.bg:'var(--s1)'};border-color:${isActive?clr.c:'var(--l1)'};opacity:${isDimmed?'.28':'1'};transition:opacity .18s,background .15s,border-color .15s">
+      <div class="evo-chip-icon" style="background:${isActive?clr.c:clr.bg};color:${isActive?'#fff':clr.c}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
       </div>
-      <span style="font-size:8.5px;font-weight:700;color:var(--n2);text-align:center;line-height:1.2;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(cat.name)}</span>
-      <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:${isOver?'var(--r)':isWarn?'var(--w)':clr.c}">${pct}%</span>
-    </div>`;
+      <span class="evo-chip-name" style="color:${isActive?clr.c:'var(--n2)'}">${esc(cat.name)}</span>
+    </button>`;
   }).join('')}
   </div>`;
 }
