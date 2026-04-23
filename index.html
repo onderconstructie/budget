@@ -3430,7 +3430,7 @@ function updateYearCats(y){
     const chipClass='evo-chip yr-chip'+(isActive?' active':isDimmed?' dimmed':'');
     // Active state via inline style, status via border-color (like _syncEvoChips)
     const bg=isActive?clr.bg:'var(--s1)';
-    const bc=isActive?clr.c:isOver?'var(--r)':isWarn?'var(--w)':'var(--l1)';
+    const bc=isActive?clr.c:'var(--l1)';
     const iconBg=isActive?clr.c:clr.bg;
     const iconColor=isActive?'#fff':clr.c;
     const nameColor=isActive?clr.c:'var(--n2)';
