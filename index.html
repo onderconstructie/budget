@@ -3341,38 +3341,35 @@ function updateYearCats(y){
   const curMonthIdx=y===now.getFullYear()?now.getMonth():-1;
   const cats=S.categories.filter(c=>c.type==='monthly');
   if(!cats.length){el.innerHTML='';return;}
+
+  // Bereken jaartotaal per categorie (huidige maand buiten beschouwing)
   const rows=cats.map(cat=>{
-    const total=MONTHS_S.reduce((s,_,i)=>s+(i===curMonthIdx?0:getCatSpent(cat.id,y+'-'+String(i+1).padStart(2,'0'))),0);
+    const total=MONTHS_S.reduce((s,_,i)=>
+      s+(i===curMonthIdx?0:getCatSpent(cat.id,y+'-'+String(i+1).padStart(2,'0'))),0);
+    return{cat,total};
+  }).filter(r=>r.total>0).sort((a,b)=>b.total-a.total);
+
+  if(!rows.length){el.innerHTML='';return;}
+
+  const grandTotal=rows.reduce((s,r)=>s+r.total,0);
+
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:14px">
+  ${rows.map(({cat,total})=>{
+    const clr=col(cat.color);
+    const pct=grandTotal>0?Math.round(total/grandTotal*100):0;
     const cyb=cat.budget*12;
     const isOver=cyb>0&&total>cyb;
-    const pct=cyb>0?Math.min(total/cyb,1):0;
-    return{cat,total,cyb,isOver,pct};
-  }).filter(r=>r.total>0).sort((a,b)=>b.total-a.total);
-  if(!rows.length){el.innerHTML='';return;}
-  const maxVal=Math.max(...rows.map(r=>Math.max(r.total,r.cyb||0)),1);
-  el.innerHTML='<div class="ldrbrd">'+rows.map(({cat,total,cyb,isOver,pct})=>{
-    const clr=col(cat.color);
-    const barW=Math.round(total/maxVal*100);
-    const budgetW=cyb>0?Math.min(Math.round(cyb/maxVal*100),100):0;
-    const barColor=isOver?'var(--r)':pct>0.85?'var(--w)':clr.c;
-    const amtColor=isOver?'var(--r)':'var(--n0)';
-    const sub=cyb>0?(isOver?`+${fmt(Math.round(total-cyb))}`:`${fmt(Math.round(cyb-total))} over`):'';
-    const subColor=isOver?'var(--r)':'var(--g)';
-    return `<div class="ldr-row" onclick="openCatEdit('${cat.id}')">`
-      +'<div class="ldr-icon" style="background:'+clr.bg+';color:'+clr.c+'">'+ic(cat.icon)+'</div>'
-      +'<div class="ldr-body">'
-        +'<div class="ldr-nameline"><span class="ldr-name">'+cat.name+'</span></div>'
-        +'<div class="ldr-barwrap">'
-          +(budgetW>0?'<div class="ldr-bar-avg" style="width:'+budgetW+'%"></div>':'')
-          +'<div class="ldr-bar-cur" style="width:'+barW+'%;background:'+barColor+'"></div>'
-        +'</div>'
-      +'</div>'
-      +'<div class="ldr-right">'
-        +'<span class="ldr-amt" style="color:'+amtColor+'">'+fmt(Math.round(total))+'</span>'
-        +(sub?'<span class="ldr-dev" style="color:'+subColor+'">'+sub+'</span>':'')
-      +'</div>'
-    +'</div>';
-  }).join('')+'</div>';
+    const isWarn=cyb>0&&!isOver&&total>cyb*0.85;
+    const borderColor=isOver?'var(--r)':isWarn?'var(--w)':clr.c;
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px 5px;border-radius:10px;background:var(--s1);border:1.5px solid ${isOver||isWarn?borderColor:'var(--l1)'}">
+      <div style="width:32px;height:32px;border-radius:var(--r6);background:${clr.bg};color:${clr.c};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">${IC[cat.icon]||IC.folder}</svg>
+      </div>
+      <span style="font-size:8.5px;font-weight:700;color:var(--n2);text-align:center;line-height:1.2;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(cat.name)}</span>
+      <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:${isOver?'var(--r)':isWarn?'var(--w)':clr.c}">${pct}%</span>
+    </div>`;
+  }).join('')}
+  </div>`;
 }
 
 // Klikbaar principe jaarchart: highlight maand in grafiek (zelfde als setEvoCat voor trends)
