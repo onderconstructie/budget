@@ -600,7 +600,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ov-cat-delta{font-size:9px;font-weight:700}
 .ov-cat-delta.up{color:var(--r)}.ov-cat-delta.down{color:var(--g)}
 /* JAAR */
-#an-jaar{padding:12px 16px calc(96px + var(--safe-b));overflow-y:auto}
+#an-jaar{overflow:hidden}
+#an-jaar-body{flex:1;overflow-y:auto;min-height:0;padding-bottom:calc(96px + var(--safe-b))}
 .yr-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .yr-nav-label{font-size:18px;font-weight:700;letter-spacing:-.5px}
 .yr-stats{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden;margin-bottom:0}.yr-stat:nth-child(1),.yr-stat:nth-child(2){border-bottom:1px solid var(--l0)}.yr-stat:nth-child(1),.yr-stat:nth-child(3){border-right:1px solid var(--l0)}
@@ -652,8 +653,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 #an-trends .chart-wrap{min-height:130px;margin-top:4px}
 /* PROGNOSE */
 #an-prognose{padding:0 0 calc(96px + var(--safe-b));overflow-y:auto}
-.fc-day-hero{display:none} /* geïntegreerd in band-section */
-.fc-breakeven{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:9.5px;font-weight:600;border:1px solid;margin-top:6px}
+.fc-day-hero{border-bottom:1px solid var(--l0);background:var(--s0)}
+.fc-breakeven{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:9.5px;font-weight:600;border:1px solid}
 .fc-band-section,.fc-cats-section,.fc-stats-section{padding:12px 16px;border-bottom:1px solid var(--l0)}
 .fc-section-hd{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .fc-section-title{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3)}
@@ -906,7 +907,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 
   <!-- TAB: JAAR -->
   <div class="an-panel" id="an-jaar">
-    <div id="an-jaar-body" style="overflow-y:auto;padding:0 0 calc(96px + var(--safe-b))">
+    <div id="an-jaar-body">
       <!-- Signalen -->
       <div style="padding:12px 16px 0">
         <div id="yr-signals"></div>
@@ -2848,9 +2849,15 @@ function updateYearChart(y){
       backgroundColor:barColors,borderColor:borderColors,
       borderWidth:1,borderRadius:6,borderSkipped:'bottom',order:2,stack:'main',
       datalabels:{
-        display:(ctx)=>{const v=ctx.dataset.data[ctx.dataIndex];return !!(v>0&&ctx.dataIndex!==curMonth);},
-        formatter:(v)=>hasBudget?Math.round(v/budget*100)+'%':fmt(Math.round(v)),
-        color:(ctx)=>labelColor(data[ctx.dataIndex]),
+        display:(ctx)=>{const v=ctx.dataset.data[ctx.dataIndex];return !!(v>0);},
+        formatter:(v,ctx)=>{
+          if(ctx.dataIndex===curMonth){
+            // Lopende maand: voorlopig % met tilde
+            return hasBudget?'~'+Math.round(v/budget*100)+'%':'~'+fmt(Math.round(v));
+          }
+          return hasBudget?Math.round(v/budget*100)+'%':fmt(Math.round(v));
+        },
+        color:(ctx)=>ctx.dataIndex===curMonth?'rgba(0,0,0,.30)':labelColor(data[ctx.dataIndex]),
         anchor:'end',align:'end',font:{size:7.5,weight:'700'},offset:1,clamp:true
       }
     });
@@ -3397,17 +3404,39 @@ function updateYearCats(y){
   const cats=S.categories.filter(c=>c.type==='monthly');
   if(!cats.length){el.innerHTML='';return;}
 
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:14px">
-  ${cats.map(cat=>{
+  const now=new Date();
+  const curMonthIdx=y===now.getFullYear()?now.getMonth():-1;
+  const completedMths=curMonthIdx>=0?curMonthIdx:12;
+
+  const rows=cats.map(cat=>{
+    let ytd=0;
+    for(let i=0;i<12;i++){
+      if(i===curMonthIdx)continue;
+      ytd+=getCatSpent(cat.id,y+'-'+String(i+1).padStart(2,'0'));
+    }
+    return{cat,ytd};
+  }).filter(r=>r.ytd>0||r.cat.budget>0).sort((a,b)=>b.ytd-a.ytd);
+
+  if(!rows.length){el.innerHTML='';return;}
+
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:12px">
+  ${rows.map(({cat,ytd})=>{
     const clr=col(cat.color);
     const isActive=yrActiveCat===cat.id;
     const isDimmed=yrActiveCat&&!isActive;
+    const partialBudget=cat.budget>0?cat.budget*completedMths:0;
+    const isOver=partialBudget>0&&ytd>partialBudget;
+    const isWarn=partialBudget>0&&!isOver&&ytd>partialBudget*0.85;
+    const borderColor=isActive?clr.c:isOver?'var(--r)':isWarn?'var(--w)':'var(--l1)';
+    const valColor=isActive?clr.c:isOver?'var(--r)':isWarn?'var(--w)':clr.c;
+    const valLabel=ytd>=10000?Math.round(ytd/1000)+'k':ytd>=1000?(ytd/1000).toFixed(1)+'k':ytd>0?Math.round(ytd)+'':'';
     return `<button class="evo-chip yr-chip" data-yrcid="${cat.id}" onclick="setYrCat('${cat.id}')"
-      style="background:${isActive?clr.bg:'var(--s1)'};border-color:${isActive?clr.c:'var(--l1)'};opacity:${isDimmed?'.28':'1'};transition:opacity .18s,background .15s,border-color .15s">
+      style="background:${isActive?clr.bg:'var(--s1)'};border-color:${borderColor};opacity:${isDimmed?'.28':'1'};transition:opacity .18s,background .15s,border-color .15s">
       <div class="evo-chip-icon" style="background:${isActive?clr.c:clr.bg};color:${isActive?'#fff':clr.c}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
       </div>
       <span class="evo-chip-name" style="color:${isActive?clr.c:'var(--n2)'}">${esc(cat.name)}</span>
+      ${valLabel?`<span style="font-family:var(--mono);font-size:8.5px;font-weight:700;color:${valColor}">€${valLabel}</span>`:''}
     </button>`;
   }).join('')}
   </div>`;
@@ -3514,114 +3543,143 @@ function renderFcSignals(){
 }
 
 function renderDayHero(){
-  // Day hero is nu geïntegreerd in renderMonthBand — aparte render niet meer nodig
-  const hero=$('fc-day-hero');if(hero)hero.innerHTML='';
+  const hero=$('fc-day-hero');if(!hero)return;
+  const da=calcDailyAllowance();
+  const pace=calcPace();
+  const budget=getMonthBudget();
+  const spent=getMonthSpent(mkd());
+  const fc=da?calcMonthEndForecast():null;
+
+  if(!da){
+    hero.style.display='block';
+    hero.innerHTML=`<div style="text-align:center;padding:20px 16px;font-size:11px;color:var(--n3)">Stel een budget in om voorspellingen te zien.</div>`;
+    return;
+  }
+  hero.style.display='block';
+
+  const{allowance,daysLeft,remaining,avgDailyBudget,isOver}=da;
+  const pctUsed=Math.min(1,Math.max(0,spent/budget));
+  const C=2*Math.PI*52; // r=52
+  const ringDash=C*(1-pctUsed);
+  const ratio=avgDailyBudget>0?allowance/avgDailyBudget:1;
+  const ringColor=isOver?'var(--r)':ratio<0.5?'var(--w)':'var(--g)';
+  const ringRgb=isOver?'220,38,38':ratio<0.5?'217,119,6':'22,163,74';
+
+  // Breakeven
+  let bkHTML='';
+  if(fc){
+    if(fc.point>budget){
+      const daysToOver=fc.dailyRate>0?Math.ceil(remaining/fc.dailyRate):null;
+      const breakDate=daysToOver&&daysToOver<=daysLeft?new Date(viewMonth.getFullYear(),viewMonth.getMonth(),pace.dayOfMonth+daysToOver):null;
+      bkHTML=breakDate
+        ?`<div class="fc-breakeven" style="background:rgba(220,38,38,.07);border-color:rgba(220,38,38,.30);color:var(--r)">⚠ budget op ~${breakDate.getDate()} ${MONTHS_S[breakDate.getMonth()]}</div>`
+        :`<div class="fc-breakeven" style="background:rgba(220,38,38,.07);border-color:rgba(220,38,38,.30);color:var(--r)">⚠ Over budget op huidig tempo</div>`;
+    } else {
+      bkHTML=`<div class="fc-breakeven" style="background:rgba(22,163,74,.07);border-color:rgba(22,163,74,.28);color:var(--g)">✓ Budget houdt maand vol</div>`;
+    }
+  }
+
+  // Prognose-getal voor context naast de ring
+  const fcColor=fc?(fc.point>budget?'var(--r)':fc.point>budget*0.88?'var(--w)':'var(--g)'):'var(--n2)';
+
+  hero.innerHTML=`
+  <div style="padding:20px 16px 16px;text-align:center">
+    <!-- Ring: groot en centraal -->
+    <div style="position:relative;width:144px;height:144px;margin:0 auto 16px">
+      <!-- Achtergrondgloed -->
+      <div style="position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle,rgba(${ringRgb},.08) 0%,transparent 70%)"></div>
+      <svg viewBox="0 0 120 120" fill="none" style="width:100%;height:100%;transform:rotate(-90deg)">
+        <!-- Track -->
+        <circle cx="60" cy="60" r="52" stroke="rgba(0,0,0,.06)" stroke-width="9"/>
+        <!-- Segment: dagbudget uitgeput -->
+        <circle cx="60" cy="60" r="52" stroke="rgba(${ringRgb},.18)" stroke-width="9"
+          stroke-dasharray="${C}" stroke-dashoffset="0" stroke-linecap="round"/>
+        <!-- Progressie -->
+        <circle cx="60" cy="60" r="52" stroke="${ringColor}" stroke-width="9"
+          stroke-dasharray="${C}" stroke-dashoffset="${ringDash.toFixed(1)}"
+          stroke-linecap="round"
+          style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)"/>
+      </svg>
+      <!-- Midden: bedrag -->
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+        <div style="font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-1.5px;line-height:1;color:${isOver?'var(--r)':ringColor}">${isOver?'−':''}€${Math.abs(allowance)}</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-top:2px">per dag</div>
+      </div>
+    </div>
+
+    <!-- Drie kerngetallen onder de ring -->
+    <div style="display:flex;justify-content:center;gap:0;margin-bottom:12px">
+      <div style="flex:1;text-align:center;padding:0 8px;${daysLeft>0?'border-right:1px solid var(--l0)':''}">
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--n0)">${fmt(Math.max(0,remaining))}</div>
+        <div style="font-size:8.5px;color:var(--n3);font-weight:600;margin-top:2px">resterend</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:0 8px;border-right:1px solid var(--l0)">
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--n0)">${daysLeft}</div>
+        <div style="font-size:8.5px;color:var(--n3);font-weight:600;margin-top:2px">dag${daysLeft!==1?'en':''} over</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:0 8px">
+        ${fc?`<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${fcColor}">${fmt(fc.point)}</div>
+        <div style="font-size:8.5px;color:var(--n3);font-weight:600;margin-top:2px">prognose</div>`:
+        `<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--n3)">${Math.round(pctUsed*100)}%</div>
+        <div style="font-size:8.5px;color:var(--n3);font-weight:600;margin-top:2px">benut</div>`}
+      </div>
+    </div>
+
+    <!-- Breakeven badge -->
+    ${bkHTML}
+  </div>`;
 }
 
 function renderMonthBand(){
   const sec=$('fc-band-section');if(!sec)return;
   const fc=calcMonthEndForecast();
   const budget=getMonthBudget();
-  const pace=calcPace();
-  const da=calcDailyAllowance();
-
-  if(!fc&&!da){
-    sec.style.display='block';
-    sec.innerHTML=`<div style="font-size:11px;color:var(--n3);padding:4px 0">Stel een budget in en voeg uitgaven in om voorspellingen te zien.</div>`;
-    return;
-  }
+  if(!fc){sec.style.display='none';return;}
   sec.style.display='block';
 
+  const pace=calcPace();
   const spent=getMonthSpent(mkd());
-  const isOver=budget>0&&fc&&fc.point>budget;
-  const isWarn=budget>0&&fc&&!isOver&&fc.point>budget*0.88;
+  const isOver=budget>0&&fc.point>budget;
+  const isWarn=budget>0&&!isOver&&fc.point>budget*0.88;
   const sem=isOver?'var(--r)':isWarn?'var(--w)':'var(--g)';
   const semRgb=isOver?'220,38,38':isWarn?'217,119,6':'22,163,74';
 
-  // Day hero waarden
-  const ringColor=da?(da.isOver?'var(--r)':da.allowance<da.avgDailyBudget*0.5?'var(--w)':'var(--g)'):'var(--n3)';
-  const allowance=da?da.allowance:0;
-  const daysLeft=da?da.daysLeft:pace.daysLeft;
-  const remaining=da?da.remaining:0;
-  const pctRing=budget>0?Math.min(1,Math.max(0,spent/budget)):0;
-  const C=2*Math.PI*50;
-  const ringDash=C*(1-pctRing);
+  const maxVal=Math.max(fc.high,budget>0?budget*1.12:fc.high,spent)*1.04;
+  const toW=v=>Math.min(98,Math.max(1,Math.round(v/maxVal*100)));
+  const spentW=toW(spent),lowW=toW(fc.low),highW=toW(fc.high),pointW=toW(fc.point);
+  const budgetW=budget>0?toW(budget):null;
+  const budgetLabelLeft=budgetW!==null?Math.max(8,Math.min(budgetW,78)):null;
 
-  // Breakeven badge
-  let breakevenHTML='';
-  if(da&&fc){
-    if(fc.point>budget){
-      const daysToOver=fc.dailyRate>0?Math.ceil(remaining/fc.dailyRate):null;
-      const breakDate=daysToOver&&daysToOver<=daysLeft?new Date(viewMonth.getFullYear(),viewMonth.getMonth(),pace.dayOfMonth+daysToOver):null;
-      if(breakDate)breakevenHTML=`<div class="fc-breakeven" style="background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.35);color:#f43f5e;margin-top:6px">⚠ budget op ~${breakDate.getDate()} ${MONTHS_S[breakDate.getMonth()]}</div>`;
-    }else{
-      breakevenHTML=`<div class="fc-breakeven" style="background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.35);color:#10b981;margin-top:6px">✓ budget houdt maand vol</div>`;
-    }
-  }
-
-  // Prognose balk
-  let balkHTML='';
-  if(fc){
-    const maxVal=Math.max(fc.high,budget>0?budget*1.15:fc.high,spent)*1.05;
-    const toW=v=>Math.min(98,Math.max(1,Math.round(v/maxVal*100)));
-    const spentW=toW(spent),lowW=toW(fc.low),highW=toW(fc.high),pointW=toW(fc.point);
-    const budgetW=budget>0?toW(budget):null;
-    const budgetLabelLeft=budgetW!==null?Math.max(8,Math.min(budgetW,78)):null;
-    const diffAmt=budget>0?Math.abs(fc.point-budget):0;
-    const diffStr=budget>0?(isOver?`+${fmt(diffAmt)} over`:` ${fmt(diffAmt)} onder`):null;
-
-    balkHTML=`
-    <div style="margin-bottom:8px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
-        <div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:2px">Verwacht einde maand</div>
-          <div style="font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-1.5px;line-height:1;color:${sem}">${fmt(fc.point)}</div>
-          ${diffStr?`<div style="font-size:10px;font-weight:700;color:${sem};margin-top:2px">${diffStr} budget</div>`:''}
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:9px;color:var(--n3);margin-bottom:2px">dag ${pace.dayOfMonth}/${pace.daysInMonth}</div>
-          <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--n2)">${fmt(spent)}</div>
-          <div style="font-size:9px;color:var(--n3);margin-top:1px">uitgegeven</div>
-        </div>
-      </div>
-      ${budgetLabelLeft!==null?`<div style="position:relative;height:12px;margin-bottom:1px"><div style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);font-size:7.5px;font-weight:700;color:rgba(0,0,0,.30);white-space:nowrap">budget ▾</div></div>`:''}
-      <div style="position:relative;height:22px;background:rgba(0,0,0,.05);border-radius:6px;overflow:hidden;margin-bottom:4px">
-        <div style="position:absolute;top:0;bottom:0;left:${lowW}%;right:${100-highW}%;background:rgba(${semRgb},.14);border-radius:3px"></div>
-        <div style="position:absolute;top:3px;bottom:3px;left:0;width:${spentW}%;background:rgba(0,0,0,.20);border-radius:5px 2px 2px 5px"></div>
-        <div style="position:absolute;top:2px;bottom:2px;left:${pointW}%;width:3px;background:${sem};border-radius:2px;transform:translateX(-50%);box-shadow:0 0 5px rgba(${semRgb},.35)"></div>
-        ${budgetW!==null?`<div style="position:absolute;top:0;bottom:0;left:${budgetW}%;width:2px;background:rgba(0,0,0,.25);transform:translateX(-50%)"></div>`:''}
-      </div>
-      <div style="display:flex;justify-content:space-between">
-        <span style="font-size:8.5px;font-weight:600;color:var(--n3)">min ${fmt(fc.low)}</span>
-        <span style="font-size:8.5px;font-weight:600;color:var(--n3)">max ${fmt(fc.high)}</span>
-      </div>
-      ${fc.hasHistory?`<div class="fc-conf-note" style="margin-top:6px">Historisch gem. ${fmt(Math.round(fc.histMean))} · σ ${fmt(Math.round(fc.histStd||0))}</div>`
-        :'<div class="fc-conf-note" style="margin-top:6px">Voeg meer maanden toe voor een betrouwbare prognose.</div>'}
-    </div>`;
-  }
+  const diffAmt=budget>0?Math.abs(fc.point-budget):0;
+  const diffStr=budget>0?(isOver?`+${fmt(diffAmt)} over`:`${fmt(diffAmt)} onder`):null;
 
   sec.innerHTML=`
-  <!-- Hero: dag-ring links, prognose-balk rechts -->
-  <div style="display:flex;gap:14px;align-items:flex-start">
-    ${da?`<div style="flex-shrink:0;text-align:center;width:96px">
-      <div style="position:relative;width:88px;height:88px;margin:0 auto 6px">
-        <svg viewBox="0 0 120 120" fill="none" style="width:100%;height:100%">
-          <circle cx="60" cy="60" r="50" stroke="rgba(0,0,0,.07)" stroke-width="10"/>
-          <circle cx="60" cy="60" r="50" stroke="${ringColor}" stroke-width="10"
-            stroke-dasharray="${C}" stroke-dashoffset="${ringDash}"
-            stroke-linecap="round" transform="rotate(-90 60 60)"
-            style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"/>
-        </svg>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-          <div style="font-family:var(--mono);font-size:15px;font-weight:700;line-height:1;color:${da.isOver?'var(--r)':ringColor}">${da.isOver?'-':''}€${Math.abs(allowance)}</div>
-          <div style="font-size:8px;color:var(--n3);margin-top:2px;font-weight:600">per dag</div>
-        </div>
-      </div>
-      <div style="font-size:9px;color:var(--n3);line-height:1.3">${daysLeft} dag${daysLeft!==1?'en':''} · ${fmt(Math.max(0,remaining))} vrij</div>
-      ${breakevenHTML}
-    </div>`:''}
-    <div style="flex:1;min-width:0">${balkHTML}</div>
-  </div>`;
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+    <div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">Verwacht einde maand</div>
+      <div style="font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-1.2px;line-height:1;color:${sem}">${fmt(fc.point)}</div>
+      ${diffStr?`<div style="font-size:10px;font-weight:700;color:${sem};margin-top:2px">${diffStr} budget</div>`:''}
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:8.5px;color:var(--n3);margin-bottom:2px">dag ${pace.dayOfMonth}/${pace.daysInMonth}</div>
+      <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--n2)">${fmt(spent)}</div>
+      <div style="font-size:8.5px;color:var(--n3);margin-top:1px">uitgegeven</div>
+    </div>
+  </div>
+
+  ${budgetLabelLeft!==null?`<div style="position:relative;height:11px;margin-bottom:1px"><div style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);font-size:7.5px;font-weight:700;color:rgba(0,0,0,.28);white-space:nowrap">budget ▾</div></div>`:''}
+  <div style="position:relative;height:20px;background:rgba(0,0,0,.05);border-radius:5px;overflow:hidden;margin-bottom:4px">
+    <div style="position:absolute;top:0;bottom:0;left:${lowW}%;right:${100-highW}%;background:rgba(${semRgb},.13);border-radius:3px"></div>
+    <div style="position:absolute;top:3px;bottom:3px;left:0;width:${spentW}%;background:rgba(0,0,0,.20);border-radius:4px 2px 2px 4px"></div>
+    <div style="position:absolute;top:2px;bottom:2px;left:${pointW}%;width:3px;background:${sem};border-radius:2px;transform:translateX(-50%);box-shadow:0 0 5px rgba(${semRgb},.35)"></div>
+    ${budgetW!==null?`<div style="position:absolute;top:0;bottom:0;left:${budgetW}%;width:2px;background:rgba(0,0,0,.22);transform:translateX(-50%)"></div>`:''}
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+    <span style="font-size:8.5px;font-weight:600;color:var(--n3)">min ${fmt(fc.low)}</span>
+    <span style="font-size:8.5px;font-weight:600;color:var(--n3)">max ${fmt(fc.high)}</span>
+  </div>
+  ${fc.hasHistory?`<div class="fc-conf-note">Historisch gem. ${fmt(Math.round(fc.histMean))} · σ ${fmt(Math.round(fc.histStd||0))}</div>`
+    :'<div class="fc-conf-note">Voeg meer maanden toe voor een betrouwbare prognose.</div>'}`;
 }
 
 function renderCatForecasts(){
@@ -4079,7 +4137,7 @@ function buildUitgegevenDetail(m){
         style="display:flex;align-items:center;gap:10px;padding:10px 0;${i>0?'border-top:1px solid var(--l0)':''}cursor:pointer;opacity:${isDimmed?'.28':'1'};transition:opacity .18s,background .12s;${isActive?'margin:0 -16px;padding:10px 16px;background:rgba(233,30,140,.04);border-radius:var(--r4)':''}">
         <!-- Icoon -->
         <div style="width:32px;height:32px;border-radius:var(--r6);background:${clr.bg};color:${clr.c};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">${IC[cat.icon]||IC.folder}</svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
         </div>
         <!-- Naam + balk -->
         <div style="flex:1;min-width:0">
