@@ -2814,7 +2814,7 @@ function updateYearChart(y){
     datasets.push({label:String(prevY),data:prevData,
       backgroundColor:'rgba(0,0,0,.065)',borderColor:'rgba(0,0,0,.08)',
       borderWidth:1,borderRadius:4,borderSkipped:'bottom',order:3,
-      stack:'prev',  // eigen stack zodat het niet meegestapeld wordt
+      ...(activeCat?{stack:'prev'}:{}),
       datalabels:{display:false}});
   }
 
@@ -2931,6 +2931,7 @@ function updateYearChart(y){
               if(c.dataset.label==='\u2300 p/maand')return '\u2300 p/mnd: '+fmt(Math.round(v));
               if(c.dataset.label===String(prevY))return prevY+': '+fmt(Math.round(v));
               if(c.dataset.label==='__cat__')return (activeCat?.name||'')+': '+fmt(Math.round(v));
+              if(c.dataset.label==='__lbl__')return null;
               const p=hasBudget?Math.round(v/budget*100):null;
               return y+': '+fmt(v)+(p?' ('+p+'%)':'');
             }
@@ -2938,9 +2939,9 @@ function updateYearChart(y){
         }
       },
       scales:{
-        x:{stacked:true,grid:{display:false},border:{display:false},
+        x:{stacked:!!activeCat,grid:{display:false},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'},padding:4}},
-        y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
+        y:{stacked:!!activeCat,min:0,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:8},padding:8,callback:v=>fmt(v),maxTicksLimit:5}}
       }
     }
