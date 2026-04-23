@@ -2828,30 +2828,36 @@ function updateYearChart(y){
     });
     const catDataClean=catData.map((v,i)=>i===curMonth?null:(v||null));
 
-    // Categorie-deel (onderaan stack) — label gecentreerd erin
+    // Categorie-deel (onderaan stack) — geen label hier
     datasets.push({label:'__cat__',data:catDataClean,
       backgroundColor:catDataClean.map(v=>v?`rgba(${rr},${gg},${bb},0.82)`:'transparent'),
       borderColor:'transparent',borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
-      datalabels:{
-        display:(ctx)=>{
-          const v=ctx.dataset.data[ctx.dataIndex];
-          const tot=data[ctx.dataIndex];
-          return !!(v&&v>0&&tot>0&&ctx.dataIndex!==curMonth);
-        },
-        formatter:(v,ctx)=>{
-          const tot=data[ctx.dataIndex];
-          return tot>0?Math.round(v/tot*100)+'%':'';
-        },
-        color:`rgba(${rr},${gg},${bb},1)`,
-        anchor:'center',align:'center',
-        font:{size:7.5,weight:'700'},clamp:true
-      }
+      datalabels:{display:false}
     });
     // Rest (bovenaan stack) — geen label
     datasets.push({label:String(y),data:restData,
       backgroundColor:restData.map(v=>v?'rgba(0,0,0,.08)':'transparent'),
       borderColor:'transparent',borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
       datalabels:{display:false}
+    });
+    // Onzichtbare label-dataset helemaal bovenaan: toont % boven de volledige bar
+    datasets.push({label:'__lbl__',data:data.map((v,i)=>i===curMonth||!v?null:0.001),
+      backgroundColor:'transparent',borderColor:'transparent',
+      borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
+      datalabels:{
+        display:(ctx)=>{
+          const tot=data[ctx.dataIndex];
+          const cat=catDataClean[ctx.dataIndex]||0;
+          return !!(tot>0&&cat>0&&ctx.dataIndex!==curMonth);
+        },
+        formatter:(_,ctx)=>{
+          const tot=data[ctx.dataIndex];
+          const cat=catDataClean[ctx.dataIndex]||0;
+          return tot>0?Math.round(cat/tot*100)+'%':'';
+        },
+        color:`rgba(${rr},${gg},${bb},1)`,
+        anchor:'end',align:'end',font:{size:7.5,weight:'700'},offset:1,clamp:true
+      }
     });
   } else {
     datasets.push({label:String(y),data,
