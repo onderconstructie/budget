@@ -1132,7 +1132,7 @@ function getFixedCosts(){if(_fixedCache!==null)return _fixedCache;let t=0;(S.fix
 function getReserved(){return 0;} // reserveringen verwijderd
 function getMonthBudget(){return S.categories.filter(c=>c.type==='monthly').reduce((s,c)=>s+c.budget,0)}
 function getCatSpent(catId,m){return S.monthlyData[m]?.[catId]||0}
-function getMonthSpent(m){const d=S.monthlyData[m];return d?Object.values(d).reduce((s,v)=>s+v,0):0}
+function getMonthSpent(m){return S.categories.filter(c=>c.type==='monthly').reduce((s,c)=>s+getCatSpent(c.id,m),0)}
 function setCatAmount(catId,m,amount){if(!S.monthlyData[m])S.monthlyData[m]={};S.monthlyData[m][catId]=Math.max(0,amount);save()}
 function addTransaction(catId,m,amount,detail){
   if(!S.transactions)S.transactions=[];
@@ -3654,16 +3654,10 @@ function renderMonthBand(){
   const diffStr=budget>0?(isOver?`+${fmt(diffAmt)} over`:`${fmt(diffAmt)} onder`):null;
 
   sec.innerHTML=`
-  <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:10px">
-    <div>
-      <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">Uitgegeven · dag ${pace.dayOfMonth}/${pace.daysInMonth}</div>
-      <div style="font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1;color:var(--n1)">${fmt(spent)}</div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">Verwacht einde maand</div>
-      <div style="font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1;color:${sem}">${fmt(fc.point)}</div>
-      ${diffStr?`<div style="font-size:10px;font-weight:700;color:${sem};margin-top:2px">${diffStr} budget</div>`:''}
-    </div>
+  <div style="text-align:right;margin-bottom:10px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">Verwacht einde maand</div>
+    <div style="font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-1.2px;line-height:1;color:${sem}">${fmt(fc.point)}</div>
+    ${diffStr?`<div style="font-size:10px;font-weight:700;color:${sem};margin-top:3px">${diffStr} budget</div>`:''}
   </div>
 
   ${budgetLabelLeft!==null?`<div style="position:relative;height:11px;margin-bottom:1px"><div style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);font-size:7.5px;font-weight:700;color:rgba(0,0,0,.28);white-space:nowrap">budget ▾</div></div>`:''}
