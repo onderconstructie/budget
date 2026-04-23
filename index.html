@@ -1113,8 +1113,8 @@ function initAnalyticsTabs(){
       setAnTab(anTabIdx+(dx<0?1:-1));
     }
   },{passive:true});
-  $('an-yr-prev').addEventListener('click',()=>{anYear--;yrActiveCat=null;updateYearChart(anYear);updateYearStats(anYear);const _yl1=$('an-year-label');if(_yl1)_yl1.textContent=anYear;const _yn1=$('an-yr-next');if(_yn1)_yn1.disabled=false;const _yp1=$('an-yr-prev');if(_yp1)_yp1.disabled=anYear<=getEarliestYear();});
-  $('an-yr-next').addEventListener('click',()=>{anYear++;yrActiveCat=null;if(anYear>=new Date().getFullYear())$('an-yr-next').disabled=true;updateYearChart(anYear);updateYearStats(anYear);const _yl2=$('an-year-label');if(_yl2)_yl2.textContent=anYear;const _yp2=$('an-yr-prev');if(_yp2)_yp2.disabled=anYear<=getEarliestYear();});
+  $('an-yr-prev').addEventListener('click',()=>{anYear--;yrActiveCats.clear();updateYearChart(anYear);updateYearStats(anYear);const _yl1=$('an-year-label');if(_yl1)_yl1.textContent=anYear;const _yn1=$('an-yr-next');if(_yn1)_yn1.disabled=false;const _yp1=$('an-yr-prev');if(_yp1)_yp1.disabled=anYear<=getEarliestYear();});
+  $('an-yr-next').addEventListener('click',()=>{anYear++;yrActiveCats.clear();if(anYear>=new Date().getFullYear())$('an-yr-next').disabled=true;updateYearChart(anYear);updateYearStats(anYear);const _yl2=$('an-year-label');if(_yl2)_yl2.textContent=anYear;const _yp2=$('an-yr-prev');if(_yp2)_yp2.disabled=anYear<=getEarliestYear();});
   // Analytics month nav (reuses viewMonth, same as dashboard)
   $('an-prev').addEventListener('click',()=>{viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-1,1);updateAnalytics()});
   $('an-next').addEventListener('click',()=>{const now=new Date();if(viewMonth.getMonth()===now.getMonth()&&viewMonth.getFullYear()===now.getFullYear())return;viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1);updateAnalytics()});
@@ -2738,10 +2738,10 @@ function updateAnomalyBoard(){
   }).join('');
 }
 
-let yrActiveCat=null;
+let yrActiveCats=new Set();
 function setYrCat(catId){
-  yrActiveCat=(yrActiveCat===catId)?null:catId;
-  // Re-render chart and chips for current year
+  if(yrActiveCats.has(catId))yrActiveCats.delete(catId);
+  else yrActiveCats.add(catId);
   const lbl=$('an-year-label');
   const y=lbl?parseInt(lbl.textContent)||new Date().getFullYear():new Date().getFullYear();
   updateYearChart(y);
@@ -2758,12 +2758,22 @@ function updateYearChart(y){
   const completedVals=data.filter((v,i)=>v>0&&i!==curMonth);
   const avg=completedVals.length>0?Math.round(completedVals.reduce((s,v)=>s+v,0)/completedVals.length):0;
 
-  // Actieve categorie overlay
-  const activeCat=yrActiveCat?S.categories.find(c=>c.id===yrActiveCat):null;
-  const catData=activeCat
-    ?MONTHS_S.map((_,i)=>getCatSpent(activeCat.id,y+'-'+String(i+1).padStart(2,'0'))||null)
+  // Multi-select: som van alle geselecteerde categorieën per maand
+  const hasSelection=yrActiveCats.size>0;
+  const selectedCats=hasSelection?S.categories.filter(c=>yrActiveCats.has(c.id)):[];
+
+  // Kleur: als één categorie geselecteerd → gebruik die kleur; meerdere → accent roze
+  const clrActive=selectedCats.length===1?col(selectedCats[0].color):null;
+  const multiColor=selectedCats.length>1?{c:'var(--a)',bg:'rgba(233,30,140,.12)'}:null;
+  const overlayColor=clrActive?clrActive:(multiColor||null);
+
+  const catData=hasSelection
+    ?MONTHS_S.map((_,i)=>{
+        const mk=y+'-'+String(i+1).padStart(2,'0');
+        const sum=selectedCats.reduce((s,c)=>s+getCatSpent(c.id,mk),0);
+        return sum||null;
+      })
     :null;
-  const clrActive=activeCat?col(activeCat.color):null;
 
   // YoY vorig jaar ghost bars
   const prevY=y-1;
@@ -2774,15 +2784,14 @@ function updateYearChart(y){
     const isFut=y===now.getFullYear()&&i>curMonth;
     const isCur=i===curMonth;
     if(v===0)return isFut?'rgba(0,0,0,.03)':'rgba(0,0,0,.05)';
-    // Dim hoofdbars als categorie actief is
-    if(activeCat)return isCur?'rgba(0,0,0,.05)':'rgba(0,0,0,.08)';
+    if(hasSelection)return isCur?'rgba(0,0,0,.05)':'rgba(0,0,0,.08)';
     if(isCur)return 'rgba(0,0,0,.10)';
     if(!hasBudget||v<=budget*0.8)return 'rgba(22,163,74,0.70)';
     if(v<=budget)return 'rgba(217,119,6,0.72)';
     return 'rgba(220,38,38,0.75)';
   });
   const borderColors=data.map((v,i)=>{
-    if(v===0||i===curMonth||activeCat)return 'transparent';
+    if(v===0||i===curMonth||hasSelection)return 'transparent';
     if(!hasBudget||v<=budget*0.8)return 'rgba(22,163,74,0.9)';
     if(v<=budget)return 'rgba(217,119,6,0.9)';
     return 'rgba(220,38,38,0.9)';
@@ -2799,13 +2808,14 @@ function updateYearChart(y){
     datasets.push({label:String(prevY),data:prevData,
       backgroundColor:'rgba(0,0,0,.065)',borderColor:'rgba(0,0,0,.08)',
       borderWidth:1,borderRadius:4,borderSkipped:'bottom',order:3,
-      ...(activeCat?{stack:'prev'}:{}),
+      ...(hasSelection?{stack:'prev'}:{}),
       datalabels:{display:false}});
   }
 
-  if(activeCat&&catData){
-    const hx=clrActive.c.replace('#','');
-    const rr=parseInt(hx.slice(0,2),16),gg=parseInt(hx.slice(2,4),16),bb=parseInt(hx.slice(4,6),16);
+  if(hasSelection&&catData){
+    // Kleur: één categorie → eigen kleur, meerdere → accent roze
+    let rr=233,gg=30,bb=140;
+    if(clrActive){const hx=clrActive.c.replace('#','');rr=parseInt(hx.slice(0,2),16);gg=parseInt(hx.slice(2,4),16);bb=parseInt(hx.slice(4,6),16);}
     const restData=data.map((v,i)=>{
       if(i===curMonth)return null;
       const cat=catData[i]||0;
@@ -2813,33 +2823,22 @@ function updateYearChart(y){
     });
     const catDataClean=catData.map((v,i)=>i===curMonth?null:(v||null));
 
-    // Categorie-deel (onderaan stack) — geen label hier
     datasets.push({label:'__cat__',data:catDataClean,
       backgroundColor:catDataClean.map(v=>v?`rgba(${rr},${gg},${bb},0.82)`:'transparent'),
       borderColor:'transparent',borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
       datalabels:{display:false}
     });
-    // Rest (bovenaan stack) — geen label
     datasets.push({label:String(y),data:restData,
       backgroundColor:restData.map(v=>v?'rgba(0,0,0,.08)':'transparent'),
       borderColor:'transparent',borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
       datalabels:{display:false}
     });
-    // Onzichtbare label-dataset helemaal bovenaan: toont % boven de volledige bar
     datasets.push({label:'__lbl__',data:data.map((v,i)=>i===curMonth||!v?null:0.001),
       backgroundColor:'transparent',borderColor:'transparent',
       borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
       datalabels:{
-        display:(ctx)=>{
-          const tot=data[ctx.dataIndex];
-          const cat=catDataClean[ctx.dataIndex]||0;
-          return !!(tot>0&&cat>0&&ctx.dataIndex!==curMonth);
-        },
-        formatter:(_,ctx)=>{
-          const tot=data[ctx.dataIndex];
-          const cat=catDataClean[ctx.dataIndex]||0;
-          return tot>0?Math.round(cat/tot*100)+'%':'';
-        },
+        display:(ctx)=>{const tot=data[ctx.dataIndex];const cat=catDataClean[ctx.dataIndex]||0;return !!(tot>0&&cat>0&&ctx.dataIndex!==curMonth);},
+        formatter:(_,ctx)=>{const tot=data[ctx.dataIndex];const cat=catDataClean[ctx.dataIndex]||0;return tot>0?Math.round(cat/tot*100)+'%':'';},
         color:`rgba(${rr},${gg},${bb},1)`,
         anchor:'end',align:'end',font:{size:7.5,weight:'700'},offset:1,clamp:true
       }
@@ -2924,7 +2923,7 @@ function updateYearChart(y){
               if(c.dataset.label==='Budget')return 'Budget: '+fmt(budget);
               if(c.dataset.label==='\u2300 p/maand')return '\u2300 p/mnd: '+fmt(Math.round(v));
               if(c.dataset.label===String(prevY))return prevY+': '+fmt(Math.round(v));
-              if(c.dataset.label==='__cat__')return (activeCat?.name||'')+': '+fmt(Math.round(v));
+              if(c.dataset.label==='__cat__'){const names=selectedCats.map(c=>c.name).join('+');return names+': '+fmt(Math.round(v));}
               if(c.dataset.label==='__lbl__')return null;
               const p=hasBudget?Math.round(v/budget*100):null;
               return y+': '+fmt(v)+(p?' ('+p+'%)':'');
@@ -2933,9 +2932,9 @@ function updateYearChart(y){
         }
       },
       scales:{
-        x:{stacked:!!activeCat,grid:{display:false},border:{display:false},
+        x:{stacked:hasSelection,grid:{display:false},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'},padding:4}},
-        y:{stacked:!!activeCat,min:0,max:yMax,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
+        y:{stacked:hasSelection,min:0,max:yMax,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:8},padding:8,callback:v=>fmt(v),maxTicksLimit:5}}
       }
     }
@@ -2945,8 +2944,8 @@ function updateYearChart(y){
   const leg=$('.yr-legend');
   if(leg){
     leg.innerHTML=
-      (activeCat&&clrActive
-        ?`<span class="yr-leg-item"><span class="yr-leg-dot" style="background:${clrActive.c}"></span>${esc(activeCat.name)}</span>`+
+      (hasSelection
+        ?selectedCats.map(c=>`<span class="yr-leg-item"><span class="yr-leg-dot" style="background:${col(c.color).c}"></span>${esc(c.name)}</span>`).join('')+
           `<span class="yr-leg-item"><span class="yr-leg-dot" style="background:rgba(0,0,0,.09)"></span>Overig</span>`
         :`<span class="yr-leg-item"><span class="yr-leg-dot" style="background:rgba(220,38,38,0.75)"></span>Over budget</span>`)+
       (hasBudget?`<span class="yr-leg-item"><span class="yr-leg-dash"></span>Budget</span>`:'')+
@@ -3422,8 +3421,8 @@ function updateYearCats(y){
   el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:12px">
   ${rows.map(({cat,ytd})=>{
     const clr=col(cat.color);
-    const isActive=yrActiveCat===cat.id;
-    const isDimmed=!!(yrActiveCat&&!isActive);
+    const isActive=yrActiveCats.has(cat.id);
+    const isDimmed=!!(yrActiveCats.size>0&&!isActive);
     const partialBudget=cat.budget>0?cat.budget*completedMths:0;
     const isOver=partialBudget>0&&ytd>partialBudget;
     const isWarn=partialBudget>0&&!isOver&&ytd>partialBudget*0.85;
@@ -3655,25 +3654,34 @@ function renderMonthBand(){
   const diffStr=budget>0?(isOver?`+${fmt(diffAmt)} over`:`${fmt(diffAmt)} onder`):null;
 
   sec.innerHTML=`
-  <div style="margin-bottom:10px">
-    <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">Verwacht einde maand</div>
-    <div style="font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-1.2px;line-height:1;color:${sem}">${fmt(fc.point)}</div>
-    ${diffStr?`<div style="font-size:10px;font-weight:700;color:${sem};margin-top:2px">${diffStr} budget</div>`:''}
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:10px">
+    <div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">Uitgegeven · dag ${pace.dayOfMonth}/${pace.daysInMonth}</div>
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1;color:var(--n1)">${fmt(spent)}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">Verwacht einde maand</div>
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1;color:${sem}">${fmt(fc.point)}</div>
+      ${diffStr?`<div style="font-size:10px;font-weight:700;color:${sem};margin-top:2px">${diffStr} budget</div>`:''}
+    </div>
   </div>
 
   ${budgetLabelLeft!==null?`<div style="position:relative;height:11px;margin-bottom:1px"><div style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);font-size:7.5px;font-weight:700;color:rgba(0,0,0,.28);white-space:nowrap">budget ▾</div></div>`:''}
-  <div style="position:relative;height:20px;background:rgba(0,0,0,.05);border-radius:5px;overflow:hidden;margin-bottom:4px">
+  <div style="position:relative;height:28px;background:rgba(0,0,0,.05);border-radius:7px;overflow:hidden;margin-bottom:5px">
     <div style="position:absolute;top:0;bottom:0;left:${lowW}%;right:${100-highW}%;background:rgba(${semRgb},.13);border-radius:3px"></div>
-    <div style="position:absolute;top:3px;bottom:3px;left:0;width:${spentW}%;background:rgba(0,0,0,.20);border-radius:4px 2px 2px 4px"></div>
-    <div style="position:absolute;top:2px;bottom:2px;left:${pointW}%;width:3px;background:${sem};border-radius:2px;transform:translateX(-50%);box-shadow:0 0 5px rgba(${semRgb},.35)"></div>
-    ${budgetW!==null?`<div style="position:absolute;top:0;bottom:0;left:${budgetW}%;width:2px;background:rgba(0,0,0,.22);transform:translateX(-50%)"></div>`:''}
+    <div style="position:absolute;top:0;bottom:0;left:0;width:${spentW}%;background:rgba(0,0,0,.14);border-radius:7px 0 0 7px"></div>
+    <div style="position:absolute;top:2px;bottom:2px;left:${spentW}%;width:2px;background:#fff;border-radius:1px;transform:translateX(-50%);box-shadow:0 0 4px rgba(0,0,0,.25)"></div>
+    <div style="position:absolute;top:2px;bottom:2px;left:${pointW}%;width:3px;background:${sem};border-radius:2px;transform:translateX(-50%);box-shadow:0 0 6px rgba(${semRgb},.4)"></div>
+    ${budgetW!==null?`<div style="position:absolute;top:0;bottom:0;left:${budgetW}%;width:2px;background:rgba(0,0,0,.20);transform:translateX(-50%)"></div>`:''}
   </div>
-  <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-    <span style="font-size:8.5px;font-weight:600;color:var(--n3)">min ${fmt(fc.low)}</span>
-    <span style="font-size:8.5px;font-weight:600;color:var(--n3)">max ${fmt(fc.high)}</span>
+  <div style="position:relative;height:14px;font-size:8.5px;color:var(--n3);font-weight:600">
+    <span style="position:absolute;left:0">min ${fmt(fc.low)}</span>
+    ${budgetLabelLeft!==null?`<span style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);color:rgba(0,0,0,.30)">budget</span>`:''}
+    <span style="position:absolute;right:0">max ${fmt(fc.high)}</span>
   </div>
-  ${fc.hasHistory?`<div class="fc-conf-note">Historisch gem. ${fmt(Math.round(fc.histMean))} · σ ${fmt(Math.round(fc.histStd||0))}</div>`
-    :'<div class="fc-conf-note">Voeg meer maanden toe voor een betrouwbare prognose.</div>'}`;
+  ${fc.hasHistory?`<div class="fc-conf-note" style="margin-top:6px">Historisch gem. ${fmt(Math.round(fc.histMean))} · σ ${fmt(Math.round(fc.histStd||0))}</div>`
+    :'<div class="fc-conf-note" style="margin-top:6px">Voeg meer maanden toe voor een betrouwbare prognose.</div>'}
+  `;
 }
 
 function renderCatForecasts(){
@@ -4346,7 +4354,7 @@ function buildGespaardDetail(m){
   // ── Rekensom ─────────────────────────────────────────
   const breakdown=[
     {lbl:'Netto inkomen',val:income,c:'var(--g)'},
-    {lbl:'− Vaste kosten',val:-fixed,c:'var(--n2)'},
+    {lbl:'− Vaste kosten',val:-fixed,c:'rgba(14,165,233,.9)'},
     isCur
       ?{lbl:'− Maandbudgetten',val:-budget,c:'var(--n2)'}
       :{lbl:'− Variabele uitgaven',val:-spent,c:'var(--n2)'},
@@ -4405,10 +4413,10 @@ function buildGespaardDetail(m){
         ">
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--a);min-width:42px;text-align:right">${target}%</div>
     </div>
-    <!-- Slideraxis: zelfde schaal 0–30% als de balk -->
+    <!-- Slideraxis: zelfde schaal 0–30% als de balk, gecorrigeerd voor browser thumb offset -->
     <div style="position:relative;height:14px;margin-top:4px;font-size:9px;color:var(--n3)">
       <span style="position:absolute;left:0">0%</span>
-      ${target>0&&target<30?`<span style="position:absolute;left:${Math.round(target/30*100)}%;transform:translateX(-50%);font-weight:700;color:var(--a)">${target}%</span>`:''}
+      ${target>0&&target<30?`<span style="position:absolute;left:calc(${Math.round(target/30*100)}% + ${((0.5-target/30)*16).toFixed(1)}px);transform:translateX(-50%);font-weight:700;color:var(--a)">${target}%</span>`:''}
       <span style="position:absolute;right:0">30%</span>
     </div>
   </div>
@@ -4440,10 +4448,9 @@ function buildGespaardDetail(m){
   <div class="dm-section">
     <div class="dm-section-title">${isCur?'hoe berekend (maandbuffer)':'hoe berekend'}</div>
     ${breakdown.map((r,i)=>{
-      const isLast=i===breakdown.length-1;
-      return`<div class="dm-row" style="${isLast?'border-top:1px solid var(--l1);margin-top:4px;padding-top:10px':''}">
-        <div class="dm-row-name" style="font-weight:${isLast?700:400};color:${isLast?'var(--n0)':'var(--n2)'}">${r.lbl}</div>
-        <div style="font-family:var(--mono);font-size:13px;font-weight:${isLast?700:400};color:${r.c}">${r.val>=0?fmt(r.val):'-'+fmt(Math.abs(r.val))}</div>
+      return`<div class="dm-row">
+        <div class="dm-row-name" style="color:var(--n2)">${r.lbl}</div>
+        <div style="font-family:var(--mono);font-size:13px;color:${r.c}">${r.val>=0?fmt(r.val):'-'+fmt(Math.abs(r.val))}</div>
       </div>`;
     }).join('')}
     <div class="dm-row" style="border-top:2px solid var(--l1);margin-top:4px;padding-top:10px">
