@@ -3091,7 +3091,7 @@ function _applyEvoCat(){
             display:(ctx)=>ctx.dataIndex===11,
             formatter:()=>avgPadded,
             color:`rgba(${rv},${gv},${bv},0.85)`,
-            anchor:'end',align:'right',offset:6,
+            anchor:'end',align:'top',offset:2,
             font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
             clip:false
           }
@@ -3109,7 +3109,7 @@ function _applyEvoCat(){
             display:(ctx)=>ctx.dataIndex===11,
             formatter:()=>budPadded,
             color:'rgba(0,0,0,.40)',
-            anchor:'end',align:'right',offset:6,
+            anchor:'end',align:'bottom',offset:2,
             font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
             clip:false
           }
@@ -3198,7 +3198,7 @@ function buildTrendDatasets(catId, y){
     borderColor:`rgba(${rv},${gv},${bv},0.60)`,
     backgroundColor:`rgba(${rv},${gv},${bv},0.07)`,
     borderWidth:2,
-    borderDash:[5,3],
+    borderDash:[],
     fill:'origin',
     pointRadius:0,pointHoverRadius:0,
     tension:0.4,spanGaps:false,order:0,
