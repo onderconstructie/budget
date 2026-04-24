@@ -3069,7 +3069,12 @@ function _applyEvoCat(){
       const clr=col(selCat.color);
       const hex=clr.c.replace('#','');
       const rv=parseInt(hex.slice(0,2),16),gv=parseInt(hex.slice(2,4),16),bv=parseInt(hex.slice(4,6),16);
-      const vals=MONTHS_S.map((_,i)=>getCatSpent(selCat.id,anYear+'-'+String(i+1).padStart(2,'0'))).filter(v=>v>0);
+      const now=new Date();
+      const lastMonthIdx=anYear<now.getFullYear()?11:(anYear===now.getFullYear()?now.getMonth()-1:now.getMonth()-1);
+      // Alle verstreken maanden van het jaar, ook maanden zonder uitgaven (=0)
+      const vals=lastMonthIdx>=0
+        ?MONTHS_S.slice(0,lastMonthIdx+1).map((_,i)=>getCatSpent(selCat.id,anYear+'-'+String(i+1).padStart(2,'0')))
+        :[];
       const avg=vals.length?Math.round(vals.reduce((s,v)=>s+v,0)/vals.length):0;
       // Bereken labels vooraf zodat we ze kunnen uitlijnen op dezelfde rechterrand
       const avgLabel='⌀ '+fmt(avg);
