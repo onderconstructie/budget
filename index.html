@@ -3934,7 +3934,7 @@ function openMetricDetail(type){
   const m=mkd();
   const titles={inkomen:'Inkomen',uitgegeven:'Uitgegeven',vast:'Vaste kosten',gespaard:'Buffer',health:'Maandscore'};
   title.textContent=titles[type]||'Details';
-  if(type==='uitgegeven')_uitgegevenMonth=null; // reset to current month
+  if(type==='uitgegeven')_uitgegevenMonth=null;
   body.innerHTML=buildDetailContent(type,m);
   bg.classList.add('open');
 }
@@ -4040,6 +4040,16 @@ let _uitgegevenMonth=null; // null = huidige maand (viewMonth)
 
 function _uitgegevenMk(){return _uitgegevenMonth||mkd();}
 
+function _updateUitgegevenNavHeader(){
+  const mk=_uitgegevenMk();
+  const [y,mo]=mk.split('-').map(Number);
+  const lbl=$('detail-nav-label');
+  const nxt=$('detail-nav-next');
+  const now=new Date();
+  if(lbl)lbl.textContent=MONTHS_S[mo-1]+' '+y;
+  if(nxt)nxt.disabled=(y===now.getFullYear()&&mo-1===now.getMonth());
+}
+
 function uitgegevenNav(dir){
   const cur=_uitgegevenMk();
   const [y,mo]=cur.split('-').map(Number);
@@ -4049,6 +4059,7 @@ function uitgegevenNav(dir){
   if(d>now)return;
   _uitgegevenMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
   _uitgegevenFilter=null;
+  _updateUitgegevenNavHeader();
   const body=$('detail-modal-body');
   const title=$('detail-modal-title');
   if(body)body.innerHTML=buildUitgegevenDetail(_uitgegevenMk());
@@ -4226,11 +4237,11 @@ function buildUitgegevenDetail(m){
   const navLabel=MONTHS[navMo-1]+' '+navY;
 
   return`
-  <!-- MAAND NAV -->
-  <div style="display:flex;align-items:center;justify-content:center;padding:10px 16px 0">
-    <div class="dh-nav">
+  <!-- NAV: sticky rechts, onder de modal-header -->
+  <div style="position:sticky;top:0;z-index:10;display:flex;justify-content:flex-end;padding:8px 16px 6px;background:var(--s0);border-bottom:1px solid var(--l0)">
+    <div class="dh-nav" style="transform:scale(.88);transform-origin:right center">
       <button class="dh-nav-btn" onclick="uitgegevenNav(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <span class="dh-nav-label">${navLabel}</span>
+      <span class="dh-nav-label" style="min-width:72px;text-align:center">${navLabel}</span>
       <button class="dh-nav-btn" onclick="uitgegevenNav(1)" ${isCurrentMo?'disabled':''}><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>
   </div>
