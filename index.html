@@ -3569,30 +3569,30 @@ function renderDayHero(){
     const label=isSlower?'trager':'sneller';
     const absPct=Math.abs(tempoPct);
     tempoHTML=`
-    <div style="flex:1;text-align:left;padding-left:20px">
+    <div style="text-align:left">
       <div style="font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">tempo</div>
       <div style="font-size:28px;line-height:1;color:${tempoColor};font-weight:300">${arrow}</div>
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${tempoColor};margin-top:2px">${absPct<10?'±0%':absPct+'%'}</div>
       <div style="font-size:9px;color:var(--n4);margin-top:3px;line-height:1.3">${absPct<10?'op schema':label}</div>
     </div>`;
   } else {
-    tempoHTML=`<div style="flex:1;padding-left:14px"></div>`;
+    tempoHTML=`<div></div>`;
   }
 
   hero.innerHTML=`
   <div style="width:100%">
-    <!-- Drie gelijke kolommen: info — cirkel — tempo -->
-    <div style="display:flex;align-items:center">
+    <!-- Drie kolommen: inhoudsbreedte — cirkel — inhoudsbreedte, gelijke gap -->
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px">
 
-      <!-- Links: vrij + dag (subtiel, links uitgelijnd) -->
-      <div style="flex:1;text-align:left;padding-right:16px">
+      <!-- Links: vrij + dag (links uitgelijnd, kolom zo breed als inhoud) -->
+      <div style="text-align:left">
         <div style="font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">resterend</div>
         <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:${remaining<0?'var(--r)':'var(--n2)'};letter-spacing:-.5px">${fmt(Math.abs(Math.round(remaining)))}</div>
         <div style="font-size:9px;color:var(--n4);margin-top:4px">dag ${pace.dayOfMonth} / ${pace.daysInMonth}</div>
       </div>
 
-      <!-- Midden: cirkel — exact gecentreerd -->
-      <div style="flex-shrink:0;display:flex;justify-content:center">
+      <!-- Midden: cirkel -->
+      <div style="display:flex;justify-content:center">
         <div class="fc-day-ring">
           <svg viewBox="0 0 120 120" fill="none">
             <circle cx="60" cy="60" r="50" stroke="rgba(0,0,0,.07)" stroke-width="10"/>
@@ -3608,7 +3608,7 @@ function renderDayHero(){
         </div>
       </div>
 
-      <!-- Rechts: tempo-indicator (links uitgelijnd vanuit cirkel) -->
+      <!-- Rechts: tempo-indicator -->
       ${tempoHTML}
     </div>
 
