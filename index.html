@@ -919,16 +919,18 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
       <div style="padding:12px 16px 0">
         <div id="yr-signals"></div>
       </div>
-      <div style="padding:10px 16px 0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div class="an-section-lbl" style="padding:0;margin:0">Maandelijkse uitgaven</div>
-          <div class="dh-nav" style="transform:scale(.88);transform-origin:right center">
-            <button class="dh-nav-btn" id="an-yr-prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-            <span class="dh-nav-label" id="an-year-label" style="min-width:48px;text-align:center">2025</span>
-            <button class="dh-nav-btn" id="an-yr-next"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div style="padding:0 16px 0">
+        <div style="position:relative">
+          <div class="chart-wrap" style="height:240px"><canvas id="chart-year"></canvas></div>
+          <!-- Nav: zweeft over de grafiek rechtsboven, neemt geen verticale ruimte -->
+          <div style="position:absolute;top:0;right:0;z-index:5;padding:4px 0">
+            <div class="dh-nav" style="transform:scale(.82);transform-origin:right top;background:rgba(255,255,255,.85);backdrop-filter:blur(4px)">
+              <button class="dh-nav-btn" id="an-yr-prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+              <span class="dh-nav-label" id="an-year-label" style="min-width:44px;text-align:center">2025</span>
+              <button class="dh-nav-btn" id="an-yr-next"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
           </div>
         </div>
-        <div class="chart-wrap" style="height:240px"><canvas id="chart-year"></canvas></div>
         <div class="yr-legend" style="justify-content:center;margin-top:6px"></div>
       </div>
       <div style="padding:8px 16px calc(96px + var(--safe-b))">
