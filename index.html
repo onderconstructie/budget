@@ -656,7 +656,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 /* PROGNOSE */
 #an-prognose{padding:0 0 calc(96px + var(--safe-b));overflow-y:auto}
 .fc-day-hero{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--l0);gap:16px}
-.fc-day-ring{position:relative;width:110px;height:110px;margin:0 auto 10px}
+.fc-day-ring{position:relative;width:136px;height:136px;margin:0 auto 10px}
 .fc-day-ring svg{width:100%;height:100%}
 .fc-day-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .fc-day-amount{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1}
@@ -3581,7 +3581,7 @@ function renderDayHero(){
 
   hero.innerHTML=`
   <div style="width:100%">
-    <div style="display:flex;align-items:center;gap:14px;width:100%">
+    <div style="display:flex;align-items:center;gap:24px;width:100%">
 
       <!-- Links: tekst naar de cirkel toe (rechts uitgelijnd) -->
       <div style="flex:1;display:flex;flex-direction:column;align-items:flex-end;text-align:right">
@@ -3640,6 +3640,7 @@ function renderMonthBand(){
   const diffStr=budget>0?(isOver?`+${fmt(diffAmt)} over`:`${fmt(diffAmt)} onder`):null;
 
   sec.innerHTML=`
+  <div class="an-section-lbl">Verwacht uitgegeven</div>
   <!-- Prognose-getal rechts, diff subtiel ernaast -->
   <div style="display:flex;align-items:baseline;justify-content:flex-end;gap:8px;margin-bottom:10px">
     <div style="font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-1.2px;color:${sem}">${fmt(fc.point)}</div>
