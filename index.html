@@ -3569,42 +3569,51 @@ function renderDayHero(){
     const label=isSlower?'trager':'sneller';
     const absPct=Math.abs(tempoPct);
     tempoHTML=`
-    <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:64px">
-      <div style="font-size:32px;line-height:1;color:${tempoColor};font-weight:300">${arrow}</div>
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${tempoColor}">${absPct<10?'±0':absPct+'%'}</div>
-      <div style="font-size:8px;font-weight:600;color:var(--n3);text-align:center;line-height:1.3">${absPct<10?'op schema':label+'\ndan normaal'}</div>
+    <div style="flex:1;text-align:left;padding-left:14px">
+      <div style="font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">tempo</div>
+      <div style="font-size:28px;line-height:1;color:${tempoColor};font-weight:300">${arrow}</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${tempoColor};margin-top:2px">${absPct<10?'±0%':absPct+'%'}</div>
+      <div style="font-size:9px;color:var(--n4);margin-top:3px;line-height:1.3">${absPct<10?'op schema':label}</div>
     </div>`;
   } else {
-    tempoHTML=`<div style="flex-shrink:0;min-width:64px"></div>`;
+    tempoHTML=`<div style="flex:1;padding-left:14px"></div>`;
   }
 
   hero.innerHTML=`
-  <div style="display:flex;align-items:center;gap:0;width:100%">
-    <!-- Links: vrij budget + dag -->
-    <div style="flex:1;min-width:0;text-align:center;padding-right:8px">
-      <div style="font-size:8.5px;font-weight:600;color:var(--n3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">vrij</div>
-      <div style="font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1;color:${remaining<0?'var(--r)':'var(--n0)'}">${fmt(Math.abs(Math.round(remaining)))}</div>
-      <div style="font-size:10px;color:var(--n3);margin-top:5px">dag ${pace.dayOfMonth}/${pace.daysInMonth}</div>
-      ${breakevenHTML}
-    </div>
-    <!-- Midden: cirkel -->
-    <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center">
-      <div class="fc-day-ring">
-        <svg viewBox="0 0 120 120" fill="none">
-          <circle cx="60" cy="60" r="50" stroke="rgba(0,0,0,.07)" stroke-width="10"/>
-          <circle cx="60" cy="60" r="50" stroke="${ringColor}" stroke-width="10"
-            stroke-dasharray="${C}" stroke-dashoffset="${dash}"
-            stroke-linecap="round" transform="rotate(-90 60 60)"
-            style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"/>
-        </svg>
-        <div class="fc-day-center">
-          <div class="fc-day-amount" style="color:${isOver?'var(--r)':ringColor}">${isOver?'-':''}€${Math.abs(allowance)}</div>
-          <div class="fc-day-lbl">per dag</div>
+  <div style="width:100%">
+    <!-- Drie gelijke kolommen: info — cirkel — tempo -->
+    <div style="display:flex;align-items:center">
+
+      <!-- Links: vrij + dag (subtiel, rechts uitgelijnd naar cirkel) -->
+      <div style="flex:1;text-align:right;padding-right:14px">
+        <div style="font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">resterend</div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:${remaining<0?'var(--r)':'var(--n2)'};letter-spacing:-.5px">${fmt(Math.abs(Math.round(remaining)))}</div>
+        <div style="font-size:9px;color:var(--n4);margin-top:4px">dag ${pace.dayOfMonth} / ${pace.daysInMonth}</div>
+      </div>
+
+      <!-- Midden: cirkel — exact gecentreerd -->
+      <div style="flex-shrink:0;display:flex;justify-content:center">
+        <div class="fc-day-ring">
+          <svg viewBox="0 0 120 120" fill="none">
+            <circle cx="60" cy="60" r="50" stroke="rgba(0,0,0,.07)" stroke-width="10"/>
+            <circle cx="60" cy="60" r="50" stroke="${ringColor}" stroke-width="10"
+              stroke-dasharray="${C}" stroke-dashoffset="${dash}"
+              stroke-linecap="round" transform="rotate(-90 60 60)"
+              style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"/>
+          </svg>
+          <div class="fc-day-center">
+            <div class="fc-day-amount" style="color:${isOver?'var(--r)':ringColor}">${isOver?'-':''}€${Math.abs(allowance)}</div>
+            <div class="fc-day-lbl">per dag</div>
+          </div>
         </div>
       </div>
+
+      <!-- Rechts: tempo-indicator (links uitgelijnd vanuit cirkel) -->
+      ${tempoHTML}
     </div>
-    <!-- Rechts: tempo-indicator -->
-    ${tempoHTML}
+
+    <!-- Breakeven badge: gecentreerd onder de cirkel -->
+    ${breakevenHTML?`<div style="display:flex;justify-content:center;margin-top:10px">${breakevenHTML}</div>`:''}
   </div>`;
 }
 
