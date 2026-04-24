@@ -3641,32 +3641,25 @@ function renderMonthBand(){
 
   sec.innerHTML=`
   <div class="an-section-lbl">Verwacht uitgegeven</div>
-  <!-- Prognose-getal rechts, diff subtiel ernaast -->
-  <div style="display:flex;align-items:baseline;justify-content:flex-end;gap:8px;margin-bottom:10px">
-    <div style="font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-1.2px;color:${sem}">${fmt(fc.point)}</div>
-    ${diffStr?`<div style="font-size:10px;font-weight:600;color:${sem};opacity:.75">${diffStr}</div>`:''}
+
+  <!-- Prognose-bedrag klein, boven de bar, rechts uitgelijnd -->
+  <div style="position:relative;height:16px;margin-bottom:2px">
+    ${pointW!==null?`<span style="position:absolute;right:0;font-family:var(--mono);font-size:9px;font-weight:700;color:${sem}">${fmt(fc.point)}${diffStr?` · ${diffStr}`:''}</span>`:''}
   </div>
 
-  <!-- Budget-label boven de tick -->
-  ${budgetLabelLeft!==null?`<div style="position:relative;height:13px;margin-bottom:2px">
-    <span style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);font-size:8px;font-weight:700;color:rgba(0,0,0,.30);white-space:nowrap">budget</span>
-  </div>`:''}
-
-  <!-- Bar: breder, consistente stijl als dashboard -->
+  <!-- Bar -->
   <div style="position:relative;height:30px;background:rgba(0,0,0,.05);border-radius:8px;overflow:hidden;margin-bottom:6px">
-    <!-- Onzekerheidsband -->
     <div style="position:absolute;inset:0;left:${lowW}%;right:${100-highW}%;background:rgba(${semRgb},.14);border-radius:4px"></div>
-    <!-- Uitgegeven segment -->
     <div style="position:absolute;top:0;bottom:0;left:0;width:${spentW}%;background:rgba(0,0,0,.18);border-radius:8px 0 0 8px"></div>
-    <!-- Prognose-lijn -->
     <div style="position:absolute;top:3px;bottom:3px;left:${pointW}%;width:3px;background:${sem};border-radius:2px;transform:translateX(-50%);box-shadow:0 0 7px rgba(${semRgb},.45)"></div>
-    <!-- Budget-tick -->
     ${budgetW!==null?`<div style="position:absolute;top:0;bottom:0;left:${budgetW}%;width:2px;background:rgba(0,0,0,.22);transform:translateX(-50%)"></div>`:''}
   </div>
 
-  <!-- Min / max labels -->
-  <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:600;color:var(--n3)">
-    <span>min ${fmt(fc.low)}</span><span>max ${fmt(fc.high)}</span>
+  <!-- Legende onder de bar: min — budget (op positie) — max -->
+  <div style="position:relative;height:16px;font-size:9px;font-weight:600;color:var(--n3)">
+    <span style="position:absolute;left:0">min ${fmt(fc.low)}</span>
+    ${budgetLabelLeft!==null?`<span style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%)">budget</span>`:''}
+    <span style="position:absolute;right:0">max ${fmt(fc.high)}</span>
   </div>
   ${fc.hasHistory?`<div class="fc-conf-note" style="margin-top:6px">Historisch gem. ${fmt(Math.round(fc.histMean))} · σ ${fmt(Math.round(fc.histStd||0))}</div>`:'<div class="fc-conf-note" style="margin-top:6px">Te weinig data voor betrouwbare prognose.</div>'}
   `;
