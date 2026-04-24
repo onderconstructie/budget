@@ -601,8 +601,6 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ov-cat-delta.up{color:var(--r)}.ov-cat-delta.down{color:var(--g)}
 /* JAAR */
 #an-jaar{overflow:hidden}
-#an-jaar{overflow:hidden}
-#an-jaar-body{flex:1;overflow-y:auto;min-height:0}
 .yr-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .yr-nav-label{font-size:18px;font-weight:700;letter-spacing:-.5px}
 .yr-stats{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden;margin-bottom:0}.yr-stat:nth-child(1),.yr-stat:nth-child(2){border-bottom:1px solid var(--l0)}.yr-stat:nth-child(1),.yr-stat:nth-child(3){border-right:1px solid var(--l0)}
@@ -915,14 +913,15 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 
   <!-- TAB: JAAR -->
   <div class="an-panel" id="an-jaar">
-    <div id="an-jaar-body">
-      <div style="padding:12px 16px 0">
+    <div id="an-jaar-body" style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+      <!-- Signalen: bovenaan -->
+      <div style="flex-shrink:0;padding:12px 16px 0">
         <div id="yr-signals"></div>
       </div>
-      <div style="padding:0 16px 0">
+      <!-- Grafiek + chips: vastzetten vanonder -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 16px calc(96px + var(--safe-b))">
         <div style="position:relative">
           <div class="chart-wrap" style="height:240px"><canvas id="chart-year"></canvas></div>
-          <!-- Nav: zweeft over de grafiek rechtsboven, neemt geen verticale ruimte -->
           <div style="position:absolute;top:0;right:0;z-index:5;padding:4px 0">
             <div class="dh-nav" style="transform:scale(.82);transform-origin:right top;background:rgba(255,255,255,.85);backdrop-filter:blur(4px)">
               <button class="dh-nav-btn" id="an-yr-prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -932,19 +931,23 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
           </div>
         </div>
         <div class="yr-legend" style="justify-content:center;margin-top:6px"></div>
-      </div>
-      <div style="padding:8px 16px calc(96px + var(--safe-b))">
-        <div id="yr-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px"></div>
+        <div id="yr-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:10px"></div>
       </div>
     </div>
   </div>
 
   <!-- TAB: TRENDS -->
   <div class="an-panel active" id="an-trends">
-    <div id="an-trends-body" style="overflow-y:auto;padding:12px 16px calc(96px + var(--safe-b))">
-      <div class="signal-cards" id="a-insights"></div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-evo"></canvas></div>
-      <div id="evo-cat-chips" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:12px"></div>
+    <div id="an-trends-body" style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+      <!-- Signalen: bovenaan, scrollbaar indien nodig -->
+      <div style="flex-shrink:0;padding:12px 16px 0">
+        <div class="signal-cards" id="a-insights"></div>
+      </div>
+      <!-- Grafiek + chips: vastzetten vanonder -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 16px calc(96px + var(--safe-b))">
+        <div class="chart-wrap" style="height:240px"><canvas id="chart-evo"></canvas></div>
+        <div id="evo-cat-chips" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:12px"></div>
+      </div>
     </div>
   </div>
 
