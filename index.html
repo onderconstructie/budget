@@ -955,7 +955,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
       <div id="fc-day-hero" class="fc-day-hero"></div>
       <div id="fc-band-section" class="fc-band-section"></div>
       <div id="fc-stats-section" class="fc-stats-section"></div>
-      <div id="fc-cats-section" style="display:none"></div>
+      
     </div>
   </div>
 
@@ -3461,7 +3461,7 @@ function updateForecast(){
   renderFcSignals();
   renderDayHero();
   renderMonthBand();
-  renderCatForecasts();
+  
   renderStatsSection();
 }
 
@@ -3569,7 +3569,7 @@ function renderDayHero(){
     const label=isSlower?'trager':'sneller';
     const absPct=Math.abs(tempoPct);
     tempoHTML=`
-    <div style="flex:1;text-align:left;padding-left:22px">
+    <div style="flex:1;text-align:left;padding-left:20px">
       <div style="font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">tempo</div>
       <div style="font-size:28px;line-height:1;color:${tempoColor};font-weight:300">${arrow}</div>
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${tempoColor};margin-top:2px">${absPct<10?'±0%':absPct+'%'}</div>
@@ -3585,7 +3585,7 @@ function renderDayHero(){
     <div style="display:flex;align-items:center">
 
       <!-- Links: vrij + dag (subtiel, links uitgelijnd) -->
-      <div style="flex:1;text-align:left;padding-right:22px">
+      <div style="flex:1;text-align:left;padding-right:16px">
         <div style="font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">resterend</div>
         <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:${remaining<0?'var(--r)':'var(--n2)'};letter-spacing:-.5px">${fmt(Math.abs(Math.round(remaining)))}</div>
         <div style="font-size:9px;color:var(--n4);margin-top:4px">dag ${pace.dayOfMonth} / ${pace.daysInMonth}</div>
