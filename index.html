@@ -316,12 +316,12 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 /* ─────────────────────────────────────────────────────────
    MODALS
 ───────────────────────────────────────────────────────── */
-.modal-bg{position:fixed;inset:0;background:rgba(17,24,39,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;visibility:hidden;transition:all .22s;z-index:200}
+.modal-bg{position:fixed;inset:0;background:rgba(17,24,39,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:all .25s;z-index:200}
 .modal-bg.open{opacity:1;visibility:visible}
-.modal{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:420px;min-height:62vh;max-height:92vh;background:var(--s1);border:1px solid var(--l2);border-top:1px solid rgba(0,0,0,.09);border-radius:var(--r16) var(--r16) 0 0;transition:transform .3s cubic-bezier(.32,0,.18,1);display:flex;flex-direction:column;z-index:201}
-.modal-bg.open .modal{transform:translateX(-50%) translateY(0)}
-.modal-handle{width:30px;height:3px;background:linear-gradient(90deg,rgba(233,30,140,.3),rgba(233,30,140,.6),rgba(233,30,140,.3));border-radius:2px;margin:9px auto 0}
-.modal-head{padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--l0)}
+.modal{position:fixed;inset:0;transform:translateY(100%);width:100%;background:var(--s0);border:none;border-radius:0;transition:transform .32s cubic-bezier(.32,0,.18,1);display:flex;flex-direction:column;z-index:201;overflow:hidden}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-handle{display:none}
+.modal-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--l0);background:var(--s0);flex-shrink:0}
 .modal-title{font-size:14px;font-weight:700;letter-spacing:-.2px}
 .modal-close{width:32px;height:32px;background:var(--s2);border:1px solid var(--l1);border-radius:var(--r4);color:var(--n2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .modal-close svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.5}
