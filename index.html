@@ -3591,7 +3591,7 @@ function renderDayHero(){
       </div>
 
       <!-- Midden: cirkel, flex-shrink:0 zodat hij nooit samengeperst wordt -->
-      <div style="flex-shrink:0">
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px">
         <div class="fc-day-ring">
           <svg viewBox="0 0 120 120" fill="none">
             <circle cx="60" cy="60" r="50" stroke="rgba(0,0,0,.07)" stroke-width="10"/>
@@ -3605,6 +3605,7 @@ function renderDayHero(){
             <div class="fc-day-lbl">per dag</div>
           </div>
         </div>
+        <div style="font-size:9px;color:var(--n3);font-weight:600">${daysLeft} dag${daysLeft!==1?'en':''} over</div>
       </div>
 
       <!-- Rechts: tekst weg van de cirkel (links uitgelijnd) -->
@@ -3642,9 +3643,9 @@ function renderMonthBand(){
   sec.innerHTML=`
   <div class="an-section-lbl">Verwacht uitgegeven</div>
 
-  <!-- Prognose-bedrag klein, boven de bar, rechts uitgelijnd -->
-  <div style="position:relative;height:16px;margin-bottom:2px">
-    ${pointW!==null?`<span style="position:absolute;right:0;font-family:var(--mono);font-size:9px;font-weight:700;color:${sem}">${fmt(fc.point)}${diffStr?` · ${diffStr}`:''}</span>`:''}
+  <!-- Prognose-bedrag groot, op positie van de prognose-lijn -->
+  <div style="position:relative;height:24px;margin-bottom:2px">
+    <span style="position:absolute;left:${Math.min(pointW,82)}%;transform:translateX(-50%);font-family:var(--mono);font-size:15px;font-weight:700;color:${sem};white-space:nowrap">${fmt(fc.point)}</span>
   </div>
 
   <!-- Bar -->
@@ -3655,11 +3656,11 @@ function renderMonthBand(){
     ${budgetW!==null?`<div style="position:absolute;top:0;bottom:0;left:${budgetW}%;width:2px;background:rgba(0,0,0,.22);transform:translateX(-50%)"></div>`:''}
   </div>
 
-  <!-- Legende onder de bar: min — budget (op positie) — max -->
-  <div style="position:relative;height:16px;font-size:9px;font-weight:600;color:var(--n3)">
-    <span style="position:absolute;left:0">min ${fmt(fc.low)}</span>
-    ${budgetLabelLeft!==null?`<span style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%)">budget</span>`:''}
-    <span style="position:absolute;right:0">max ${fmt(fc.high)}</span>
+  <!-- Legende: min — budget met waarde — max -->
+  <div style="position:relative;height:14px;font-size:8.5px;font-weight:600;color:var(--n3)">
+    <span style="position:absolute;left:0">${fmt(fc.low)}</span>
+    ${budgetLabelLeft!==null?`<span style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);white-space:nowrap">${fmt(budget)} budget</span>`:''}
+    <span style="position:absolute;right:0">${fmt(fc.high)}</span>
   </div>
   ${fc.hasHistory?`<div class="fc-conf-note" style="margin-top:6px">Historisch gem. ${fmt(Math.round(fc.histMean))} · σ ${fmt(Math.round(fc.histStd||0))}</div>`:'<div class="fc-conf-note" style="margin-top:6px">Te weinig data voor betrouwbare prognose.</div>'}
   `;
