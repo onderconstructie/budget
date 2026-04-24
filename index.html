@@ -601,7 +601,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ov-cat-delta.up{color:var(--r)}.ov-cat-delta.down{color:var(--g)}
 /* JAAR */
 #an-jaar{overflow:hidden}
-#an-jaar-body{flex:1;overflow-y:auto;min-height:0;padding-bottom:calc(96px + var(--safe-b))}
+#an-jaar-body{flex:1;overflow-y:auto;min-height:0}
+#yr-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
 .yr-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .yr-nav-label{font-size:18px;font-weight:700;letter-spacing:-.5px}
 .yr-stats{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden;margin-bottom:0}.yr-stat:nth-child(1),.yr-stat:nth-child(2){border-bottom:1px solid var(--l0)}.yr-stat:nth-child(1),.yr-stat:nth-child(3){border-right:1px solid var(--l0)}
@@ -650,6 +651,11 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .evo-chip-name{font-size:9.5px;font-weight:600;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;transition:color .15s}
 .evo-chip.active{border-width:1.5px}
 .evo-chip.dimmed{opacity:.25;border-color:var(--l0)}
+/* Jaar-tab: horizontale pill-stijl, signaleert multi-select */
+.yr-chip{flex-direction:row!important;padding:7px 10px!important;gap:7px!important;border-radius:100px!important;justify-content:flex-start}
+.yr-chip .evo-chip-icon{width:24px;height:24px;border-radius:50%;flex-shrink:0}
+.yr-chip .evo-chip-icon svg{width:11px;height:11px}
+.yr-chip .evo-chip-name{text-align:left;font-size:10px}
 #an-trends .chart-wrap{min-height:130px;margin-top:4px}
 /* PROGNOSE */
 #an-prognose{padding:0 0 calc(96px + var(--safe-b));overflow-y:auto}
@@ -906,13 +912,11 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   </div>
 
   <!-- TAB: JAAR -->
-  <div class="an-panel" id="an-jaar">
-    <div id="an-jaar-body">
-      <!-- Signalen -->
+  <div class="an-panel" id="an-jaar" style="display:flex;flex-direction:column;overflow:hidden">
+    <div id="an-jaar-body" style="flex:1;overflow-y:auto;min-height:0;padding-bottom:8px">
       <div style="padding:12px 16px 0">
         <div id="yr-signals"></div>
       </div>
-      <!-- Grafiek + nav in één blok -->
       <div style="padding:10px 16px 0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div class="an-section-lbl" style="padding:0;margin:0">Maandelijkse uitgaven</div>
@@ -922,24 +926,22 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
             <button class="dh-nav-btn" id="an-yr-next"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
           </div>
         </div>
-        <div class="chart-wrap" style="height:220px;margin-bottom:8px"><canvas id="chart-year"></canvas></div>
-        <!-- Legende: dynamisch gevuld door JS -->
-        <div class="yr-legend" style="justify-content:center;margin-bottom:10px"></div>
-      </div>
-      <!-- Categorie chips -->
-      <div style="padding:0 16px 10px">
-        <div id="yr-cats"></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chart-year"></canvas></div>
+        <div class="yr-legend" style="justify-content:center;margin-top:6px"></div>
       </div>
     </div>
+    <!-- Chips: vast onderaan, buiten scroll -->
+    <div id="yr-cats" style="flex-shrink:0;padding:8px 16px calc(96px + var(--safe-b));border-top:1px solid var(--l0)"></div>
   </div>
 
   <!-- TAB: TRENDS -->
-  <div class="an-panel active" id="an-trends">
-    <div id="an-trends-body" style="overflow-y:auto;padding:12px 16px calc(96px + var(--safe-b))">
+  <div class="an-panel active" id="an-trends" style="display:flex;flex-direction:column;overflow:hidden">
+    <div id="an-trends-body" style="flex:1;overflow-y:auto;min-height:0;padding:12px 16px 8px">
       <div class="signal-cards" id="a-insights"></div>
-      <div class="chart-wrap" style="height:240px;margin-top:0"><canvas id="chart-evo"></canvas></div>
-      <div id="evo-cat-chips" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:12px"></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-evo"></canvas></div>
     </div>
+    <!-- Chips: vast onderaan, buiten scroll -->
+    <div id="evo-cat-chips" style="flex-shrink:0;padding:8px 16px calc(96px + var(--safe-b));border-top:1px solid var(--l0);display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px"></div>
   </div>
 
   <!-- TAB: PROGNOSE -->
@@ -3400,48 +3402,26 @@ function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worst
 
 function updateYearCats(y){
   const el=$('yr-cats');if(!el)return;
-  const cats=S.categories.filter(c=>c.type==='monthly');
+  const cats=S.categories.filter(c=>c.type==='monthly'); // zelfde volgorde als trends-tab
   if(!cats.length){el.innerHTML='';return;}
-
   const now=new Date();
   const curMonthIdx=y===now.getFullYear()?now.getMonth():-1;
   const completedMths=curMonthIdx>=0?curMonthIdx:12;
-
-  const rows=cats.map(cat=>{
+  el.innerHTML=cats.map(cat=>{
     let ytd=0;
-    for(let i=0;i<12;i++){
-      if(i===curMonthIdx)continue;
-      ytd+=getCatSpent(cat.id,y+'-'+String(i+1).padStart(2,'0'));
-    }
-    return{cat,ytd};
-  }).filter(r=>r.ytd>0||r.cat.budget>0).sort((a,b)=>b.ytd-a.ytd);
-
-  if(!rows.length){el.innerHTML='';return;}
-
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:12px">
-  ${rows.map(({cat,ytd})=>{
+    for(let i=0;i<12;i++){if(i===curMonthIdx)continue;ytd+=getCatSpent(cat.id,y+'-'+String(i+1).padStart(2,'0'));}
     const clr=col(cat.color);
     const isActive=yrActiveCats.has(cat.id);
     const isDimmed=!!(yrActiveCats.size>0&&!isActive);
-    const partialBudget=cat.budget>0?cat.budget*completedMths:0;
-    const isOver=partialBudget>0&&ytd>partialBudget;
-    const isWarn=partialBudget>0&&!isOver&&ytd>partialBudget*0.85;
-    const chipClass='evo-chip yr-chip'+(isActive?' active':isDimmed?' dimmed':'');
-    // Active state via inline style, status via border-color (like _syncEvoChips)
-    const bg=isActive?clr.bg:'var(--s1)';
-    const bc=isActive?clr.c:'var(--l1)';
-    const iconBg=isActive?clr.c:clr.bg;
-    const iconColor=isActive?'#fff':clr.c;
-    const nameColor=isActive?clr.c:'var(--n2)';
+    const chipClass='evo-chip yr-chip'+(isActive?' active':'')+(isDimmed?' dimmed':'');
     return `<button class="${chipClass}" data-yrcid="${cat.id}" onclick="setYrCat('${cat.id}')"
-      style="background:${bg};border-color:${bc}">
-      <div class="evo-chip-icon" style="background:${iconBg};color:${iconColor}">
+      style="background:${isActive?clr.bg:'var(--s1)'};border-color:${isActive?clr.c:'var(--l1)'}">
+      <div class="evo-chip-icon" style="background:${isActive?clr.c:clr.bg};color:${isActive?'#fff':clr.c}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
       </div>
-      <span class="evo-chip-name" style="color:${nameColor}">${esc(cat.name)}</span>
+      <span class="evo-chip-name" style="color:${isActive?clr.c:'var(--n2)'}">${esc(cat.name)}</span>
     </button>`;
-  }).join('')}
-  </div>`;
+  }).join('');
 }
 
 // Klikbaar principe jaarchart: highlight maand in grafiek (zelfde als setEvoCat voor trends)
@@ -3654,10 +3634,9 @@ function renderMonthBand(){
   const diffStr=budget>0?(isOver?`+${fmt(diffAmt)} over`:`${fmt(diffAmt)} onder`):null;
 
   sec.innerHTML=`
-  <div style="text-align:right;margin-bottom:10px">
-    <div style="font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">Verwacht einde maand</div>
+  <div style="text-align:right;margin-bottom:8px">
     <div style="font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-1.2px;line-height:1;color:${sem}">${fmt(fc.point)}</div>
-    ${diffStr?`<div style="font-size:10px;font-weight:700;color:${sem};margin-top:3px">${diffStr} budget</div>`:''}
+    <div style="font-size:8.5px;font-weight:600;color:var(--n3);margin-top:3px">${diffStr||'verwacht einde maand'}</div>
   </div>
 
   ${budgetLabelLeft!==null?`<div style="position:relative;height:11px;margin-bottom:1px"><div style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);font-size:7.5px;font-weight:700;color:rgba(0,0,0,.28);white-space:nowrap">budget ▾</div></div>`:''}
@@ -3947,13 +3926,14 @@ function openMetricDetail(type){
   const m=mkd();
   const titles={inkomen:'Inkomen',uitgegeven:'Uitgegeven',vast:'Vaste kosten',gespaard:'Buffer',health:'Maandscore'};
   title.textContent=titles[type]||'Details';
+  if(type==='uitgegeven')_uitgegevenMonth=null; // reset to current month
   body.innerHTML=buildDetailContent(type,m);
   bg.classList.add('open');
 }
 
 function buildDetailContent(type,m){
   if(type==='inkomen')   return buildInkomenDetail(m);
-  if(type==='uitgegeven')return buildUitgegevenDetail(m);
+  if(type==='uitgegeven')return buildUitgegevenDetail(_uitgegevenMk());
   if(type==='vast')      return buildVastDetail();
   if(type==='gespaard')  return buildGespaardDetail(m);
   if(type==='health')    return buildHealthDetail(m);
@@ -4048,10 +4028,29 @@ function buildInkomenDetail(m){
 
 // ── UITGEGEVEN ────────────────────────────────────────
 let _uitgegevenFilter=null;
+let _uitgegevenMonth=null; // null = huidige maand (viewMonth)
+
+function _uitgegevenMk(){return _uitgegevenMonth||mkd();}
+
+function uitgegevenNav(dir){
+  const cur=_uitgegevenMk();
+  const [y,mo]=cur.split('-').map(Number);
+  const d=new Date(y,mo-1+dir,1);
+  const now=new Date();
+  // Niet voorbij huidige maand
+  if(d>now)return;
+  _uitgegevenMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  _uitgegevenFilter=null;
+  const body=$('detail-modal-body');
+  const title=$('detail-modal-title');
+  if(body)body.innerHTML=buildUitgegevenDetail(_uitgegevenMk());
+  if(title)title.textContent='Uitgegeven';
+}
+
 function filterUitgegevenByCat(catId){
   _uitgegevenFilter=(_uitgegevenFilter===catId)?null:catId;
   const body=$('detail-modal-body');
-  if(body)body.innerHTML=buildUitgegevenDetail(mkd());
+  if(body)body.innerHTML=buildUitgegevenDetail(_uitgegevenMk());
 }
 
 function buildUitgegevenDetail(m){
@@ -4211,7 +4210,23 @@ function buildUitgegevenDetail(m){
     </div>`;
   }
 
+  const navMk=_uitgegevenMk();
+  const [navY,navMo]=navMk.split('-').map(Number);
+  const navDate=new Date(navY,navMo-1,1);
+  const now2=new Date();
+  const isCurrentMo=navY===now2.getFullYear()&&navMo-1===now2.getMonth();
+  const navLabel=MONTHS[navMo-1]+' '+navY;
+
   return`
+  <!-- MAAND NAV -->
+  <div style="display:flex;align-items:center;justify-content:center;padding:10px 16px 0">
+    <div class="dh-nav">
+      <button class="dh-nav-btn" onclick="uitgegevenNav(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <span class="dh-nav-label">${navLabel}</span>
+      <button class="dh-nav-btn" onclick="uitgegevenNav(1)" ${isCurrentMo?'disabled':''}><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+
   <!-- HERO -->
   <div class="dm-section">
     <div class="dm-hero">
