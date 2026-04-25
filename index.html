@@ -3084,19 +3084,24 @@ function _applyEvoCat(){
       const avgPadded=avgLabel.padStart(maxLen,'\u2007');  // figure space = monospace breedte
       const budPadded=budLabel.padStart(maxLen,'\u2007');
 
+      // Hoogste waarde krijgt label boven, laagste onder — nooit overlap
+      const avgAbove=selCat.budget>0?(avg>=selCat.budget):true;
+      const avgAlign=avgAbove?'top':'bottom';
+      const budAlign=avgAbove?'bottom':'top';
+
       if(avg>0){
         charts.evo.data.datasets.push({
           label:'⌀ gem.',
           data:Array(12).fill(avg),
           borderColor:`rgba(${rv},${gv},${bv},0.50)`,
-          borderDash:[4,3],borderWidth:1.5,
+          borderDash:[],borderWidth:2,
           fill:false,pointRadius:0,pointHoverRadius:0,
           tension:0,spanGaps:true,order:0,
           datalabels:{
             display:(ctx)=>ctx.dataIndex===11,
             formatter:()=>avgPadded,
             color:`rgba(${rv},${gv},${bv},0.85)`,
-            anchor:'end',align:'top',offset:2,
+            anchor:'end',align:avgAlign,offset:2,
             font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
             clip:false
           }
@@ -3114,7 +3119,7 @@ function _applyEvoCat(){
             display:(ctx)=>ctx.dataIndex===11,
             formatter:()=>budPadded,
             color:'rgba(0,0,0,.40)',
-            anchor:'end',align:'bottom',offset:2,
+            anchor:'end',align:budAlign,offset:2,
             font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
             clip:false
           }
