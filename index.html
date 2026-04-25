@@ -2872,12 +2872,18 @@ function updateYearChart(y){
     });
   }
 
-  // Labels rechts op de referentielijnen
+  // Labels rechts op de referentielijnen — hogere waarde boven, lagere onder
   const avgLabel=avg>0&&completedVals.length>=2?('\u2300 '+fmt(avg)):'';
   const budLabel=hasBudget&&hasData?fmt(budget):'';
   const maxLblLen=Math.max(avgLabel.length,budLabel.length);
   const avgPadded=avgLabel?avgLabel.padStart(maxLblLen,'\u2007'):'';
   const budPadded=budLabel?budLabel.padStart(maxLblLen,'\u2007'):'';
+
+  // Welke lijn ligt hoger? Hoogste → align top, laagste → align bottom
+  const bothPresent=avgLabel&&budLabel;
+  const avgAbove=bothPresent?(avg>=budget):true;
+  const avgAlign=avgAbove?'top':'bottom';
+  const budAlign=avgAbove?'bottom':'top';
 
   if(hasBudget&&hasData){
     datasets.push({label:'Budget',data:Array(12).fill(budget),type:'line',
@@ -2887,7 +2893,7 @@ function updateYearChart(y){
         display:(ctx)=>ctx.dataIndex===11,
         formatter:()=>budPadded,
         color:'rgba(0,0,0,.38)',
-        anchor:'end',align:'right',offset:6,
+        anchor:'end',align:budAlign,offset:2,
         font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
         clip:false
       }
@@ -2901,7 +2907,7 @@ function updateYearChart(y){
         display:(ctx)=>ctx.dataIndex===11,
         formatter:()=>avgPadded,
         color:'rgba(233,30,140,0.80)',
-        anchor:'end',align:'right',offset:6,
+        anchor:'end',align:avgAlign,offset:2,
         font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
         clip:false
       }
