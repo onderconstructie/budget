@@ -3353,12 +3353,13 @@ function updateEvoBreakdown(){
   const sec=$('evo-breakdown');
   if(!sec)return;
 
-  if(!evoActiveCat){sec.style.display='none';if(charts.breakdown){charts.breakdown.destroy();charts.breakdown=null;}return;}
+  const hide=()=>{sec.style.display='none';if(charts.breakdown){charts.breakdown.destroy();charts.breakdown=null;}};
 
+  if(!evoActiveCat){hide();return;}
   const cat=S.categories.find(c=>c.id===evoActiveCat);
-  if(!cat){sec.style.display='none';return;}
+  if(!cat){hide();return;}
 
-  // Verzamel alle transacties voor deze categorie, groepeer per maand × detail
+  // Laatste 12 maanden
   const now=new Date();
   const months=[];
   for(let i=11;i>=0;i--){
@@ -3366,97 +3367,104 @@ function updateEvoBreakdown(){
     months.push({mk:mkd(d),label:MONTHS_S[d.getMonth()]});
   }
 
-  // Alle unieke details (winkels/doelen), geaggregeerd over alle maanden
-  const allTotals={};
-  months.forEach(({mk})=>{
-    getCatTransactions(cat.id,mk).forEach(tx=>{
-      const key=(tx.detail||'—').trim().toLowerCase();
-      const label=(tx.detail||'—').trim();
-      if(!allTotals[key])allTotals[key]={label,total:0};
-      allTotals[key].total+=tx.amount;
-    });
-  });
+  // Precompute: alle transacties per maand, éénmalig opgehaald
+  const txsByMonth=months.map(({mk})=>getCatTransactions(cat.id,mk));
 
-  // Top 5 + Andere
+  // Aggregeer per detail-label
+  const allTotals={};
+  txsByMonth.forEach(txs=>txs.forEach(tx=>{
+    const key=(tx.detail||'—').trim().toLowerCase();
+    const label=(tx.detail||'—').trim();
+    if(!allTotals[key])allTotals[key]={label,total:0,months:0};
+    allTotals[key].total+=tx.amount;
+  }));
+
   const sorted=Object.values(allTotals).sort((a,b)=>b.total-a.total);
-  if(!sorted.length){sec.style.display='none';return;}
+  if(!sorted.length){hide();return;}
 
   const TOP=5;
-  const topKeys=sorted.slice(0,TOP).map(r=>r.label.toLowerCase());
-  const storeLabels=sorted.slice(0,TOP).map(r=>r.label);
+  const topItems=sorted.slice(0,TOP);
   const hasOther=sorted.length>TOP;
+  const storeLabels=topItems.map(r=>r.label);
   if(hasOther)storeLabels.push('Andere');
+  const topKeys=new Set(topItems.map(r=>r.label.toLowerCase()));
 
-  // Kleurenpalet voor de winkels (categorieëkleur als basis, variaties)
-  const clr=col(cat.color);
-  const baseHex=clr.c.replace('#','');
-  const br=parseInt(baseHex.slice(0,2),16);
-  const bg=parseInt(baseHex.slice(2,4),16);
-  const bb=parseInt(baseHex.slice(4,6),16);
-  const storeColors=storeLabels.map((_,i)=>{
-    if(i===storeLabels.length-1&&hasOther)return'rgba(0,0,0,.15)';
-    const opacity=0.85-i*0.12;
-    // Shift hue slightly per store for visual distinction
-    const shift=i*30;
-    return `rgba(${Math.min(255,br+shift)},${Math.min(255,bg-shift/2)},${Math.min(255,bb+shift/3)},${opacity.toFixed(2)})`;
+  // Kwalitatief kleurenpalet — visueel duidelijk onderscheidbaar, semantisch neutraal
+  const PALETTE=[
+    'rgba(99,102,241,.80)',   // indigo
+    'rgba(236,72,153,.80)',   // roze
+    'rgba(245,158,11,.80)',   // amber
+    'rgba(16,185,129,.80)',   // groen
+    'rgba(59,130,246,.80)',   // blauw
+  ];
+  const storeColors=storeLabels.map((s,i)=>{
+    if(s==='Andere')return'rgba(0,0,0,.14)';
+    return PALETTE[i%PALETTE.length];
   });
 
-  // Datasets: één per winkel
+  // Datasets: per winkel, data precomputed
   const datasets=storeLabels.map((store,si)=>({
     label:store,
-    data:months.map(({mk})=>{
-      const txs=getCatTransactions(cat.id,mk);
-      if(store==='Andere'){
-        return txs.filter(tx=>!topKeys.includes((tx.detail||'—').trim().toLowerCase())).reduce((s,tx)=>s+tx.amount,0)||null;
-      }
-      return txs.filter(tx=>(tx.detail||'—').trim().toLowerCase()===store.toLowerCase()).reduce((s,tx)=>s+tx.amount,0)||null;
+    data:txsByMonth.map(txs=>{
+      const isOther=store==='Andere';
+      const val=txs.filter(tx=>{
+        const key=(tx.detail||'—').trim().toLowerCase();
+        return isOther?!topKeys.has(key):key===store.toLowerCase();
+      }).reduce((s,tx)=>s+tx.amount,0);
+      return val||null;
     }),
     backgroundColor:storeColors[si],
     borderRadius:3,
     datalabels:{display:false}
   }));
 
-  // Patroon-analyse
-  let insight='';
-  const monthlyTotals=months.map(({mk})=>getCatTransactions(cat.id,mk).reduce((s,tx)=>s+tx.amount,0));
-  const filledMonths=monthlyTotals.filter(v=>v>0).length;
+  // Maanden met data
+  const filledMonths=txsByMonth.filter(txs=>txs.length>0).length;
+  const grandTotal=sorted.reduce((s,r)=>s+r.total,0);
 
-  if(filledMonths>=3&&sorted.length>=1){
+  // Patroon-analyse — prioriteit: dominantie → groei → spread
+  let insight='';
+  if(filledMonths>=3){
     const top=sorted[0];
-    // Dominantie: top winkel als % van totaal
-    const grandTotal=sorted.reduce((s,r)=>s+r.total,0);
     const domPct=Math.round(top.total/grandTotal*100);
+
     if(domPct>=60){
-      insight=`<strong>${esc(top.label)}</strong> is goed voor <strong>${domPct}%</strong> van alle uitgaven in ${esc(cat.name)} — hoge concentratie bij één bestemming.`;
-    } else if(sorted.length>=3){
-      // Groeipatroon: vergelijk eerste 3 vs laatste 3 maanden voor top winkel
-      const early=months.slice(0,3).map(({mk})=>getCatTransactions(cat.id,mk).filter(tx=>(tx.detail||'—').trim()===top.label).reduce((s,tx)=>s+tx.amount,0));
-      const recent=months.slice(-3).map(({mk})=>getCatTransactions(cat.id,mk).filter(tx=>(tx.detail||'—').trim()===top.label).reduce((s,tx)=>s+tx.amount,0));
-      const earlyAvg=early.reduce((s,v)=>s+v,0)/3;
-      const recentAvg=recent.reduce((s,v)=>s+v,0)/3;
-      if(earlyAvg>0&&recentAvg>earlyAvg*1.2){
+      // Dominantie
+      insight=`<strong>${esc(top.label)}</strong> neemt <strong>${domPct}%</strong> voor zijn rekening — je bent hier sterk afhankelijk van één bestemming.`;
+    } else {
+      // Groei top-winkel: vroeg (eerste 3m) vs recent (laatste 3m)
+      const catTotal=(arr)=>arr.filter(tx=>(tx.detail||'—').trim()===top.label).reduce((s,tx)=>s+tx.amount,0);
+      const earlyAvg=(catTotal(txsByMonth[0])+catTotal(txsByMonth[1])+catTotal(txsByMonth[2]))/3;
+      const recentAvg=(catTotal(txsByMonth[9])+catTotal(txsByMonth[10])+catTotal(txsByMonth[11]))/3;
+
+      if(earlyAvg>0&&recentAvg>earlyAvg*1.20){
         const rise=Math.round((recentAvg-earlyAvg)/earlyAvg*100);
-        insight=`<strong>${esc(top.label)}</strong> groeit: +${rise}% de laatste 3 maanden vs 3 maanden geleden.`;
+        insight=`<strong>${esc(top.label)}</strong> neemt toe: +${rise}% de afgelopen 3 maanden vs 3 maanden eerder.`;
+      } else if(earlyAvg>0&&recentAvg<earlyAvg*0.80){
+        const drop=Math.round((earlyAvg-recentAvg)/earlyAvg*100);
+        insight=`<strong>${esc(top.label)}</strong> daalt: −${drop}% de afgelopen 3 maanden. Andere bestemmingen nemen het over.`;
       } else if(sorted.length>=2){
-        insight=`Spread over <strong>${sorted.length}</strong> bestemmingen — ${esc(storeLabels.slice(0,2).join(' en '))} zijn de twee grootste.`;
+        const top2=esc(sorted[0].label)+' en '+esc(sorted[1].label);
+        const share=Math.round((sorted[0].total+sorted[1].total)/grandTotal*100);
+        insight=`Verspreid over <strong>${sorted.length}</strong> bestemmingen. ${top2} samen goed voor <strong>${share}%</strong>.`;
       }
     }
   }
 
+  // Render
   sec.style.display='block';
-  $('evo-breakdown-title').textContent=`${esc(cat.name)} — waar naartoe`;
-  $('evo-breakdown-note').textContent=`Laatste 12 maanden · ${filledMonths} maanden met data`;
-  $('evo-breakdown-insight').innerHTML=insight||'';
-  $('evo-breakdown-insight').style.display=insight?'block':'none';
+  $('evo-breakdown-title').textContent=`${esc(cat.name)} — per bestemming`;
+  $('evo-breakdown-note').textContent=`Laatste 12 maanden · ${filledMonths} maand${filledMonths!==1?'en':''} met invoer`;
+  const insightEl=$('evo-breakdown-insight');
+  insightEl.innerHTML=insight; insightEl.style.display=insight?'block':'none';
 
-  // Legend
+  // Legenda
   $('evo-breakdown-legend').innerHTML=storeLabels.map((s,i)=>
     `<span style="display:flex;align-items:center;gap:4px;font-size:8.5px;color:var(--n2)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${storeColors[i]};flex-shrink:0"></span>${esc(s)}</span>`
   ).join('');
 
-  // Chart
-  const ctx=$('chart-breakdown');
-  if(!ctx)return;
+  // Grafiek
+  const ctx=$('chart-breakdown');if(!ctx)return;
   if(charts.breakdown)charts.breakdown.destroy();
   charts.breakdown=new Chart(ctx,{
     type:'bar',
@@ -3467,12 +3475,15 @@ function updateEvoBreakdown(){
         tooltip:{mode:'index',intersect:false,
           backgroundColor:'rgba(17,24,39,.92)',borderColor:'rgba(255,255,255,.08)',borderWidth:1,
           titleColor:'rgba(255,255,255,.75)',bodyColor:'rgba(255,255,255,.60)',padding:10,cornerRadius:8,
-          callbacks:{label:c=>c.raw?`${c.dataset.label}: ${fmt(Math.round(c.raw))}`:null}
+          filter:item=>!!item.raw,
+          callbacks:{label:c=>`${c.dataset.label}: ${fmt(Math.round(c.raw))}`}
         }
       },
       scales:{
-        x:{stacked:true,grid:{display:false},border:{display:false},ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'}}},
-        y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,.04)'},border:{display:false},ticks:{color:'rgba(0,0,0,.30)',font:{size:8},callback:v=>fmt(v),stepSize:100}}
+        x:{stacked:true,grid:{display:false},border:{display:false},
+          ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'}}},
+        y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,.04)'},border:{display:false},
+          ticks:{color:'rgba(0,0,0,.30)',font:{size:8},callback:v=>fmt(v),stepSize:100}}
       }
     }
   });
