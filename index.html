@@ -2357,7 +2357,7 @@ function calcDailyAllowance(){
   const m=mkd();
   const spent=getMonthSpent(m);
   if(!budget||!pace.isCurrentMonth)return null;
-  const daysLeft=pace.daysInMonth-pace.dayOfMonth;
+  const daysLeft=pace.daysInMonth-pace.dayOfMonth+1;
   const remaining=budget-spent;
   const allowance=daysLeft>0?remaining/daysLeft:remaining;
   const avgDailyBudget=budget/pace.daysInMonth;
@@ -2407,7 +2407,7 @@ function calcPace(){
   const daysInMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,0).getDate();
   const dayOfMonth=isCur?now.getDate():daysInMonth;
   const pctElapsed=dayOfMonth/daysInMonth;
-  const daysLeft=daysInMonth-dayOfMonth;
+  const daysLeft=daysInMonth-dayOfMonth+1;
 return{dayOfMonth,daysInMonth,pctElapsed,isCurrentMonth:isCur,daysLeft};
 }
 
