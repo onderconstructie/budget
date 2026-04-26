@@ -1386,99 +1386,148 @@ function updateDashTip(m,spent,budget){
   const pace=calcPace();
   const cats=S.categories.filter(c=>c.type==='monthly');
   const hist=getMonthHistory(6).filter(h=>h.spent>0);
+  const now=new Date();
+  const weekday=now.getDay(); // 0=zon, 5=vrij, 6=zat
+  const isWeekend=weekday===0||weekday===6;
+  const dayName=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'][weekday];
   let tip='',type='info';
 
   if(!pace.isCurrentMonth){
-    // Historische maand: enkel iets zeggen als het niet-voor-de-hand-liggend is
+    // Historische maand
     const pct=budget>0?spent/budget:0;
-    const allMonths=hist.map(h=>h.spent);
-    const stats=calcStats(allMonths);
+    const stats=calcStats(hist.map(h=>h.spent));
     if(stats.n>=3){
       const z=zScore(spent,stats.mean,stats.std);
       if(pct>1&&z>1.2){
         tip=`Niet alleen over budget, maar ook ${(Math.round(z*10)/10)}σ boven je eigen historisch gemiddelde — statistisch uitzonderlijke maand.`;
         type='danger';
       } else if(pct<0.75&&z<-0.8){
-        tip=`Rustige maand én onder je historisch patroon. Controleer of uitgaven niet vergeten zijn, of geniet ervan.`;
+        tip=`Rustige maand én onder je historisch patroon. Controleer of uitgaven niet vergeten zijn.`;
         type='success';
       } else if(pct>1){
-        // Over budget maar niet statistisch uitzonderlijk — zoek de oorzaak
         const overCat=cats.map(c=>({c,s:getCatSpent(c.id,m)})).filter(r=>r.c.budget>0&&r.s>r.c.budget).sort((a,b)=>(b.s-b.c.budget)-(a.s-a.c.budget))[0];
-        if(overCat){
-          tip=`Budget overschreden, hoofdzakelijk door <strong>${esc(overCat.c.name)}</strong> (+${fmt(Math.round(overCat.s-overCat.c.budget))}).`;
-          type='danger';
-        }
-        // Geen tip als niets specifiek te zeggen — al zichtbaar op scherm
+        if(overCat){tip=`Budget overschreden, hoofdzakelijk door <strong>${esc(overCat.c.name)}</strong> (+${fmt(Math.round(overCat.s-overCat.c.budget))}).`;type='danger';}
       }
-      // Niet zeggen "X% van budget" — staat al op scherm
     }
   } else if(spent===0){
     if(pace.dayOfMonth<=3){
       const fc=getFixedCosts();
-      if(fc>0)tip=`Dag ${pace.dayOfMonth} — je vaste kosten (${fmt(Math.round(fc))}) lopen al. Variabele uitgaven zijn nog niet ingegeven.`;
-      // Geen tip als ook geen vaste kosten
+      if(fc>0){tip=`Dag ${pace.dayOfMonth} — je vaste kosten (${fmt(Math.round(fc))}) lopen al. Variabele uitgaven zijn nog niet ingegeven.`;type='info';}
     }
-    // Na dag 3 zonder invoer: geen bevoogdende melding
-    type='info';
   } else {
-    // Lopende maand — enkel niet-voor-de-hand-liggende inzichten
+    // Lopende maand — tijd-bewuste inzichten
 
-    // A. Structureel te laag budget: categorie die >3 maanden op rij over budget eindigde
-    if(!tip&&hist.length>=3){
-      const structOver=cats.find(c=>{
-        if(!c.budget)return false;
-        const overCount=hist.slice(0,3).filter(h=>getCatSpent(c.id,h.mk)>c.budget).length;
-        return overCount>=3;
+    // 1. Vandaag ingegeven vs gemiddelde dag
+    // Transacties van de meest recente invoerdag (ongeacht tijdstip)
+    const todayKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const allCurTxs=getAllTransactions(todayKey);
+    const lastTs=allCurTxs.length?Math.max(...allCurTxs.map(tx=>tx.ts||0)):0;
+    const lastDate=lastTs?new Date(lastTs):null;
+    const recentCutoff=new Date(now);recentCutoff.setDate(recentCutoff.getDate()-1); // gisteren
+    const todayTxs=lastDate&&lastDate>=recentCutoff
+      ?allCurTxs.filter(tx=>tx.ts&&new Date(tx.ts).toDateString()===lastDate.toDateString())
+      :[];
+    const todaySpent=todayTxs.reduce((s,tx)=>s+tx.amount,0);
+    const dailyAvg=pace.dayOfMonth>1?Math.round(spent/pace.dayOfMonth):0;
+
+    if(!tip&&todaySpent>0&&dailyAvg>0&&todaySpent>dailyAvg*2.2){
+      // Vandaag bijzonder hoge dag
+      const topTx=todayTxs.sort((a,b)=>b.amount-a.amount)[0];
+      tip=`Vandaag al <strong>${fmt(Math.round(todaySpent))}</strong> ingegeven — ${Math.round(todaySpent/dailyAvg)}× je daggemiddelde (${fmt(dailyAvg)}).${topTx?` Grootste post: ${esc(topTx.detail||'—')} (${fmt(topTx.amount)}).`:''}`;
+      type='warn';
+    }
+
+    // 2. Weekend-effect: vergelijk weekend- vs weekdaguitgaven
+    if(!tip&&isWeekend&&hist.length>=2&&pace.pctElapsed>0.15){
+      const wkdTxs=S.transactions.filter(tx=>{
+        if(!tx.ts)return false;
+        const d=new Date(tx.ts);
+        const mo=mkd(d);
+        if(mo!==m)return false;
+        const wd=d.getDay();
+        return wd===0||wd===6;
       });
-      if(structOver){
-        const vals=hist.slice(0,3).map(h=>getCatSpent(structOver.id,h.mk));
-        const avgOver=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
-        tip=`<strong>${esc(structOver.name)}</strong> is 3 maanden op rij over budget (gem. ${fmt(avgOver)} vs ${fmt(structOver.budget)}). Het budget lijkt structureel te laag — overweeg het aan te passen.`;
+      const wkdSpent=wkdTxs.reduce((s,tx)=>s+tx.amount,0);
+      const weekendDays=Math.max(1,[...Array(pace.dayOfMonth)].filter((_,i)=>{
+        const d=new Date(now.getFullYear(),now.getMonth(),i+1);
+        return d.getDay()===0||d.getDay()===6;
+      }).length);
+      const wkdDailyAvg=weekendDays>0?Math.round(wkdSpent/weekendDays):0;
+      if(wkdDailyAvg>dailyAvg*1.4&&dailyAvg>0){
+        tip=`In het weekend geef je gem. ${fmt(wkdDailyAvg)}/dag uit, vs ${fmt(dailyAvg)} op een weekdag. ${dayName.charAt(0).toUpperCase()+dayName.slice(1)} is een risicodag.`;
         type='warn';
       }
     }
 
-    // B. Ratchet-effect: bodem van uitgavenpatroon stijgt
+    // 3. Structureel te laag budget (3 mnd op rij over)
+    if(!tip&&hist.length>=3){
+      const structOver=cats.find(c=>{
+        if(!c.budget)return false;
+        return hist.slice(0,3).filter(h=>getCatSpent(c.id,h.mk)>c.budget).length>=3;
+      });
+      if(structOver){
+        const vals=hist.slice(0,3).map(h=>getCatSpent(structOver.id,h.mk));
+        const avgOver=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+        tip=`<strong>${esc(structOver.name)}</strong>: 3 maanden op rij boven budget (gem. ${fmt(avgOver)} vs ${fmt(structOver.budget)}). Pas het budget aan naar de realiteit.`;
+        type='warn';
+      }
+    }
+
+    // 4. Ratchet-effect: stille kostenstijging
     if(!tip&&hist.length>=4){
       const older=hist.slice(3).map(h=>h.spent);
       const newer=hist.slice(0,3).map(h=>h.spent);
       const minOld=Math.min(...older),minNew=Math.min(...newer);
       if(minNew>minOld*1.15&&minNew>0&&minOld>0){
         const rise=Math.round((minNew-minOld)/minOld*100);
-        tip=`Je goedkoopste maanden kosten nu <strong>${rise}% meer</strong> dan vroeger (${fmt(Math.round(minOld))} → ${fmt(Math.round(minNew))}). Stille uitgavengroei in je basisniveau.`;
+        tip=`Je goedkoopste maanden kosten nu <strong>${rise}% meer</strong> dan vroeger (${fmt(Math.round(minOld))} → ${fmt(Math.round(minNew))}). Stille uitgavengroei.`;
         type='warn';
       }
     }
 
-    // C. Compensatiepatroon na dure maand
+    // 5. Compensatie na dure maand
     if(!tip&&hist.length>=1&&budget>0){
       const prevSpent=hist[0].spent;
       if(prevSpent>budget*1.08&&pace.pctElapsed>0.25){
-        const curPaceProj=pace.dayOfMonth>0?spent/pace.dayOfMonth*pace.daysInMonth:spent;
-        if(curPaceProj<prevSpent*0.88){
-          tip=`Vorige maand ${fmt(Math.round(prevSpent-budget))} over — je tempo is nu merkbaar lager. Goede bijsturing.`;
+        const proj=pace.dayOfMonth>0?Math.round(spent/pace.dayOfMonth*pace.daysInMonth):spent;
+        if(proj<prevSpent*0.88){
+          tip=`Vorige maand ${fmt(Math.round(prevSpent-budget))} over — je tempo ligt nu duidelijk lager. Goede bijsturing.`;
           type='success';
-        } else if(curPaceProj>budget*0.97&&pace.pctElapsed>0.35){
-          tip=`Na een dure vorige maand (+${fmt(Math.round(prevSpent-budget))}) koers je deze maand niet op herstel.`;
+        } else if(proj>budget*0.97&&pace.pctElapsed>0.35){
+          tip=`Na een dure vorige maand (+${fmt(Math.round(prevSpent-budget))}) koers je deze maand niet op herstel. Prognose: ${fmt(proj)}.`;
           type='warn';
         }
       }
     }
 
-    // D. Eigen tempo vs historisch (niet vs budget)
+    // 6. Eigen dagelijks tempo vs historisch op dit punt
     if(!tip&&hist.length>=3&&pace.pctElapsed>0.12){
       const expectedNow=hist.slice(0,3).reduce((s,h)=>s+h.spent,0)/3*pace.pctElapsed;
       const diff=expectedNow>0?Math.round((spent-expectedNow)/expectedNow*100):0;
       if(diff<=-25){
-        tip=`<strong>${Math.abs(diff)}% minder</strong> dan je eigen patroon op dag ${pace.dayOfMonth}. Bewust of vergeten in te geven?`;
+        tip=`<strong>${Math.abs(diff)}% minder</strong> dan je eigen gemiddelde op dag ${pace.dayOfMonth}. ${isWeekend?'Weekend zonder grote uitgaven.':'Stille week.'}`;
         type='success';
       } else if(diff>=35&&pace.daysLeft>5){
-        tip=`Op dag ${pace.dayOfMonth} zit je <strong>${diff}% boven</strong> je eigen historisch gemiddelde voor dit punt.`;
+        const proj=Math.round(spent/pace.pctElapsed);
+        tip=`Op dag ${pace.dayOfMonth} zit je <strong>${diff}% boven</strong> je historisch gemiddelde. Prognose op huidig tempo: ${fmt(proj)}.`;
         type='warn';
       }
     }
 
-    // E. Laatste vangnet — alleen als echt kritisch
+    // 7. Categorie die vandaag/deze week meerdere keren aangeboord werd
+    if(!tip&&todayTxs.length>=2){
+      const catCounts={};
+      todayTxs.forEach(tx=>{catCounts[tx.catId]=(catCounts[tx.catId]||0)+1;});
+      const topCatId=Object.keys(catCounts).sort((a,b)=>catCounts[b]-catCounts[a])[0];
+      const topCat=cats.find(c=>c.id===topCatId);
+      if(topCat&&catCounts[topCatId]>=2){
+        const catSpentToday=todayTxs.filter(tx=>tx.catId===topCatId).reduce((s,tx)=>s+tx.amount,0);
+        tip=`Vandaag al ${catCounts[topCatId]}× ingegeven bij <strong>${esc(topCat.name)}</strong> (${fmt(Math.round(catSpentToday))} vandaag).`;
+        type='info';
+      }
+    }
+
+    // 8. Kritisch budget-restant
     if(!tip&&budget>0&&spent>0){
       const rem=budget-spent;
       if(rem<0){
@@ -1488,7 +1537,7 @@ function updateDashTip(m,spent,budget){
           :`Over het totaalbudget.`;
         type='danger';
       } else if(pace.daysLeft>0&&rem/budget<0.08&&pace.daysLeft>2){
-        tip=`Nog <strong>${fmt(Math.round(rem))}</strong> voor ${pace.daysLeft} dagen — ${fmt(Math.round(rem/pace.daysLeft))}/dag. Kritisch.`;
+        tip=`Nog <strong>${fmt(Math.round(rem))}</strong> voor ${pace.daysLeft} dag${pace.daysLeft!==1?'en':''} — ${fmt(Math.round(rem/pace.daysLeft))}/dag. Kritisch.`;
         type='warning';
       }
     }
