@@ -4727,23 +4727,99 @@ function buildHealthDetail(m){
   const scoreColor=finalScore>=80?'var(--g)':finalScore>=60?'var(--w)':'var(--r)';
   const scoreText=finalScore>=80?'Uitstekend':finalScore>=60?'Goed':finalScore>=40?'Matig':'Actie nodig';
 
-  // Tips
+  // ── SLIMME TIPS op basis van alle beschikbare data ─────────────────────
   const tips=[];
-  if(catOver>0)tips.push('Verlaag je uitgaven in overschreden categorieën.');
-  if(savePct<20){
-    const gap=Math.round(income*0.2-saved);
-    // Zoek grootste variabele categorie als concrete bespaarstip
-    const varCats=S.categories.filter(c=>c.type==='monthly'&&(!c.costType||c.costType==='variable'));
-    const topVar=varCats.map(c=>({c,s:getCatSpent(c.id,m)})).sort((a,b)=>b.s-a.s)[0];
-    if(topVar&&topVar.s>0){
-      const saveAmt=Math.round(topVar.s*0.15);
-      tips.push('Als je 15% minder uitgeeft aan '+topVar.c.name+' (−'+fmt(saveAmt)+'/maand), spaar je '+fmt(saveAmt*12)+' extra per jaar.');
-    } else {
-      tips.push('Probeer '+fmt(gap)+' meer over te houden om de 20%-norm te halen.');
+  const hist=getMonthHistory(6).filter(h=>h.spent>0);
+  const isCur=isCurMonth(m);
+  const pace=isCur?calcPace():null;
+
+  // 1. Specifieke overschrijding met historische context
+  if(catOver>0){
+    const overCats=cats.map(cat=>{
+      const s=getCatSpent(cat.id,m);
+      const histVals=hist.map(h=>getCatSpent(cat.id,h.mk)).filter(v=>v>0);
+      const avg=histVals.length?Math.round(histVals.reduce((a,v)=>a+v,0)/histVals.length):0;
+      return{cat,s,over:Math.round(s-(cat.budget||0)),avg,histVals};
+    }).filter(r=>cat.budget>0&&r.s>cat.budget).sort((a,b)=>b.over-a.over);
+
+    const worst=overCats[0];
+    if(worst){
+      if(worst.avg>0&&worst.s>worst.avg*1.15){
+        const rise=Math.round((worst.s-worst.avg)/worst.avg*100);
+        tips.push(`<strong>${esc(worst.cat.name)}</strong>: ${fmt(worst.over)} over budget én ${rise}% boven je eigen historisch gemiddelde. Niet enkel het budget, ook je patroon wijkt af.`);
+      } else if(worst.avg>0&&worst.cat.budget>0&&worst.avg>worst.cat.budget){
+        tips.push(`<strong>${esc(worst.cat.name)}</strong> overschrijdt al meerdere maanden het budget (historisch gem. ${fmt(worst.avg)} vs budget ${fmt(worst.cat.budget)}). Overweeg het budget aan te passen naar de realiteit.`);
+      } else {
+        // Zoek welke winkel de overschrijding veroorzaakte
+        const txs=getCatTransactions(worst.cat.id,m);
+        const topTx=txs.sort((a,b)=>b.amount-a.amount)[0];
+        if(topTx&&topTx.amount>worst.cat.budget*0.3){
+          tips.push(`<strong>${esc(worst.cat.name)}</strong>: de uitgave aan <strong>${esc(topTx.detail||'—')}</strong> (${fmt(topTx.amount)}) neemt ${Math.round(topTx.amount/worst.s*100)}% van deze categorie in.`);
+        } else {
+          tips.push(`<strong>${esc(worst.cat.name)}</strong> overschreden met ${fmt(worst.over)}. ${overCats.length>1?`${overCats.length-1} andere categorie${overCats.length>2?'ën':''} ook over.`:''}`);
+        }
+      }
     }
   }
-  if(budget>0&&spent>budget*0.95)tips.push('Je zit dicht bij je maandbudget. Let op de rest van de maand.');
-  if(!tips.length)tips.push('Blijf zo doorgaan! Je hebt alles goed onder controle.');
+
+  // 2. Spaartekort met concrete actie op basis van grootste variabele post
+  if(savePct<(S.savingsTarget||20)){
+    const target=S.savingsTarget||20;
+    const gap=Math.round(income*target/100-saved);
+    const varCats=cats.filter(c=>!c.costType||c.costType==='variable');
+    const topVar=varCats.map(c=>({c,s:getCatSpent(c.id,m),histVals:hist.map(h=>getCatSpent(c.id,h.mk)).filter(v=>v>0)}))
+      .filter(r=>r.s>0).sort((a,b)=>b.s-a.s)[0];
+    if(topVar){
+      const histAvg=topVar.histVals.length?Math.round(topVar.histVals.reduce((a,v)=>a+v,0)/topVar.histVals.length):0;
+      if(histAvg>0&&topVar.s>histAvg*1.1){
+        const overAvg=Math.round(topVar.s-histAvg);
+        tips.push(`Je spaart ${Math.round(savePct)}% — doel is ${target}%. <strong>${esc(topVar.c.name)}</strong> ligt ${fmt(overAvg)} boven je gemiddelde. Terugkeren naar normaal = ${fmt(overAvg*12)} extra spaargeld per jaar.`);
+      } else {
+        const save15=Math.round(topVar.s*0.15);
+        if(save15>=gap){
+          tips.push(`Je spaart ${Math.round(savePct)}% — doel is ${target}%. 15% minder bij <strong>${esc(topVar.c.name)}</strong> (−${fmt(save15)}) dekt het volledige tekort van ${fmt(gap)}.`);
+        } else {
+          tips.push(`Je spaart ${Math.round(savePct)}% — ${fmt(gap)} tekort op het ${target}%-doel. Verdeeld over je top-2 variabele posten is dat een aanpassing van ${fmt(Math.round(gap/2))} elk.`);
+        }
+      }
+    }
+  }
+
+  // 3. Patroon-inzicht op basis van transactiedata
+  if(tips.length<2&&hist.length>=3){
+    // Zoek categorie met hoogste cv (meest onregelmatig)
+    const volatiel=cats.map(cat=>{
+      const vals=hist.map(h=>getCatSpent(cat.id,h.mk));
+      const st=calcStats(vals);
+      return{cat,cv:st.cv,mean:st.mean};
+    }).filter(r=>r.cv>0.35&&r.mean>20).sort((a,b)=>b.cv-a.cv)[0];
+    if(volatiel){
+      tips.push(`<strong>${esc(volatiel.cat.name)}</strong> varieert sterk van maand tot maand (CV ${Math.round(volatiel.cv*100)}%). Moeilijk te budgetteren — overweeg een bufferbudget van ${fmt(Math.round(volatiel.mean*1.3))}/mnd.`);
+    }
+  }
+
+  // 4. Lopende maand: dagritme-inzicht
+  if(tips.length<2&&isCur&&pace&&pace.pctElapsed>0.15&&hist.length>=2){
+    const expectedNow=hist.slice(0,3).reduce((s,h)=>s+h.spent,0)/Math.min(3,hist.length)*pace.pctElapsed;
+    const diff=expectedNow>0?Math.round((spent/expectedNow-1)*100):0;
+    if(diff<=-20&&spent>0){
+      const vrij=budget>0?Math.round(budget-spent):0;
+      tips.push(`Je loopt ${Math.abs(diff)}% achter op je eigen gemiddeld tempo. ${vrij>0?`Nog ${fmt(vrij)} vrij — goed moment om een geplande uitgave te doen of extra te sparen.`:''}`);
+    }
+  }
+
+  // 5. Positief inzicht: wat gaat goed?
+  if(tips.length<2){
+    const underBudget=cats.filter(cat=>cat.budget>0&&getCatSpent(cat.id,m)>0&&getCatSpent(cat.id,m)<cat.budget*0.7);
+    if(underBudget.length>=2&&hist.length>=2){
+      const saving=underBudget.reduce((s,cat)=>s+cat.budget-getCatSpent(cat.id,m),0);
+      tips.push(`<strong>${underBudget.length} categorieën</strong> lopen minstens 30% onder budget (samen ${fmt(Math.round(saving))} vrij). Bewust of vergeten in te geven?`);
+    } else if(finalScore>=80){
+      tips.push('Alles goed onder controle deze maand. Consistent gedrag over meerdere maanden is de sterkste indicator van financiële gezondheid.');
+    }
+  }
+
+  if(!tips.length)tips.push('Voeg meer uitgaven in om gepersonaliseerde inzichten te zien.');
 
   return`
   <div class="dm-section" style="text-align:center;padding-bottom:16px">
