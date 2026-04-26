@@ -3757,51 +3757,114 @@ function renderFcSignals(){
   const m=mkd();
   const spent=getMonthSpent(m);
   const da=calcDailyAllowance();
+  const cats=S.categories.filter(c=>c.type==='monthly');
+  const hist=getMonthHistory(12).filter(h=>h.spent>0);
+  const histStats=calcStats(hist.map(h=>h.spent));
   const signals=[];
 
-  // 1. Einde-maand prognose vs budget
-  if(fc&&budget>0){
-    const isOver=fc.point>budget;
-    const isWarn=!isOver&&fc.point>budget*0.88;
-    const diff=Math.abs(Math.round(fc.point-budget));
-    if(isOver){
-      const savePD=Math.ceil(diff/Math.max(pace.daysLeft,1));
-      signals.push({type:'danger',icon:'alert',
-        title:`Prognose: ${fmt(diff)} over budget`,
-        body:`Op huidig tempo eindig je op <strong>${fmt(fc.point)}</strong>. Bespaar ${fmt(savePD)}/dag om op schema te blijven.`});
-    }else if(isWarn){
+  if(!pace.isCurrentMonth){el.innerHTML='';return;}
+
+  // ── 1. PROGNOSE VS HISTORISCH PATROON (niet vs budget — dat staat al in de balk) ──
+  if(fc&&histStats.n>=3){
+    const z=zScore(fc.point,histStats.mean,histStats.std);
+    if(z>1.4){
+      // Zoek welke categorie bovengemiddeld bijdraagt
+      const drivers=cats.map(c=>{
+        const cur=getCatSpent(c.id,m);
+        const histVals=hist.slice(0,4).map(h=>getCatSpent(c.id,h.mk||mkd(h.month))).filter(v=>v>0);
+        const avg=histVals.length?histVals.reduce((s,v)=>s+v,0)/histVals.length:0;
+        return{c,cur,avg,delta:cur-avg};
+      }).filter(r=>r.delta>15&&r.avg>0).sort((a,b)=>b.delta-a.delta);
+      const d=drivers[0];
       signals.push({type:'warning',icon:'zap',
-        title:`Nog ${fmt(diff)} marge — let op`,
-        body:`Verwacht eindtotaal ${fmt(fc.point)} (${Math.round(fc.point/budget*100)}% van budget). Dagbudget: <strong>${fmt(da?.allowance||0)}</strong>.`});
-    }else{
+        title:`Koers op ${Math.abs(z).toFixed(1)}σ boven je historisch gemiddelde`,
+        body:d
+          ?`Normaal eindig je op <strong>${fmt(Math.round(histStats.mean))}</strong>. <strong>${esc(d.c.name)}</strong> loopt ${fmt(Math.round(d.delta))} hoger dan je eigen gemiddelde — dát maakt het verschil.`
+          :`Normaal eindig je op <strong>${fmt(Math.round(histStats.mean))}</strong> — dit wordt een duurder dan gemiddelde maand.`});
+    } else if(z<-1.2){
       signals.push({type:'success',icon:'check',
-        title:`Op schema — ${fmt(diff)} ruimte`,
-        body:`Verwacht eindtotaal <strong>${fmt(fc.point)}</strong>. Je hebt ${fmt(da?.allowance||0)}/dag beschikbaar.`});
+        title:`Rustigste maand in tijden — ${Math.abs(z).toFixed(1)}σ onder gemiddelde`,
+        body:`Prognose ligt ${fmt(Math.round(histStats.mean-fc.point))} onder je historisch gemiddelde van <strong>${fmt(Math.round(histStats.mean))}</strong>. Goed moment om iets extra te sparen.`});
     }
-  }else if(!fc&&budget>0&&pace.isCurrentMonth&&pace.dayOfMonth<5){
-    signals.push({type:'info',icon:'activity',
-      title:'Prognose beschikbaar na een paar dagen',
-      body:`Tot nu ${fmt(spent)} uitgegeven op dag ${pace.dayOfMonth}. Voeg meer in voor een betrouwbare schatting.`});
   }
 
-  // 2. Meest risicovolle categorie
-  const catFcs=calcCatForecasts().filter(r=>r.budget>0&&r.overBudget);
-  if(catFcs.length){
-    const worst=catFcs.sort((a,b)=>b.overshoot-a.overshoot)[0];
-    signals.push({type:'warning',icon:'zap',
-      title:`${worst.cat.name} dreigt over budget`,
-      body:`Prognose <strong>${fmt(worst.projected)}</strong> bij budget van ${fmt(worst.budget)} — +${fmt(Math.round(worst.overshoot))} te veel.`});
+  // ── 2. TEMPO-ANOMALIE: vergelijk huidig dagritme met zelfde punt vorige maanden ──
+  if(hist.length>=3&&pace.pctElapsed>0.10&&spent>0){
+    const expectedNow=hist.slice(0,3).reduce((s,h)=>s+h.spent,0)/3*pace.pctElapsed;
+    const tempoPct=expectedNow>0?Math.round((spent-expectedNow)/expectedNow*100):0;
+    if(tempoPct>=30){
+      const projAtThisTempo=budget>0?Math.round(spent/pace.pctElapsed):0;
+      signals.push({type:'warning',icon:'zap',
+        title:`${tempoPct}% sneller dan je eigen gemiddeld tempo`,
+        body:`Op dag ${pace.dayOfMonth} was je historisch gem. <strong>${fmt(Math.round(expectedNow))}</strong> — nu al ${fmt(spent)}. Op dit tempo: prognose <strong>${fmt(projAtThisTempo||fc?.point||0)}</strong>.`});
+    } else if(tempoPct<=-25){
+      signals.push({type:'success',icon:'check',
+        title:`${Math.abs(tempoPct)}% trager dan je eigen gemiddeld tempo`,
+        body:`Op dag ${pace.dayOfMonth} stond je historisch op gem. <strong>${fmt(Math.round(expectedNow))}</strong> — je zit op ${fmt(spent)}. Meer marge dan gewoonlijk.`});
+    }
   }
 
-  // 3. Historische anomalie
-  const hist=getMonthHistory(12);
-  const hs=calcStats(hist.map(h=>h.spent).filter(v=>v>0));
-  if(hs.n>=4&&fc&&fc.point>0){
-    const z=zScore(fc.point,hs.mean,hs.std);
-    if(Math.abs(z)>=1.5){
-      signals.push({type:z>1.5?'warning':'info',icon:'activity',
-        title:`${Math.abs(z).toFixed(1)}σ ${z>0?'boven':'onder'} jouw gemiddelde`,
-        body:`Normaal geef je <strong>${fmt(Math.round(hs.mean))}/maand</strong> uit. Deze maand lijkt ${z>0?'drukker':'rustiger'} dan normaal.`});
+  // ── 3. CATEGORIE DIE DREIGT TE PIEKEN op basis van eigen historisch patroon ──
+  if(hist.length>=3&&pace.pctElapsed>0.15){
+    const atRisk=cats.map(c=>{
+      if(!c.budget)return null;
+      const cur=getCatSpent(c.id,m);
+      const histVals=hist.slice(0,4).map(h=>getCatSpent(c.id,h.mk||mkd(h.month)));
+      const hs=calcStats(histVals.filter(v=>v>0));
+      if(hs.n<2)return null;
+      // Projecteer op eindmaand
+      const proj=pace.pctElapsed>0?Math.round(cur/pace.pctElapsed):cur;
+      const z=zScore(proj,hs.mean,hs.std);
+      return{c,cur,proj,z,budget:c.budget,histMean:hs.mean};
+    }).filter(r=>r&&r.z>1.5&&r.proj>r.budget).sort((a,b)=>b.z-a.z);
+
+    if(atRisk.length>0){
+      const r=atRisk[0];
+      signals.push({type:'warning',icon:'alert',
+        title:`${esc(r.c.name)}: ${r.z.toFixed(1)}σ boven je eigen patroon`,
+        body:`Prognose <strong>${fmt(r.proj)}</strong> bij historisch gem. ${fmt(Math.round(r.histMean))} en budget ${fmt(r.budget)}. Uniek hoge maand voor deze categorie.`});
+    }
+  }
+
+  // ── 4. LAATSTE DAGEN: wat staat er nog te komen? ─────────────────────────
+  if(pace.daysLeft<=7&&pace.daysLeft>0&&hist.length>=2){
+    // Vergelijk typisch einde-maand-bedrag: wat wordt er de laatste week gemiddeld uitgegeven?
+    const lastWeekAvg=hist.slice(0,3).reduce((s,h)=>{
+      const mk=h.mk||mkd(h.month);
+      const [y,mo]=mk.split('-').map(Number);
+      const daysInM=new Date(y,mo,0).getDate();
+      const lastWeekTxs=getAllTransactions(mk).filter(tx=>{
+        if(!tx.ts)return false;
+        return new Date(tx.ts).getDate()>daysInM-7;
+      });
+      return s+lastWeekTxs.reduce((a,tx)=>a+tx.amount,0);
+    },0)/Math.min(3,hist.length);
+
+    if(lastWeekAvg>20){
+      const rem=budget>0?Math.max(0,budget-spent):0;
+      const shortfall=lastWeekAvg-rem;
+      if(shortfall>20){
+        signals.push({type:'warning',icon:'zap',
+          title:`Laatste week kost je gem. ${fmt(Math.round(lastWeekAvg))} — je hebt ${fmt(Math.round(rem))} over`,
+          body:`De afgelopen maanden gaf je de laatste ${pace.daysLeft} dagen gem. <strong>${fmt(Math.round(lastWeekAvg))}</strong> uit. Dat past nu niet meer binnen je resterende budget.`});
+      } else if(rem>0){
+        signals.push({type:'info',icon:'activity',
+          title:`Nog ${pace.daysLeft} dagen — historisch kost dat gem. ${fmt(Math.round(lastWeekAvg))}`,
+          body:`Je hebt <strong>${fmt(Math.round(rem))}</strong> resterend. Op basis van vorige maanden past de rest van de maand er ${shortfall<-10?'ruim':''} in.`});
+      }
+    }
+  }
+
+  // ── 5. BIJSTURING NA DURE MAAND ──────────────────────────────────────────
+  if(!signals.length&&hist.length>=1&&budget>0){
+    const prevSpent=hist[0].spent;
+    if(prevSpent>budget*1.08&&pace.pctElapsed>0.25){
+      const proj=pace.pctElapsed>0?Math.round(spent/pace.pctElapsed):0;
+      if(proj<prevSpent*0.90){
+        signals.push({type:'success',icon:'check',
+          title:`Bijgestuurd na dure vorige maand`,
+          body:`Vorige maand <strong>${fmt(Math.round(prevSpent-budget))}</strong> over budget. Op dit tempo eindig je op <strong>${fmt(proj)}</strong> — duidelijk lager dan vorige maand (${fmt(prevSpent)}).`});
+      }
     }
   }
 
