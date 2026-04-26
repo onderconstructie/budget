@@ -4737,7 +4737,7 @@ function buildHealthDetail(m){
 
   const finalScore=Math.max(0,Math.min(100,scoreBase));
   const scoreColor=finalScore>=80?'var(--g)':finalScore>=60?'var(--w)':'var(--r)';
-  const scoreText=finalScore>=80?'Uitstekend':finalScore>=60?'Goed':finalScore>=40?'Matig':'Actie nodig';
+  const scoreText=finalScore>=80?'Uitstekend':finalScore>=60?'Goed bezig':finalScore>=40?'Let op':'Actie nodig';
 
   // ── SLIMME TIPS op basis van alle beschikbare data ─────────────────────
   const tips=[];
@@ -4834,33 +4834,59 @@ function buildHealthDetail(m){
   if(!tips.length)tips.push('Voeg meer uitgaven in om gepersonaliseerde inzichten te zien.');
 
   return`
-  <div class="dm-section" style="text-align:center;padding-bottom:16px">
-    <div style="font-family:var(--font-mono);font-size:52px;font-weight:700;color:${scoreColor};letter-spacing:-2px;line-height:1">${finalScore}</div>
-    <div style="font-size:13px;font-weight:700;color:${scoreColor};margin-top:2px">${scoreText}</div>
-    <div style="margin-top:10px;height:6px;background:rgba(0,0,0,.07);border-radius:3px;overflow:hidden">
-      <div style="height:100%;width:${finalScore}%;background:${scoreColor};border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1)"></div>
+  <!-- SCORE HERO -->
+  <div class="dm-section" style="text-align:center;padding:20px 0 16px">
+    <div style="position:relative;width:96px;height:96px;margin:0 auto 12px">
+      <svg viewBox="0 0 96 96" fill="none" style="width:100%;height:100%;transform:rotate(-90deg)">
+        <circle cx="48" cy="48" r="40" stroke="rgba(0,0,0,.07)" stroke-width="8"/>
+        <circle cx="48" cy="48" r="40" stroke="${scoreColor}" stroke-width="8"
+          stroke-linecap="round"
+          stroke-dasharray="${2*Math.PI*40}"
+          stroke-dashoffset="${2*Math.PI*40*(1-finalScore/100)}"
+          style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+        <div style="font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-1px;line-height:1;color:${scoreColor}">${finalScore}</div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)">/100</div>
+      </div>
     </div>
+    <div style="font-size:14px;font-weight:700;color:${scoreColor}">${scoreText}</div>
   </div>
+
+  <!-- SCORE OPBOUW -->
   <div class="dm-section">
     <div class="dm-section-title">score-opbouw</div>
-    <div>100 punten basis</div>
+    <div class="dm-row" style="padding:6px 0">
+      <div class="dm-row-name" style="color:var(--n3)">Startpunt</div>
+      <div style="font-family:var(--mono);font-size:13px;color:var(--n3)">100</div>
+    </div>
     ${components.map(c=>`
-      <div class="dm-score-row">
-        <div class="dm-score-dot" style="background:${c.color}"></div>
-        <div style="flex:1">
-          <div class="dm-score-label">${c.lbl}</div>
-          ${c.sub?`<div style="font-size:9px;color:var(--text-muted)">${c.sub}</div>`:''}
+    <div class="dm-row" style="padding:6px 0;border-top:1px solid var(--l0)">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+        <div style="width:6px;height:6px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:500;color:var(--n1)">${c.lbl}</div>
+          ${c.sub?`<div style="font-size:9px;color:var(--n3);margin-top:1px">${c.sub}</div>`:''}
         </div>
-        <div class="dm-score-val" style="color:${c.color}">${c.val>0?'+':''}${c.val}</div>
-      </div>`).join('')}
-    <div class="dm-score-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">
-      <div style="flex:1;font-size:12px;font-weight:700">Eindscore</div>
-      <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;color:${scoreColor}">${finalScore}/100</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${c.color};flex-shrink:0">${c.val>0?'+':''}${c.val}</div>
+    </div>`).join('')}
+    <div class="dm-row" style="border-top:2px solid var(--l1);margin-top:4px;padding-top:10px">
+      <div class="dm-row-name" style="font-weight:700;color:var(--n0)">Eindscore</div>
+      <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:${scoreColor}">${finalScore}/100</div>
     </div>
   </div>
+
+  <!-- INZICHTEN -->
   <div class="dm-section">
-    <div class="dm-section-title">tips</div>
-    ${tips.map(t=>`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary);line-height:1.5"><span style="color:var(--brand-400);font-weight:700">→</span>${t}</div>`).join('')}
+    <div class="dm-section-title">inzichten</div>
+    ${tips.map((t,i)=>`
+    <div style="display:flex;gap:10px;padding:9px 0;${i>0?'border-top:1px solid var(--l0)':''}">
+      <div style="width:18px;height:18px;border-radius:50%;background:var(--s2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div style="font-size:12px;color:var(--n2);line-height:1.55;flex:1">${t}</div>
+    </div>`).join('')}
   </div>`;
 }
 
