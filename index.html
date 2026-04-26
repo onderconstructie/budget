@@ -2931,6 +2931,7 @@ function updateYearChart(y){
         datalabels:{},
         tooltip:{
           mode:'index',intersect:false,
+          events:['mousemove','mouseout','touchstart','touchend'],
           backgroundColor:'rgba(17,24,39,.92)',borderColor:'rgba(255,255,255,.08)',
           borderWidth:1,titleColor:'rgba(255,255,255,.75)',bodyColor:'rgba(255,255,255,.60)',
           padding:10,cornerRadius:8,
@@ -2957,8 +2958,9 @@ function updateYearChart(y){
       }
     }
   });
-
-  // Legenda: enkel gemiddelde- en budgetlijn tonen indien aanwezig — OK/Bijna/Over weg
+  ctx.addEventListener('touchend',()=>{
+    if(charts.year){charts.year.tooltip.setActiveElements([],{x:0,y:0});charts.year.update('none');}
+  },{passive:true});
   const leg=$('.yr-legend');
   if(leg){
     leg.innerHTML=
@@ -3299,6 +3301,7 @@ function updateEvoChart(y){
         datalabels:{},
         tooltip:{
           mode:'index',intersect:false,
+          events:['mousemove','mouseout','touchstart','touchend'],
           callbacks:{title:items=>{
             const m=items[0].label;
             if(!evoActiveCat)return m;
@@ -3326,6 +3329,11 @@ function updateEvoChart(y){
   });
   // Herstel actieve staat na recreatie (bijv. bij tab-wissel)
   if(evoActiveCat)_applyEvoCat();
+
+  // Tap buiten datapunt = tooltip sluiten
+  ctx.addEventListener('touchend',()=>{
+    if(charts.evo){charts.evo.tooltip.setActiveElements([],{x:0,y:0});charts.evo.update('none');}
+  },{passive:true});
 }
 
 function updateYearStats(y){
@@ -3473,6 +3481,7 @@ function updateEvoBreakdown(){
       responsive:true,maintainAspectRatio:false,animation:{duration:300},
       plugins:{legend:{display:false},datalabels:{display:false},
         tooltip:{mode:'index',intersect:false,
+          events:['mousemove','mouseout','touchstart','touchend'],
           backgroundColor:'rgba(17,24,39,.92)',borderColor:'rgba(255,255,255,.08)',borderWidth:1,
           titleColor:'rgba(255,255,255,.75)',bodyColor:'rgba(255,255,255,.60)',padding:10,cornerRadius:8,
           filter:item=>!!item.raw,
@@ -3487,6 +3496,9 @@ function updateEvoBreakdown(){
       }
     }
   });
+  ctx.addEventListener('touchend',()=>{
+    if(charts.breakdown){charts.breakdown.tooltip.setActiveElements([],{x:0,y:0});charts.breakdown.update('none');}
+  },{passive:true});
 }
 
 function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worstI){
