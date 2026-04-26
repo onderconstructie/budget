@@ -922,6 +922,15 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
         <div id="evo-cat-chips" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:12px"></div>
       </div>
 
+      <!-- Verdeling per winkel/doel over maanden -->
+      <div id="evo-breakdown" style="padding:16px 16px 0;display:none">
+        <div class="an-section-lbl" id="evo-breakdown-title">Verdeling</div>
+        <div id="evo-breakdown-note" style="font-size:9px;color:var(--n3);margin-bottom:8px"></div>
+        <div class="chart-wrap" style="height:180px"><canvas id="chart-breakdown"></canvas></div>
+        <div id="evo-breakdown-legend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+        <div id="evo-breakdown-insight" style="margin-top:8px;padding:8px 10px;background:var(--s1);border-radius:var(--r6);font-size:10px;color:var(--n2);line-height:1.5"></div>
+      </div>
+
       <!-- Scheidingslijn -->
       <div style="margin:20px 16px 0;border-top:1px solid var(--l0)"></div>
 
@@ -2120,7 +2129,7 @@ function openIncomeModal(){
 // === OPTIMIZED ANALYTICS: alleen actieve tab renderen ===
 function renderAnalyticsTab(idx){updateAnStats();
   switch(idx){
-    case 0:updateSmartInsights();updateEvoChart(anYear);renderEvoCatChips();updateYearChart(anYear);updateYearStats(anYear);break;
+    case 0:updateSmartInsights();updateEvoChart(anYear);renderEvoCatChips();updateEvoBreakdown();updateYearChart(anYear);updateYearStats(anYear);break;
     case 1:updateForecast();break;
   }
 }
@@ -2966,6 +2975,7 @@ let evoActiveCat=null;
 function setEvoCat(catId){
   evoActiveCat=(evoActiveCat===catId)?null:catId;
   _applyEvoCat();
+  updateEvoBreakdown();
 }
 
 function renderEvoCatChips(){
@@ -3337,6 +3347,135 @@ function updateYearStats(y){
 
   updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worstI);
   updateYearCats(y);
+}
+
+function updateEvoBreakdown(){
+  const sec=$('evo-breakdown');
+  if(!sec)return;
+
+  if(!evoActiveCat){sec.style.display='none';if(charts.breakdown){charts.breakdown.destroy();charts.breakdown=null;}return;}
+
+  const cat=S.categories.find(c=>c.id===evoActiveCat);
+  if(!cat){sec.style.display='none';return;}
+
+  // Verzamel alle transacties voor deze categorie, groepeer per maand × detail
+  const now=new Date();
+  const months=[];
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({mk:mkd(d),label:MONTHS_S[d.getMonth()]});
+  }
+
+  // Alle unieke details (winkels/doelen), geaggregeerd over alle maanden
+  const allTotals={};
+  months.forEach(({mk})=>{
+    getCatTransactions(cat.id,mk).forEach(tx=>{
+      const key=(tx.detail||'—').trim().toLowerCase();
+      const label=(tx.detail||'—').trim();
+      if(!allTotals[key])allTotals[key]={label,total:0};
+      allTotals[key].total+=tx.amount;
+    });
+  });
+
+  // Top 5 + Andere
+  const sorted=Object.values(allTotals).sort((a,b)=>b.total-a.total);
+  if(!sorted.length){sec.style.display='none';return;}
+
+  const TOP=5;
+  const topKeys=sorted.slice(0,TOP).map(r=>r.label.toLowerCase());
+  const storeLabels=sorted.slice(0,TOP).map(r=>r.label);
+  const hasOther=sorted.length>TOP;
+  if(hasOther)storeLabels.push('Andere');
+
+  // Kleurenpalet voor de winkels (categorieëkleur als basis, variaties)
+  const clr=col(cat.color);
+  const baseHex=clr.c.replace('#','');
+  const br=parseInt(baseHex.slice(0,2),16);
+  const bg=parseInt(baseHex.slice(2,4),16);
+  const bb=parseInt(baseHex.slice(4,6),16);
+  const storeColors=storeLabels.map((_,i)=>{
+    if(i===storeLabels.length-1&&hasOther)return'rgba(0,0,0,.15)';
+    const opacity=0.85-i*0.12;
+    // Shift hue slightly per store for visual distinction
+    const shift=i*30;
+    return `rgba(${Math.min(255,br+shift)},${Math.min(255,bg-shift/2)},${Math.min(255,bb+shift/3)},${opacity.toFixed(2)})`;
+  });
+
+  // Datasets: één per winkel
+  const datasets=storeLabels.map((store,si)=>({
+    label:store,
+    data:months.map(({mk})=>{
+      const txs=getCatTransactions(cat.id,mk);
+      if(store==='Andere'){
+        return txs.filter(tx=>!topKeys.includes((tx.detail||'—').trim().toLowerCase())).reduce((s,tx)=>s+tx.amount,0)||null;
+      }
+      return txs.filter(tx=>(tx.detail||'—').trim().toLowerCase()===store.toLowerCase()).reduce((s,tx)=>s+tx.amount,0)||null;
+    }),
+    backgroundColor:storeColors[si],
+    borderRadius:3,
+    datalabels:{display:false}
+  }));
+
+  // Patroon-analyse
+  let insight='';
+  const monthlyTotals=months.map(({mk})=>getCatTransactions(cat.id,mk).reduce((s,tx)=>s+tx.amount,0));
+  const filledMonths=monthlyTotals.filter(v=>v>0).length;
+
+  if(filledMonths>=3&&sorted.length>=1){
+    const top=sorted[0];
+    // Dominantie: top winkel als % van totaal
+    const grandTotal=sorted.reduce((s,r)=>s+r.total,0);
+    const domPct=Math.round(top.total/grandTotal*100);
+    if(domPct>=60){
+      insight=`<strong>${esc(top.label)}</strong> is goed voor <strong>${domPct}%</strong> van alle uitgaven in ${esc(cat.name)} — hoge concentratie bij één bestemming.`;
+    } else if(sorted.length>=3){
+      // Groeipatroon: vergelijk eerste 3 vs laatste 3 maanden voor top winkel
+      const early=months.slice(0,3).map(({mk})=>getCatTransactions(cat.id,mk).filter(tx=>(tx.detail||'—').trim()===top.label).reduce((s,tx)=>s+tx.amount,0));
+      const recent=months.slice(-3).map(({mk})=>getCatTransactions(cat.id,mk).filter(tx=>(tx.detail||'—').trim()===top.label).reduce((s,tx)=>s+tx.amount,0));
+      const earlyAvg=early.reduce((s,v)=>s+v,0)/3;
+      const recentAvg=recent.reduce((s,v)=>s+v,0)/3;
+      if(earlyAvg>0&&recentAvg>earlyAvg*1.2){
+        const rise=Math.round((recentAvg-earlyAvg)/earlyAvg*100);
+        insight=`<strong>${esc(top.label)}</strong> groeit: +${rise}% de laatste 3 maanden vs 3 maanden geleden.`;
+      } else if(sorted.length>=2){
+        insight=`Spread over <strong>${sorted.length}</strong> bestemmingen — ${esc(storeLabels.slice(0,2).join(' en '))} zijn de twee grootste.`;
+      }
+    }
+  }
+
+  sec.style.display='block';
+  $('evo-breakdown-title').textContent=`${esc(cat.name)} — waar naartoe`;
+  $('evo-breakdown-note').textContent=`Laatste 12 maanden · ${filledMonths} maanden met data`;
+  $('evo-breakdown-insight').innerHTML=insight||'';
+  $('evo-breakdown-insight').style.display=insight?'block':'none';
+
+  // Legend
+  $('evo-breakdown-legend').innerHTML=storeLabels.map((s,i)=>
+    `<span style="display:flex;align-items:center;gap:4px;font-size:8.5px;color:var(--n2)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${storeColors[i]};flex-shrink:0"></span>${esc(s)}</span>`
+  ).join('');
+
+  // Chart
+  const ctx=$('chart-breakdown');
+  if(!ctx)return;
+  if(charts.breakdown)charts.breakdown.destroy();
+  charts.breakdown=new Chart(ctx,{
+    type:'bar',
+    data:{labels:months.map(m=>m.label),datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{legend:{display:false},datalabels:{display:false},
+        tooltip:{mode:'index',intersect:false,
+          backgroundColor:'rgba(17,24,39,.92)',borderColor:'rgba(255,255,255,.08)',borderWidth:1,
+          titleColor:'rgba(255,255,255,.75)',bodyColor:'rgba(255,255,255,.60)',padding:10,cornerRadius:8,
+          callbacks:{label:c=>c.raw?`${c.dataset.label}: ${fmt(Math.round(c.raw))}`:null}
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{display:false},border:{display:false},ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'}}},
+        y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,.04)'},border:{display:false},ticks:{color:'rgba(0,0,0,.30)',font:{size:8},callback:v=>fmt(v),stepSize:100}}
+      }
+    }
+  });
 }
 
 function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worstI){
