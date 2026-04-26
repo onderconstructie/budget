@@ -1092,7 +1092,7 @@ function initDetailModal(){
   document.addEventListener('touchmove',e=>{
     if(!isDragging)return;
     const dy=e.touches[0].clientY-startY;
-    if(dy>0)modal.style.transform=`translateX(-50%) translateY(${dy}px)`;
+    if(dy>0)modal.style.transform=`translateY(${dy}px)`;
   },{passive:true});
   document.addEventListener('touchend',e=>{
     if(!isDragging)return;
@@ -3492,7 +3492,7 @@ function updateEvoBreakdown(){
         x:{stacked:true,grid:{display:false},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'}}},
         y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,.04)'},border:{display:false},
-          ticks:{color:'rgba(0,0,0,.30)',font:{size:8},callback:v=>fmt(v),stepSize:100}}
+          ticks:{color:'rgba(0,0,0,.30)',font:{size:8},callback:v=>fmt(v),stepSize:20}}
       }
     }
   });
