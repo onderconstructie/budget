@@ -4752,7 +4752,7 @@ function buildHealthDetail(m){
       const histVals=hist.map(h=>getCatSpent(cat.id,h.mk)).filter(v=>v>0);
       const avg=histVals.length?Math.round(histVals.reduce((a,v)=>a+v,0)/histVals.length):0;
       return{cat,s,over:Math.round(s-(cat.budget||0)),avg,histVals};
-    }).filter(r=>cat.budget>0&&r.s>cat.budget).sort((a,b)=>b.over-a.over);
+    }).filter(r=>r.cat.budget>0&&r.s>r.cat.budget).sort((a,b)=>b.over-a.over);
 
     const worst=overCats[0];
     if(worst){
