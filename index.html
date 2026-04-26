@@ -2625,25 +2625,146 @@ function alertHtml(s,at,ai,prefix,renderFn){
 
 function updateSmartInsights(){
   const el=$('a-insights');if(!el)return;
-  const m=mkd();
-  const pace=calcPace();
-  const budget=getMonthBudget();
-  const spent=getMonthSpent(m);
   const income=getMonthlyIncome();
   const fixed=getFixedCosts();
   const cats=S.categories.filter(c=>c.type==='monthly');
   const hist=getMonthHistory(12);
   const histFilled=hist.filter(h=>h.spent>0);
-  const stats=calcStats(histFilled.map(h=>h.spent));
   const signals=[];
 
-  // Helper: gemiddelde van een categorie over n voltooide maanden
-  const catAvg=(catId,months)=>{
-    const vals=months.map(h=>getCatSpent(catId,h.mk||mkd(h.month))).filter(v=>v>0);
-    return vals.length?vals.reduce((s,v)=>s+v,0)/vals.length:0;
-  };
+  // Helper
+  const catAvg=(id,months)=>{const v=months.map(h=>getCatSpent(id,h.mk||mkd(h.month))).filter(v=>v>0);return v.length?v.reduce((s,x)=>s+x,0)/v.length:0;};
 
-  // ── 1. LEEFSTIJLINFLATIE ─────────────────────────────────────────────────
+  // ── 1. TRANSACTIEFREQUENTIE-SHIFT ─────────────────────────────────────────
+  if(histFilled.length>=6){
+    const recentCounts=histFilled.slice(0,3).map(h=>getAllTransactions(h.mk||mkd(h.month)).length);
+    const olderCounts=histFilled.slice(3,6).map(h=>getAllTransactions(h.mk||mkd(h.month)).length);
+    const rAvg=recentCounts.reduce((s,v)=>s+v,0)/recentCounts.length;
+    const oAvg=olderCounts.reduce((s,v)=>s+v,0)/olderCounts.length;
+    if(oAvg>0&&rAvg>oAvg*1.25){
+      const pct=Math.round((rAvg-oAvg)/oAvg*100);
+      const recentAvgTx=histFilled.slice(0,3).reduce((s,h)=>s+h.spent,0)/3/Math.max(rAvg,1);
+      const olderAvgTx=histFilled.slice(3,6).reduce((s,h)=>s+h.spent,0)/3/Math.max(oAvg,1);
+      signals.push({type:'info',icon:'activity',
+        title:`${pct}% meer transacties de laatste 3 maanden`,
+        body:recentAvgTx<olderAvgTx*0.85
+          ?`Je koopt vaker maar goedkoper per aankoop (gem. ${fmt(Math.round(recentAvgTx))} vs ${fmt(Math.round(olderAvgTx))}). Meer impulsmomenten, maar kleiner per stuk.`
+          :`Méér aankopen én vergelijkbaar bedrag per stuk — je uitgavenmoment neemt toe. Frequentie is zelden neutraal.`});
+    }
+  }
+
+  // ── 2. BUDGET-MEDIAAN KLOOF ────────────────────────────────────────────────
+  if(histFilled.length>=5){
+    const catAlerts=cats.filter(c=>{
+      if(!c.budget||c.budget<=0)return false;
+      const vals=histFilled.slice(0,6).map(h=>getCatSpent(c.id,h.mk||mkd(h.month))).filter(v=>v>0);
+      if(vals.length<4)return false;
+      const sorted=[...vals].sort((a,b)=>a-b);
+      const median=sorted.length%2===0?(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2:sorted[Math.floor(sorted.length/2)];
+      const mean=vals.reduce((s,v)=>s+v,0)/vals.length;
+      return median<c.budget&&mean>c.budget&&mean>median*1.15;
+    });
+    if(catAlerts.length>0){
+      const c=catAlerts[0];
+      const vals=histFilled.slice(0,6).map(h=>getCatSpent(c.id,h.mk||mkd(h.month))).filter(v=>v>0);
+      const sorted=[...vals].sort((a,b)=>a-b);
+      const median=Math.round(sorted.length%2===0?(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2:sorted[Math.floor(sorted.length/2)]);
+      const mean=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+      signals.push({type:'info',icon:'activity',
+        title:`${esc(c.name)}: pieken, geen structureel probleem`,
+        body:`Typische maand: <strong>${fmt(median)}</strong> (mediaan, onder budget). Gemiddelde: <strong>${fmt(mean)}</strong> (over budget). Één of twee dure maanden trekken het gemiddelde omhoog.`});
+    }
+  }
+
+  // ── 3. BESTE MAAND ANATOMIE ────────────────────────────────────────────────
+  if(histFilled.length>=4){
+    const sorted=[...histFilled].sort((a,b)=>a.spent-b.spent);
+    const best=sorted[0];
+    const rest=histFilled.filter(h=>h!==best);
+    const bestMk=best.mk||mkd(best.month);
+    const drivers=cats.map(c=>{
+      const bestVal=getCatSpent(c.id,bestMk);
+      const restAvg=rest.length?rest.reduce((s,h)=>s+getCatSpent(c.id,h.mk||mkd(h.month)),0)/rest.length:0;
+      return{c,saving:restAvg-bestVal};
+    }).filter(r=>r.saving>15).sort((a,b)=>b.saving-a.saving);
+    if(drivers.length>=1){
+      const savings=drivers.slice(0,2).map(d=>`${esc(d.c.name)} −${fmt(Math.round(d.saving))}`).join(', ');
+      signals.push({type:'good',icon:'check',
+        title:`Wat maakte ${MONTHS[parseInt(bestMk.split('-')[1])-1]} je beste maand?`,
+        body:`${savings}. Die categorieën lager houden = potentieel <strong>${fmt(Math.round(drivers.slice(0,2).reduce((s,d)=>s+d.saving,0)*12))}</strong>/jaar extra.`});
+    }
+  }
+
+  // ── 4. CATEGORIECORRELATIE: substitutiepatroon ────────────────────────────
+  if(histFilled.length>=5&&cats.length>=2){
+    let bestCorr={r:0,a:null,b:null};
+    for(let i=0;i<cats.length;i++){
+      for(let j=i+1;j<cats.length;j++){
+        const vA=histFilled.map(h=>getCatSpent(cats[i].id,h.mk||mkd(h.month)));
+        const vB=histFilled.map(h=>getCatSpent(cats[j].id,h.mk||mkd(h.month)));
+        const n=vA.length,mA=vA.reduce((s,v)=>s+v,0)/n,mB=vB.reduce((s,v)=>s+v,0)/n;
+        const num=vA.reduce((s,v,k)=>s+(v-mA)*(vB[k]-mB),0);
+        const den=Math.sqrt(vA.reduce((s,v)=>s+(v-mA)**2,0)*vB.reduce((s,v)=>s+(v-mB)**2,0));
+        const r=den>0?num/den:0;
+        if(r<-0.55&&r<bestCorr.r){bestCorr={r,a:cats[i],b:cats[j]};}
+      }
+    }
+    if(bestCorr.a){
+      const pct=Math.round(Math.abs(bestCorr.r)*100);
+      signals.push({type:'info',icon:'activity',
+        title:`Als ${esc(bestCorr.a.name)} hoog is, is ${esc(bestCorr.b.name)} laag`,
+        body:`Correlatie −${pct}%: je verschuift uitgaven tussen deze twee categorieën. Niet besparen — substitueren. Weet je dat bewust?`});
+    }
+  }
+
+  // ── 5. PRIJSDRIFT PER WINKEL ──────────────────────────────────────────────
+  if(histFilled.length>=6){
+    const recentMks=histFilled.slice(0,3).map(h=>h.mk||mkd(h.month));
+    const olderMks=histFilled.slice(3,6).map(h=>h.mk||mkd(h.month));
+    let best=null;
+    cats.forEach(cat=>{
+      const byPeriod=(mks)=>{
+        const m={};
+        mks.forEach(mk=>getCatTransactions(cat.id,mk).forEach(tx=>{
+          const k=(tx.detail||'').trim().toLowerCase();
+          if(!k||k==='—')return;
+          if(!m[k])m[k]={total:0,count:0,label:(tx.detail||'').trim()};
+          m[k].total+=tx.amount;m[k].count++;
+        }));
+        return m;
+      };
+      const r=byPeriod(recentMks),o=byPeriod(olderMks);
+      Object.keys(r).forEach(k=>{
+        if(!o[k]||r[k].count<2||o[k].count<2)return;
+        const rA=r[k].total/r[k].count,oA=o[k].total/o[k].count;
+        if(oA>5&&rA>oA*1.25){
+          const rise=Math.round((rA-oA)/oA*100);
+          if(!best||rise>best.rise)best={store:r[k].label,rise,rAvg:rA,oAvg:oA,cat};
+        }
+      });
+    });
+    if(best){
+      signals.push({type:'warn',icon:'zap',
+        title:`Gemiddeld bedrag bij ${esc(best.store)} stijgt: +${best.rise}%`,
+        body:`In <strong>${esc(best.cat.name)}</strong>: per bezoek ${fmt(Math.round(best.oAvg))} vroeger → <strong>${fmt(Math.round(best.rAvg))}</strong> recent. Prijsstijging, groter mandje of duurdere keuzes?`});
+    }
+  }
+
+  // ── 6. VRIJE KASSTROOM TREND ──────────────────────────────────────────────
+  if(income>0&&histFilled.length>=4){
+    const fcVals=histFilled.slice(0,6).map(h=>income-fixed-h.spent);
+    const recent=fcVals.slice(0,3).reduce((s,v)=>s+v,0)/3;
+    const older=fcVals.slice(3).reduce((s,v)=>s+v,0)/Math.max(fcVals.slice(3).length,1);
+    const change=Math.round(recent-older);
+    const pct=Math.round(Math.abs(change)/Math.max(Math.abs(older),1)*100);
+    if(Math.abs(change)>30&&pct>=15){
+      signals.push({type:change<0?'warn':'good',icon:change<0?'zap':'check',
+        title:`Vrije kasstroom ${change<0?'daalt':'stijgt'} met ${fmt(Math.abs(change))}/mnd`,
+        body:`Recent gem. vrij: <strong>${fmt(Math.round(recent))}/mnd</strong> vs ${fmt(Math.round(older))} eerder. ${change<0?`Op jaarbasis <strong>−${fmt(Math.abs(change)*12)}</strong> minder beschikbaar.`:`Op jaarbasis <strong>+${fmt(change*12)}</strong> extra armslag.`}`});
+    }
+  }
+
+  // ── 7. LEEFSTIJLINFLATIE ─────────────────────────────────────────────────
   if(histFilled.length>=8){
     const byDate=[...histFilled].sort((a,b)=>(a.mk||a.month)>(b.mk||b.month)?1:-1);
     const half=Math.floor(byDate.length/2);
@@ -2651,143 +2772,38 @@ function updateSmartInsights(){
     const lateMin=Math.min(...byDate.slice(half).map(h=>h.spent));
     if(earlyMin>0&&lateMin>earlyMin*1.10){
       const rise=Math.round((lateMin-earlyMin)/earlyMin*100);
-      signals.push({type:'warn',
+      signals.push({type:'warn',icon:'zap',
         title:`Leefstijlinflatie: +${rise}% in je rustigste maanden`,
         body:`Zelfs je goedkoopste maanden kosten nu <strong>${fmt(Math.round(lateMin))}</strong> vs <strong>${fmt(Math.round(earlyMin))}</strong> eerder. Je basisniveau stijgt structureel — niet alleen pieken.`});
-    }
-  }
-
-  // ── 2. PSEUDO-VASTE KOSTEN ───────────────────────────────────────────────
-  if(histFilled.length>=4){
-    const pseudo=cats.filter(c=>{
-      if(c.costType==='semi')return false; // al als semi-vast gemarkeerd
-      const present=histFilled.filter(h=>getCatSpent(c.id,h.mk||mkd(h.month))>0).length;
-      return present>=histFilled.length*0.9;
-    });
-    if(pseudo.length>0){
-      const total=Math.round(pseudo.reduce((s,c)=>s+catAvg(c.id,histFilled),0));
-      if(total>30){
-        signals.push({type:'info',
-          title:`${pseudo.slice(0,2).map(c=>esc(c.name)).join(' & ')} gedragen zich als vaste kost`,
-          body:`Je hebt ${pseudo.length>1?'deze categorieën':'deze categorie'} nog nooit overgeslagen. Feitelijk <strong>${fmt(total)}/maand</strong> extra verplicht — maar geregistreerd als variabel.`});
-      }
-    }
-  }
-
-  // ── 3. MOMENTUM: trending omhoog of omlaag ───────────────────────────────
-  const recent3=histFilled.slice(0,3).map(h=>h.spent);
-  const older3=histFilled.slice(3,6).map(h=>h.spent).filter(v=>v>0);
-  if(recent3.length>=2&&older3.length>=2){
-    const rAvg=recent3.reduce((a,b)=>a+b,0)/recent3.length;
-    const oAvg=older3.reduce((a,b)=>a+b,0)/older3.length;
-    if(oAvg>0){
-      const mom=Math.round((rAvg-oAvg)/oAvg*100);
-      if(Math.abs(mom)>=12){
-        const jaarbasis=Math.round(Math.abs(rAvg-oAvg)*12);
-        // Zoek welke categorie de meeste groei/daling draagt
-        const drivers=cats.map(c=>{
-          const ra=catAvg(c.id,histFilled.slice(0,3));
-          const oa=catAvg(c.id,histFilled.slice(3,6));
-          return{c,delta:ra-oa};
-        }).filter(r=>Math.abs(r.delta)>10).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
-        const driver=drivers[0];
-        signals.push({type:mom>0?'warn':'good',
-          title:mom>0?`Uitgaven stijgen ${mom}% de laatste 3 maanden`:`Uitgaven dalen ${Math.abs(mom)}% de laatste 3 maanden`,
-          body:mom>0
-            ?`Op jaarbasis is dat <strong>+${fmt(jaarbasis)}</strong> extra.${driver?` Grootste drijver: <strong>${esc(driver.c.name)}</strong> (+${fmt(Math.round(driver.delta))}/mnd).`:''}`
-            :`Gecorrigeerd voor budget is dat <strong>${fmt(jaarbasis)}</strong>/jaar teruggewonnen.${driver?` <strong>${esc(driver.c.name)}</strong> daalt het sterkst (−${fmt(Math.abs(Math.round(driver.delta)))}/mnd).`:''}`
-        });
-      }
-    }
-  }
-
-  // ── 4. STRUCTUREEL TE LAAG BUDGET ────────────────────────────────────────
-  if(histFilled.length>=3){
-    const structOver=cats.filter(c=>{
-      if(!c.budget)return false;
-      return histFilled.slice(0,Math.min(4,histFilled.length)).filter(h=>getCatSpent(c.id,h.mk||mkd(h.month))>c.budget).length>=3;
-    });
-    if(structOver.length>0){
-      const c=structOver[0];
-      const avg=Math.round(catAvg(c.id,histFilled.slice(0,4)));
-      signals.push({type:'warn',
-        title:`Budget ${esc(c.name)} structureel te laag`,
-        body:`Al ${Math.min(4,histFilled.length)} maanden op rij over budget (gem. ${fmt(avg)} vs ${fmt(c.budget)}). Realistischer budget: <strong>${fmt(Math.round(avg*1.05))}</strong>.`});
-    }
-  }
-
-  // ── 5. CONCENTRATIERISICO: één categorie domineert variabele ruimte ───────
-  if(histFilled.length>=3&&stats.mean>0){
-    const varBudget=cats.reduce((s,c)=>s+c.budget,0);
-    const catShares=cats.map(c=>({c,avg:catAvg(c.id,histFilled.slice(0,3))}))
-      .filter(r=>r.avg>0).sort((a,b)=>b.avg-a.avg);
-    if(catShares.length>=2&&varBudget>0){
-      const topShare=catShares[0].avg/(varBudget||1);
-      if(topShare>0.50){
-        const cv=calcStats(histFilled.slice(0,6).map(h=>getCatSpent(catShares[0].c.id,h.mk||mkd(h.month))).filter(v=>v>0)).cv;
-        const volatiel=cv>0.25;
-        signals.push({type:'info',
-          title:`${esc(catShares[0].c.name)} neemt ${Math.round(topShare*100)}% van je variabele budget`,
-          body:volatiel
-            ?`En die post wisselt sterk (CV ${Math.round(cv*100)}%) — één dure maand daarin kleurt je hele resultaat rood.`
-            :`Wel consistent, maar weinig speelruimte elders. Één tegenvaller dekt direct je hele buffer.`});
-      }
-    }
-  }
-
-  // ── 6. VASTE KOSTEN RATIO ────────────────────────────────────────────────
-  if(income>0&&fixed/income>0.52){
-    const fr=Math.round(fixed/income*100);
-    signals.push({type:'warn',
-      title:`${fr}% naar vaste kosten — structureel weinig marge`,
-      body:`Slechts ${fmt(Math.round(income-fixed))}/maand vrij na vaste lasten. Bij een onverwachte uitgave van ${fmt(Math.round(fixed*0.1))} is je buffer al aangetast.`});
-  }
-
-  // ── 7. SEIZOENSEFFECT: kwartaalpatroon ───────────────────────────────────
-  if(histFilled.length>=6){
-    const qVals=[0,1,2,3].map(q=>{
-      const qMonths=histFilled.filter(h=>{
-        const mo=parseInt((h.mk||mkd(h.month)).split('-')[1])-1;
-        return Math.floor(mo/3)===q;
-      });
-      return qMonths.length?qMonths.reduce((s,h)=>s+h.spent,0)/qMonths.length:0;
-    }).filter(v=>v>0);
-    if(qVals.length>=2){
-      const qMax=Math.max(...qVals),qMin=Math.min(...qVals);
-      if(qMax>qMin*1.20){
-        const qNames=['Q1 (jan–mrt)','Q2 (apr–jun)','Q3 (jul–sep)','Q4 (okt–dec)'];
-        const qMaxI=[0,1,2,3].find(q=>qVals[[0,1,2,3].filter((_,i)=>qVals[i]>0)[q]]===qMax)||0;
-        signals.push({type:'info',
-          title:`Seizoenspatroon: ${fmt(Math.round(qMax-qMin))}/mnd verschil`,
-          body:`Je duurste kwartaal is gemiddeld <strong>${Math.round((qMax-qMin)/qMin*100)}%</strong> duurder dan je goedkoopste. Houd hier rekening mee bij grotere aankopen of spaardoelen.`});
-      }
     }
   }
 
   // ── 8. SPAARDOELKLOOF ───────────────────────────────────────────────────
   if(income>0&&histFilled.length>=3){
     const target=S.savingsTarget||20;
-    const savedVals=histFilled.slice(0,3).map(h=>getSaved(h.mk||mkd(h.month)));
+    const savedVals=histFilled.slice(0,3).map(h=>income-fixed-(h.spent||0));
     const avgSaved=savedVals.reduce((s,v)=>s+v,0)/savedVals.length;
     const savedPct=Math.round(avgSaved/income*100);
     if(savedPct<target-5){
       const gap=Math.round(income*target/100-avgSaved);
-      const topVar=cats.filter(c=>!c.costType||c.costType==='variable')
-        .map(c=>({c,avg:catAvg(c.id,histFilled.slice(0,3))})).sort((a,b)=>b.avg-a.avg)[0];
-      signals.push({type:'warn',
+      const mostVar=cats.map(c=>{
+        const vals=histFilled.slice(0,6).map(h=>getCatSpent(c.id,h.mk||mkd(h.month))).filter(v=>v>0);
+        const st=calcStats(vals);
+        return{c,cv:st.cv,mean:st.mean};
+      }).filter(r=>r.cv>0.15&&r.mean>20).sort((a,b)=>b.cv*b.mean-a.cv*a.mean)[0];
+      signals.push({type:'warn',icon:'zap',
         title:`Je spaart gem. ${savedPct}% — doel is ${target}%`,
-        body:topVar
-          ?`Tekort: ${fmt(gap)}/mnd. <strong>${esc(topVar.c.name)}</strong> kost gem. ${fmt(Math.round(topVar.avg))}/mnd — 20% minder = <strong>${fmt(Math.round(topVar.avg*0.2))}</strong> extra gespaard.`
-          :`Je mist gem. ${fmt(gap)}/mnd om je ${target}%-spaardoel te halen.`});
+        body:mostVar
+          ?`Tekort: ${fmt(gap)}/mnd. <strong>${esc(mostVar.c.name)}</strong> is je meest variabele post (CV ${Math.round(mostVar.cv*100)}%) — hier zit de meeste beweegruimte.`
+          :`Je mist gem. ${fmt(gap)}/mnd voor je ${target}%-spaardoel.`});
     }
   }
 
   if(!signals.length){
-    signals.push({type:'good',
+    signals.push({type:'good',icon:'check',
       title:'Patroon stabiel en consistent',
-      body:'Geen structurele afwijkingen. Inzichten verschijnen zodra er genoeg historische data is (min. 3 maanden).'});
+      body:'Geen opvallende afwijkingen. Inzichten verschijnen zodra er meer historische data is (min. 3 maanden).'});
   }
-
   const typeMap={warn:'warning',good:'success',bad:'danger',info:'info'};
   const iconMap={warn:'zap',good:'check',bad:'alert',info:'activity'};
   const prefix='insights:';
@@ -2795,7 +2811,6 @@ function updateSmartInsights(){
     alertHtml(s,typeMap[s.type]||'info',iconMap[s.type]||'activity',prefix,updateSmartInsights)
   ).join('');
 }
-
 function updateAnomalyBoard(){
   const el=$('a-leaderboard');if(!el)return;
   const now=viewMonth,m=mkd();
