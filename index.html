@@ -1154,7 +1154,28 @@ function getEarliestYear(){
   const m=getEarliestMonth();
   return m?parseInt(m.slice(0,4)):new Date().getFullYear();
 }
-function getFixedCosts(){if(_fixedCache!==null)return _fixedCache;let t=0;(S.fixedGroups||[]).forEach(g=>g.items.forEach(i=>{if(!i.enabled)return;const a=i.amount||0;if(i.period==='m')t+=a;else if(i.period==='q')t+=a/3;else t+=a/12}));return _fixedCache=t}
+function _calcFixedCosts(groups){let t=0;(groups||[]).forEach(g=>g.items.forEach(i=>{if(!i.enabled)return;const a=i.amount||0;if(i.period==='m')t+=a;else if(i.period==='q')t+=a/3;else t+=a/12}));return t;}
+function getFixedCosts(mk){
+  // Huidige maand of geen mk → live berekening
+  if(!mk||mk===mkd())return _fixedCache!==null?_fixedCache:(_fixedCache=_calcFixedCosts(S.fixedGroups));
+  // Historische maand → gebruik snapshot indien beschikbaar
+  const snap=S.monthlyData[mk]?.__fixedSnapshot;
+  if(snap!=null)return snap;
+  // Geen snapshot: val terug op live (maand zonder data of vóór feature)
+  return _calcFixedCosts(S.fixedGroups);
+}
+
+function _snapshotFixedIfNeeded(){
+  // Neem automatisch snapshot van vorige maand als die er nog niet is
+  const now=new Date();
+  const prev=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const mk=mkd(prev);
+  if(!S.monthlyData[mk])S.monthlyData[mk]={};
+  if(S.monthlyData[mk].__fixedSnapshot==null){
+    S.monthlyData[mk].__fixedSnapshot=_calcFixedCosts(S.fixedGroups);
+    save();
+  }
+}
 function getReserved(){return 0;} // reserveringen verwijderd
 function getMonthBudget(){return S.categories.filter(c=>c.type==='monthly').reduce((s,c)=>s+c.budget,0)}
 function getCatSpent(catId,m){return S.monthlyData[m]?.[catId]||0}
@@ -2091,7 +2112,7 @@ function openConfirmModal(title,body,confirmLabel,onConfirm,danger=true){
 // Vorige maanden: werkelijk = inkomen - vast - gereserveerd - werkelijk_uitgegeven
 function getSaved(m){
   const income=getMonthlyIncome();
-  const fixed=getFixedCosts();
+  const fixed=getFixedCosts(m);
   const spent=getMonthSpent(m);
   const budget=getMonthBudget();
   const now=new Date();
@@ -2765,7 +2786,7 @@ function updateSmartInsights(){
 
   // ── 6. VRIJE KASSTROOM TREND ──────────────────────────────────────────────
   if(income>0&&histFilled.length>=4){
-    const fcVals=histFilled.slice(0,6).map(h=>income-fixed-h.spent);
+    const fcVals=histFilled.slice(0,6).map(h=>income-getFixedCosts(h.mk)-h.spent);
     const recent=fcVals.slice(0,3).reduce((s,v)=>s+v,0)/3;
     const older=fcVals.slice(3).reduce((s,v)=>s+v,0)/Math.max(fcVals.slice(3).length,1);
     const change=Math.round(recent-older);
@@ -4355,6 +4376,7 @@ function buildInkomenDetail(m){
     {name:'Vakantiegeld',key:'vacation',icon:'sun'},
     {name:'Terugbetaling',key:'refund',icon:'refresh'},
     {name:'Andere jaarlijks',key:'otherYearly',icon:'plus'},
+    {name:'Eenmalig',key:'oneTime',icon:'star'},
   ];
   lumpSrc.forEach(ls=>{
     const src=I[ls.key];
@@ -5292,7 +5314,7 @@ async function importJSON(file){try{const text=await file.text();const data=JSON
 
 
 // === INIT ===
-function init(){const hasData=load();if(!hasData||!S.init){wData={income:{monthly:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:JSON.parse(JSON.stringify(FIXED_GROUPS)),reserves:[],categories:JSON.parse(JSON.stringify(DEFAULT_CATS))};showScreen('wizard');renderWizard(1)}else showScreen('dashboard');
+function init(){const hasData=load();_snapshotFixedIfNeeded();if(!hasData||!S.init){wData={income:{monthly:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:JSON.parse(JSON.stringify(FIXED_GROUPS)),reserves:[],categories:JSON.parse(JSON.stringify(DEFAULT_CATS))};showScreen('wizard');renderWizard(1)}else showScreen('dashboard');
 $$('.nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.s)));
 $('fab').onclick=()=>openQuickEntry();
 $('m-add-prev').onclick=()=>{qeMonth=new Date(qeMonth.getFullYear(),qeMonth.getMonth()-1,1);if(_sceMode){const id=$('m-add').dataset.sceCatId;if(id)openSingleCatEntry(id);else renderQuickEntry()}else renderQuickEntry()};
