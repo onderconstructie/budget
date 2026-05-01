@@ -3201,7 +3201,7 @@ function _applyEvoCat(){
       ds.borderColor=clr.c;
       ds.borderWidth=1.5;
       ds.pointRadius=Array(n).fill(2);
-      ds.pointHoverRadius=Array(n).fill(5);
+      ds.pointHoverRadius=Array(n).fill(2); // geen hover-vergroting op mobiel
       ds.pointBackgroundColor=Array(n).fill(clr.c);
       ds.fill=false;
       ds.backgroundColor='transparent';
@@ -3210,7 +3210,7 @@ function _applyEvoCat(){
       ds.borderColor=clr.c;
       ds.borderWidth=2.5;
       ds.pointRadius=Array(n).fill(3.5);
-      ds.pointHoverRadius=Array(n).fill(6);
+      ds.pointHoverRadius=Array(n).fill(4);
       ds.pointBackgroundColor=Array(n).fill(clr.c);
       ds.fill='origin';
       const hex=clr.c.replace('#','');
@@ -3488,7 +3488,7 @@ function updateEvoChart(y){
 
   // Tap buiten datapunt = tooltip sluiten
   ctx.addEventListener('touchend',()=>{
-    if(charts.evo){charts.evo.tooltip.setActiveElements([],{x:0,y:0});charts.evo.update('none');}
+    if(charts.evo){charts.evo.setActiveElements([]);charts.evo.tooltip.setActiveElements([],{x:0,y:0});charts.evo.update('none');}
   },{passive:true});
 }
 
