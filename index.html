@@ -141,23 +141,32 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dh-label-meta{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--n2);text-transform:none;letter-spacing:0}
 
 /* ── Alerts ── */
-.alert{display:flex;gap:10px;padding:12px 12px 12px 15px;border-radius:var(--r8);margin-bottom:8px;border:none;border-left:3px solid transparent;position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none;transition:transform .22s cubic-bezier(.4,0,.2,1),opacity .22s,max-height .2s,margin .2s,padding .2s}
+
 .alert.danger{background:linear-gradient(100deg,rgba(220,38,38,.13) 0%,rgba(220,38,38,.06) 100%);border-color:var(--r)}
 .alert.warning,.alert.warn{background:linear-gradient(100deg,rgba(217,119,6,.12) 0%,rgba(217,119,6,.05) 100%);border-color:var(--w)}
 .alert.info{background:linear-gradient(100deg,rgba(14,165,233,.11) 0%,rgba(14,165,233,.04) 100%);border-color:#0ea5e9}
 .alert.success{background:linear-gradient(100deg,rgba(22,163,74,.12) 0%,rgba(22,163,74,.05) 100%);border-color:var(--g)}
-.alert-dismiss{width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.08);color:var(--n2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-start;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent;padding:0}
-.alert-dismiss:active{background:rgba(0,0,0,.16);color:var(--n0)}
+.alert{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border-radius:var(--r8);margin-bottom:8px;border:1px solid transparent}
+.alert-dismiss{width:24px;height:24px;border-radius:50%;border:none;background:rgba(0,0,0,.08);color:var(--n2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-start;transition:background .12s;-webkit-tap-highlight-color:transparent;padding:0}
+.alert-dismiss:active{background:rgba(0,0,0,.16)}
 .alert-dismiss svg{width:9px;height:9px;stroke:currentColor;stroke-width:3}
-.alert-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.alert-icon svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5}
-.alert.danger .alert-icon,.alert.danger .alert-title{color:var(--r)}
-.alert.warning .alert-icon,.alert.warning .alert-title,.alert.warn .alert-icon,.alert.warn .alert-title{color:var(--w)}
-.alert.success .alert-icon,.alert.success .alert-title{color:var(--g)}
-.alert.info .alert-icon,.alert.info .alert-title{color:#0ea5e9}
+.alert-icon{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:0px}
+.alert-icon svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none}
+.alert.danger{background:rgba(220,38,38,.07);border-color:rgba(220,38,38,.18)}
+.alert.danger .alert-icon{background:rgba(220,38,38,.15);color:var(--r)}
+.alert.danger .alert-title{color:var(--r)}
+.alert.warning,.alert.warn{background:rgba(217,119,6,.07);border-color:rgba(217,119,6,.18)}
+.alert.warning .alert-icon,.alert.warn .alert-icon{background:rgba(217,119,6,.15);color:var(--w)}
+.alert.warning .alert-title,.alert.warn .alert-title{color:var(--w)}
+.alert.success{background:rgba(22,163,74,.07);border-color:rgba(22,163,74,.18)}
+.alert.success .alert-icon{background:rgba(22,163,74,.15);color:var(--g)}
+.alert.success .alert-title{color:var(--g)}
+.alert.info{background:rgba(14,165,233,.07);border-color:rgba(14,165,233,.18)}
+.alert.info .alert-icon{background:rgba(14,165,233,.15);color:#0ea5e9}
+.alert.info .alert-title{color:#0ea5e9}
 .alert-content{flex:1;min-width:0}
 .alert-title{font-size:12px;font-weight:700;line-height:1.3}
-.alert-text{font-size:11px;color:var(--n1);margin-top:3px;line-height:1.45;opacity:.82}
+.alert-text{font-size:11px;color:var(--n2);margin-top:3px;line-height:1.45}
 
 /* ── Category rows — FLAT, no card wrapper ── */
 .dh-cats{display:flex;flex-direction:column}
@@ -1070,6 +1079,10 @@ let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:
 let charts={},wStep=1,wData={},viewMonth=new Date();
 const $=id=>document.getElementById(id),$$=sel=>document.querySelectorAll(sel),genId=()=>Math.random().toString(36).substr(2,9);
 const fmt=(n,d=0)=>'€'+(Number(n)||0).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d});
+// Bedragen in meldingen: altijd gekleurd + prefix, nooit een kaal minteken
+const fmtPos=(n)=>`<strong style="color:var(--g)">+${fmt(Math.abs(n))}</strong>`;
+const fmtNeg=(n)=>`<strong style="color:var(--r)">\u2212${fmt(Math.abs(n))}</strong>`;
+const fmtAmt=(n,positive)=>positive!==false&&n>=0?fmtPos(n):fmtNeg(n);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const mkd=(d=viewMonth)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 function calc(expr){try{const c=String(expr).replace(/\s/g,'');if(!/^[\d+\-*/().]+$/.test(c)||/[+\-*/]{2,}/.test(c))return null;const r=Function('"use strict";return('+c+')')();return typeof r==='number'&&isFinite(r)?Math.round(r*100)/100:null}catch{return null}}
@@ -1537,7 +1550,7 @@ function updateDashTip(m,spent,budget){
           :`Over het totaalbudget.`;
         type='danger';
       } else if(pace.daysLeft>0&&rem/budget<0.08&&pace.daysLeft>2){
-        tip=`Nog <strong>${fmt(Math.round(rem))}</strong> voor ${pace.daysLeft} dag${pace.daysLeft!==1?'en':''} — ${fmt(Math.round(rem/pace.daysLeft))}/dag. Kritisch.`;
+        tip=`Nog ${fmtPos(Math.round(rem))} voor ${pace.daysLeft} dag${pace.daysLeft!==1?'en':''} — ${fmt(Math.round(rem/pace.daysLeft))}/dag. Kritisch.`;
         type='warning';
       }
     }
@@ -2672,7 +2685,7 @@ function updateSmartInsights(){
       const mean=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
       signals.push({type:'info',icon:'activity',
         title:`${esc(c.name)}: pieken, geen structureel probleem`,
-        body:`Typische maand: <strong>${fmt(median)}</strong> (mediaan, onder budget). Gemiddelde: <strong>${fmt(mean)}</strong> (over budget). Één of twee dure maanden trekken het gemiddelde omhoog.`});
+        body:`Typische maand: ${fmt(median)} (mediaan, onder budget). Gemiddelde: ${fmtNeg(mean)} (over budget). Één of twee dure maanden trekken het gemiddelde omhoog.`});
     }
   }
 
@@ -2691,7 +2704,7 @@ function updateSmartInsights(){
       const savings=drivers.slice(0,2).map(d=>`${esc(d.c.name)} −${fmt(Math.round(d.saving))}`).join(', ');
       signals.push({type:'good',icon:'check',
         title:`Wat maakte ${MONTHS[parseInt(bestMk.split('-')[1])-1]} je beste maand?`,
-        body:`${savings}. Die categorieën lager houden = potentieel <strong>${fmt(Math.round(drivers.slice(0,2).reduce((s,d)=>s+d.saving,0)*12))}</strong>/jaar extra.`});
+        body:`${savings}. Die categorieën lager houden = potentieel ${fmtPos(Math.round(drivers.slice(0,2).reduce((s,d)=>s+d.saving,0)*12))}/jaar extra.`});
     }
   }
 
@@ -2746,7 +2759,7 @@ function updateSmartInsights(){
     if(best){
       signals.push({type:'warn',icon:'zap',
         title:`Gemiddeld bedrag bij ${esc(best.store)} stijgt: +${best.rise}%`,
-        body:`In <strong>${esc(best.cat.name)}</strong>: per bezoek ${fmt(Math.round(best.oAvg))} vroeger → <strong>${fmt(Math.round(best.rAvg))}</strong> recent. Prijsstijging, groter mandje of duurdere keuzes?`});
+        body:`In <strong>${esc(best.cat.name)}</strong>: per bezoek ${fmt(Math.round(best.oAvg))} vroeger → ${fmtNeg(Math.round(best.rAvg))} recent. Prijsstijging, groter mandje of duurdere keuzes?`});
     }
   }
 
@@ -2760,7 +2773,7 @@ function updateSmartInsights(){
     if(Math.abs(change)>30&&pct>=15){
       signals.push({type:change<0?'warn':'good',icon:change<0?'zap':'check',
         title:`Vrije kasstroom ${change<0?'daalt':'stijgt'} met ${fmt(Math.abs(change))}/mnd`,
-        body:`Recent gem. vrij: <strong>${fmt(Math.round(recent))}/mnd</strong> vs ${fmt(Math.round(older))} eerder. ${change<0?`Op jaarbasis <strong>−${fmt(Math.abs(change)*12)}</strong> minder beschikbaar.`:`Op jaarbasis <strong>+${fmt(change*12)}</strong> extra armslag.`}`});
+        body:`Recent gem. vrij: ${fmtPos(Math.round(recent))}/mnd vs ${fmt(Math.round(older))} eerder. ${change<0?`Op jaarbasis ${fmtNeg(Math.abs(change)*12)} minder beschikbaar.`:`Op jaarbasis ${fmtPos(change*12)} extra armslag.`}`});
     }
   }
 
@@ -2774,7 +2787,7 @@ function updateSmartInsights(){
       const rise=Math.round((lateMin-earlyMin)/earlyMin*100);
       signals.push({type:'warn',icon:'zap',
         title:`Leefstijlinflatie: +${rise}% in je rustigste maanden`,
-        body:`Zelfs je goedkoopste maanden kosten nu <strong>${fmt(Math.round(lateMin))}</strong> vs <strong>${fmt(Math.round(earlyMin))}</strong> eerder. Je basisniveau stijgt structureel — niet alleen pieken.`});
+        body:`Zelfs je goedkoopste maanden kosten nu ${fmtNeg(Math.round(lateMin))} vs ${fmtPos(Math.round(earlyMin))} eerder. Je basisniveau stijgt structureel — niet alleen pieken.`});
     }
   }
 
@@ -2794,7 +2807,7 @@ function updateSmartInsights(){
       signals.push({type:'warn',icon:'zap',
         title:`Je spaart gem. ${savedPct}% — doel is ${target}%`,
         body:mostVar
-          ?`Tekort: ${fmt(gap)}/mnd. <strong>${esc(mostVar.c.name)}</strong> is je meest variabele post (CV ${Math.round(mostVar.cv*100)}%) — hier zit de meeste beweegruimte.`
+          ?`Tekort: ${fmtNeg(gap)}/mnd. <strong>${esc(mostVar.c.name)}</strong> is je meest variabele post (CV ${Math.round(mostVar.cv*100)}%) — hier zit de meeste beweegruimte.`
           :`Je mist gem. ${fmt(gap)}/mnd voor je ${target}%-spaardoel.`});
     }
   }
@@ -3794,12 +3807,12 @@ function renderFcSignals(){
       signals.push({type:'warning',icon:'zap',
         title:`Koers op ${Math.abs(z).toFixed(1)}σ boven je historisch gemiddelde`,
         body:d
-          ?`Normaal eindig je op <strong>${fmt(Math.round(histStats.mean))}</strong>. <strong>${esc(d.c.name)}</strong> loopt ${fmt(Math.round(d.delta))} hoger dan je eigen gemiddelde — dát maakt het verschil.`
+          ?`Normaal eindig je op ${fmt(Math.round(histStats.mean))}. <strong>${esc(d.c.name)}</strong> loopt ${fmt(Math.round(d.delta))} hoger dan je eigen gemiddelde — dát maakt het verschil.`
           :`Normaal eindig je op <strong>${fmt(Math.round(histStats.mean))}</strong> — dit wordt een duurder dan gemiddelde maand.`});
     } else if(z<-1.2){
       signals.push({type:'success',icon:'check',
         title:`Rustigste maand in tijden — ${Math.abs(z).toFixed(1)}σ onder gemiddelde`,
-        body:`Prognose ligt ${fmt(Math.round(histStats.mean-fc.point))} onder je historisch gemiddelde van <strong>${fmt(Math.round(histStats.mean))}</strong>. Goed moment om iets extra te sparen.`});
+        body:`Prognose ligt ${fmtPos(Math.round(histStats.mean-fc.point))} onder je historisch gemiddelde van <strong>${fmt(Math.round(histStats.mean))}</strong>. Goed moment om iets extra te sparen.`});
     }
   }
 
@@ -3811,7 +3824,7 @@ function renderFcSignals(){
       const projAtThisTempo=budget>0?Math.round(spent/pace.pctElapsed):0;
       signals.push({type:'warning',icon:'zap',
         title:`${tempoPct}% sneller dan je eigen gemiddeld tempo`,
-        body:`Op dag ${pace.dayOfMonth} was je historisch gem. <strong>${fmt(Math.round(expectedNow))}</strong> — nu al ${fmt(spent)}. Op dit tempo: prognose <strong>${fmt(projAtThisTempo||fc?.point||0)}</strong>.`});
+        body:`Op dag ${pace.dayOfMonth} was je historisch gem. <strong>${fmt(Math.round(expectedNow))}</strong> — nu al ${fmtNeg(spent)}. Op dit tempo: prognose <strong>${fmt(projAtThisTempo||fc?.point||0)}</strong>.`});
     } else if(tempoPct<=-25){
       signals.push({type:'success',icon:'check',
         title:`${Math.abs(tempoPct)}% trager dan je eigen gemiddeld tempo`,
@@ -3837,7 +3850,7 @@ function renderFcSignals(){
       const r=atRisk[0];
       signals.push({type:'warning',icon:'alert',
         title:`${esc(r.c.name)}: ${r.z.toFixed(1)}σ boven je eigen patroon`,
-        body:`Prognose <strong>${fmt(r.proj)}</strong> bij historisch gem. ${fmt(Math.round(r.histMean))} en budget ${fmt(r.budget)}. Uniek hoge maand voor deze categorie.`});
+        body:`Prognose ${fmtNeg(r.proj)} bij historisch gem. ${fmt(Math.round(r.histMean))} en budget ${fmt(r.budget)}. Uniek hoge maand voor deze categorie.`});
     }
   }
 
@@ -3861,11 +3874,11 @@ function renderFcSignals(){
       if(shortfall>20){
         signals.push({type:'warning',icon:'zap',
           title:`Laatste week kost je gem. ${fmt(Math.round(lastWeekAvg))} — je hebt ${fmt(Math.round(rem))} over`,
-          body:`De afgelopen maanden gaf je de laatste ${pace.daysLeft} dagen gem. <strong>${fmt(Math.round(lastWeekAvg))}</strong> uit. Dat past nu niet meer binnen je resterende budget.`});
+          body:`De afgelopen maanden gaf je de laatste ${pace.daysLeft} dagen gem. ${fmtNeg(Math.round(lastWeekAvg))} uit. Dat past nu niet meer binnen je resterende budget.`});
       } else if(rem>0){
         signals.push({type:'info',icon:'activity',
           title:`Nog ${pace.daysLeft} dagen — historisch kost dat gem. ${fmt(Math.round(lastWeekAvg))}`,
-          body:`Je hebt <strong>${fmt(Math.round(rem))}</strong> resterend. Op basis van vorige maanden past de rest van de maand er ${shortfall<-10?'ruim':''} in.`});
+          body:`Je hebt ${fmtPos(Math.round(rem))} resterend. Op basis van vorige maanden past de rest van de maand er ${shortfall<-10?'ruim':''} in.`});
       }
     }
   }
@@ -3878,7 +3891,7 @@ function renderFcSignals(){
       if(proj<prevSpent*0.90){
         signals.push({type:'success',icon:'check',
           title:`Bijgestuurd na dure vorige maand`,
-          body:`Vorige maand <strong>${fmt(Math.round(prevSpent-budget))}</strong> over budget. Op dit tempo eindig je op <strong>${fmt(proj)}</strong> — duidelijk lager dan vorige maand (${fmt(prevSpent)}).`});
+          body:`Vorige maand ${fmtNeg(Math.round(prevSpent-budget))} over budget. Op dit tempo eindig je op ${fmtPos(proj)} — duidelijk lager dan vorige maand (${fmt(prevSpent)}).`});
       }
     }
   }
@@ -5275,8 +5288,9 @@ function exportXLSX(){
   showToast('✓ CSV gedownload');
 }
 function exportBackup(){const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`buddy-budget-backup-${new Date().toISOString().split('T')[0]}.json`;a.click()}
-async function importJSON(file){try{const text=await file.text();const data=JSON.parse(text);if(!data.categories){showToast('⚠ Ongeldig backup-bestand',3000);return;}function doImport(){S={...S,...data};if(!S.monthlyData)S.monthlyData={};if(S.transactions){S.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});delete S.transactions}save();showScreen('dashboard');showToast('✓ Backup geladen')}
-openConfirmModal('Backup importeren','Dit vervangt al je huidige gegevens met de backup.','Importeren',doImport,false)}catch(e){showToast('⚠ Import fout: '+e.message,3500)}}
+async function importJSON(file){try{const text=await file.text();const data=JSON.parse(text);if(!data.categories){showToast('⚠ Ongeldig backup-bestand',3000);return;}if(!confirm('Huidige data overschrijven met deze backup?'))return;Object.assign(S,data);if(!S.monthlyData)S.monthlyData={};if(!S.transactions)S.transactions=[];save();location.reload();}catch(e){showToast('⚠ Fout bij importeren: '+e.message,4000);}}
+
+
 // === INIT ===
 function init(){const hasData=load();if(!hasData||!S.init){wData={income:{monthly:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:JSON.parse(JSON.stringify(FIXED_GROUPS)),reserves:[],categories:JSON.parse(JSON.stringify(DEFAULT_CATS))};showScreen('wizard');renderWizard(1)}else showScreen('dashboard');
 $$('.nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.s)));
