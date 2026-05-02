@@ -1769,7 +1769,7 @@ function renderCatEdit(){
     <div style="padding-top:12px;display:flex;gap:8px;margin-bottom:12px">
       <div style="flex:1">
         <div style="font-size:9px;color:var(--n3);margin-bottom:5px">Naam</div>
-        <input type="text" id="ce-name" value="${cat.name}" class="field-input" style="font-size:13px;padding:9px 12px">
+        <input type="text" id="ce-name" value="${esc(cat.name)}" class="field-input" style="font-size:13px;padding:9px 12px">
       </div>
       <div style="width:96px">
         <div style="font-size:9px;color:var(--n3);margin-bottom:5px">Budget/mnd</div>
@@ -1973,7 +1973,7 @@ function renderQuickEntry(focusCatId){
         <div class="qe-row-top">
           <div style="width:26px;height:26px;border-radius:var(--r4);background:${clr.bg};color:${clr.c};display:flex;align-items:center;justify-content:center;flex-shrink:0">${ic(cat.icon)}</div>
           <div style="flex:1;min-width:0;overflow:hidden">
-            <div style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">${cat.name}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">${esc(cat.name)}</div>
             <div style="font-size:10px;color:var(--n3);line-height:1.2;margin-top:1px">${spent>0?`${fmt(spent)} uitgegeven`:`Budget: ${fmt(cat.budget)}`}</div>
           </div>
           <input type="text" class="qe-amount-input" id="qa-${cat.id}" data-qid="${cat.id}" data-existing="${spent}" placeholder="0" inputmode="decimal" autocomplete="off">
@@ -2243,7 +2243,7 @@ function openSingleCatEntry(catId){
     <div style="display:flex;align-items:center;gap:14px;padding:6px 0 16px;border-bottom:1px solid var(--l0);margin-bottom:16px">
       <div style="width:44px;height:44px;border-radius:var(--r6);display:flex;align-items:center;justify-content:center;background:${clr.bg};color:${clr.c};flex-shrink:0">${ic(cat.icon)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:var(--n0)">${cat.name}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--n0)">${esc(cat.name)}</div>
         <div style="font-size:11px;color:var(--n3);margin-top:2px">${budget>0?'Budget: '+fmt(budget)+' · ':''} Uitgegeven: ${fmt(spent)}</div>
       </div>
       ${budget>0?`<div style="text-align:right;flex-shrink:0"><div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${spent>=budget?'var(--r)':spent>=budget*.85?'var(--w)':'var(--g)'}">
@@ -2384,6 +2384,17 @@ function zScore(val,mean,std){
   return(val-mean)/std;
 }
 
+// Standaard normale CDF (Abramowitz & Stegun #26.2.17, max fout ~1.5e-7)
+// Geeft P(X <= z) voor X ~ N(0,1). Gebruikt voor kansberekeningen op prognoses.
+function normCdf(z){
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const sign=z<0?-1:1;
+  z=Math.abs(z)/Math.sqrt(2);
+  const t=1/(1+p*z);
+  const y=1-(((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-z*z);
+  return 0.5*(1+sign*y);
+}
+
 // Haal N maanden history op (exclusief huidige maand)
 function getMonthHistory(n=12){
   const res=[];
@@ -2403,6 +2414,7 @@ function calcMonthEndForecast(){
   const pace=calcPace();
   const m=mkd();
   const spent=getMonthSpent(m);
+  const budget=getMonthBudget();
   const{dayOfMonth,daysInMonth,pctElapsed,isCurrentMonth}=pace;
   if(!isCurrentMonth||dayOfMonth===0)return null;
 
@@ -2412,33 +2424,85 @@ function calcMonthEndForecast(){
 
   // 2. Historisch gemiddelde + std (Bessel-gecorrigeerd via calcStats)
   const hist=getMonthHistory(12);
-  const histSpent=hist.map(h=>h.spent);
+  const histSpent=hist.map(h=>h.spent).filter(v=>v>0);
   const stats=calcStats(histSpent);
+  const hasHistory=stats.n>=3;
 
-  // 3. Adaptieve weging: vroeg in maand meer historisch (minder observaties),
-  //    laat in maand meer naïef (observaties zijn representatiever)
-  //    pctElapsed: 0→1 over de maand
-  const histWeight=stats.n>=3?Math.max(0.20, 0.55*(1-pctElapsed)):0;
-  const point=stats.n>=3
-    ? (1-histWeight)*naiveProjection + histWeight*stats.mean
-    : naiveProjection;
+  // 3. Adaptieve weging: vroeg in maand meer historisch, laat in maand meer naïef
+  const histWeight=hasHistory?Math.max(0.20,0.55*(1-pctElapsed)):0;
+  const point=hasHistory
+    ?(1-histWeight)*naiveProjection+histWeight*stats.mean
+    :naiveProjection;
 
-  // 4. Symmetrische ±1σ betrouwbandbreedtes (statistisch gegrond)
-  //    Onderkant geclipt op reeds-besteed (kan niet minder worden)
-  const uncertainty=stats.n>=3 ? stats.std : point*0.18;
-  const low=Math.max(spent, point - uncertainty);
-  const high=point + uncertainty;
+  // 4. Onzekerheid: krimpt naarmate de maand vordert
+  // Vroeg: volledige historische std. Laat: gereduceerd naar nog-te-bestedingen.
+  // Modelleer als σ * sqrt(1 - pctElapsed) — onzekerheid neemt af met sqrt-tijd.
+  const baseStd=hasHistory?stats.std:point*0.18;
+  const uncertainty=baseStd*Math.sqrt(Math.max(0.10,1-pctElapsed));
+
+  // 5. Percentielen via normale verdeling: P10, P50 (=point), P90
+  // Z-waarden: P10≈-1.282, P90≈+1.282
+  const p10=Math.max(spent,point-1.282*uncertainty);
+  const p90=point+1.282*uncertainty;
+  const low=Math.max(spent,point-uncertainty);
+  const high=point+uncertainty;
+
+  // 6. Kans op budgetoverschrijding: P(eindtotaal > budget)
+  // = 1 - Φ((budget - point) / uncertainty)
+  let pOverBudget=null;
+  if(budget>0&&uncertainty>0){
+    pOverBudget=1-normCdf((budget-point)/uncertainty);
+    pOverBudget=Math.max(0,Math.min(1,pOverBudget));
+  }
+
+  // 7. Burn-day: dag waarop budget bereikt wordt bij huidig tempo
+  let burnDay=null;
+  if(budget>0&&dailyRate>0){
+    const d=Math.ceil(budget/dailyRate);
+    if(d<=daysInMonth)burnDay=d;
+  }
+
+  // 8. Onderliggende prognose: sluit grootste uitschieter deze maand uit
+  // Detecteer outlier: transactie >= 25% van totaal én >= 2× mediaan van overige tx
+  let underlyingPoint=null,outlierTx=null;
+  const curTxs=getAllTransactions(m);
+  if(curTxs.length>=4&&spent>50){
+    const amounts=curTxs.map(t=>t.amount).sort((a,b)=>a-b);
+    const max=amounts[amounts.length-1];
+    const others=amounts.slice(0,-1);
+    const otherMedian=others[Math.floor(others.length/2)];
+    if(max>=spent*0.25&&max>=otherMedian*2&&otherMedian>0){
+      const big=curTxs.find(t=>t.amount===max);
+      if(big){
+        outlierTx=big;
+        // Herbereken zonder uitschieter
+        const cleanSpent=spent-max;
+        const cleanRate=cleanSpent/dayOfMonth;
+        const cleanNaive=cleanRate*daysInMonth;
+        underlyingPoint=hasHistory
+          ?Math.round((1-histWeight)*cleanNaive+histWeight*stats.mean)
+          :Math.round(cleanNaive);
+      }
+    }
+  }
 
   return{
     point:Math.round(point),
     low:Math.round(low),
     high:Math.round(high),
+    p10:Math.round(p10),
+    p90:Math.round(p90),
+    pOverBudget,         // 0..1 of null
+    burnDay,             // dag van de maand of null
+    underlyingPoint,     // prognose zonder uitschieter, of null
+    outlierTx,           // de uitschieter-transactie, of null
     dailyRate,
     naiveProjection:Math.round(naiveProjection),
-    daysLeft:daysInMonth-dayOfMonth,
-    hasHistory:stats.n>=3,
+    daysLeft:daysInMonth-dayOfMonth+1,
+    hasHistory,
     histMean:stats.mean,
-    histStd:stats.std
+    histStd:stats.std,
+    uncertainty:Math.round(uncertainty)
   };
 }
 
@@ -2625,7 +2689,7 @@ function updateOvCategories(){
     return '<div class="ov-cat-row" onclick="openCatEdit(\''+cat.id+'\')">'
       +'<div class="ov-cat-icon" style="background:'+clr.bg+';color:'+clr.c+'">'+ic(cat.icon)+'</div>'
       +'<div class="ov-cat-mid">'
-        +'<div class="ov-cat-nameline"><span class="ov-cat-name">'+cat.name+'</span>'+(budget>0?'<span class="ov-cat-budlbl">'+fmt(budget)+'</span>':'')+'</div>'
+        +'<div class="ov-cat-nameline"><span class="ov-cat-name">'+esc(cat.name)+'</span>'+(budget>0?'<span class="ov-cat-budlbl">'+fmt(budget)+'</span>':'')+'</div>'
         +'<div class="ov-cat-bar-wrap"><div class="ov-cat-bar-track"><div class="ov-cat-bar-fill" style="width:'+fillPct+'%;background:'+fillColor+'"></div></div>'+(budget>0&&pace.isCurrentMonth?'<div class="ov-cat-pace-tick" style="left:'+pacePct+'%"></div>':'')+'</div>'
       +'</div>'
       +'<div class="ov-cat-right"><div class="ov-cat-amount" style="color:'+amtColor+'">'+fmt(spent)+'</div>'
@@ -3146,7 +3210,7 @@ function renderEvoCatChips(){
       <div class="evo-chip-icon" style="background:${clr.bg};color:${clr.c}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
       </div>
-      <span class="evo-chip-name" style="color:var(--n2)">${cat.name}</span>
+      <span class="evo-chip-name" style="color:var(--n2)">${esc(cat.name)}</span>
     </button>`;
   }).join('');
   _syncEvoChips();
@@ -3810,8 +3874,42 @@ function renderFcSignals(){
   const hist=getMonthHistory(12).filter(h=>h.spent>0);
   const histStats=calcStats(hist.map(h=>h.spent));
   const signals=[];
+  const getMonthName=(p)=>MONTHS_S[new Date().getMonth()].toLowerCase();
 
   if(!pace.isCurrentMonth){el.innerHTML='';return;}
+
+  // ── 0a. KANS OP OVERSCHRIJDING (statistisch onderbouwd) ─────────────────
+  if(fc&&fc.pOverBudget!=null&&budget>0&&pace.pctElapsed>0.10){
+    const pct=Math.round(fc.pOverBudget*100);
+    if(pct>=70){
+      signals.push({type:'warning',icon:'alert',
+        title:`${pct}% kans dat je over budget gaat`,
+        body:`Op basis van je historische variatie (±${fmt(fc.uncertainty)}) en huidig tempo. Prognose <strong>${fmt(fc.point)}</strong> tegenover budget ${fmt(budget)}.`});
+    } else if(pct<=15&&fc.point<budget){
+      signals.push({type:'success',icon:'check',
+        title:`${100-pct}% kans dat je binnen budget blijft`,
+        body:`Met een ruime marge: prognose <strong>${fmt(fc.point)}</strong> ligt comfortabel onder budget ${fmt(budget)}.`});
+    }
+  }
+
+  // ── 0b. BURN-DAY (bij huidig tempo bereik je budget op dag X) ───────────
+  if(fc&&fc.burnDay!=null&&budget>0&&pace.pctElapsed>0.15&&fc.burnDay<pace.daysInMonth-1){
+    const daysAfter=pace.daysInMonth-fc.burnDay;
+    signals.push({type:'warning',icon:'zap',
+      title:`Bij huidig tempo: budget op ${fc.burnDay} ${getMonthName(pace)}`,
+      body:`Dat is <strong>${daysAfter} dag${daysAfter!==1?'en':''}</strong> vóór maandeinde. Tempo verlagen of accepteren dat je over budget gaat.`});
+  }
+
+  // ── 0c. UITSCHIETER-IMPACT ──────────────────────────────────────────────
+  if(fc&&fc.outlierTx&&fc.underlyingPoint!=null){
+    const tx=fc.outlierTx;
+    const diff=fc.point-fc.underlyingPoint;
+    if(diff>30){
+      signals.push({type:'info',icon:'activity',
+        title:`Eén uitschieter trekt je prognose omhoog`,
+        body:`<strong>${esc(tx.detail||'—')}</strong> (${fmt(tx.amount)}) maakt ${Math.round(tx.amount/spent*100)}% van deze maand uit. Zonder die uitgave: prognose ${fmt(fc.underlyingPoint)} (in plaats van ${fmt(fc.point)}).`});
+    }
+  }
 
   // ── 1. PROGNOSE VS HISTORISCH PATROON (niet vs budget — dat staat al in de balk) ──
   if(fc&&histStats.n>=3){
@@ -4116,7 +4214,7 @@ function renderCatForecasts(){
       <!-- Midden: naam + balk + subtekst -->
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;gap:6px">
-          <span style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${cat.name}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${esc(cat.name)}</span>
           ${pctProj!==null?`<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${sem};flex-shrink:0">${pctProj}%</span>`:''}
         </div>
 
@@ -4304,7 +4402,13 @@ function renderStatsSection(){
 
     <div class="fc-stat-grid">
       ${statCard('Gem. p/maand', stats.n>0?fmt(Math.round(stats.mean)):'—', 'over '+stats.n+' maanden', 'var(--n3)')}
-      ${statCard('Budget succes', successRate!==null?successRate+'%':'—', srText, srColor)}
+      ${(()=>{
+        if(!fc||fc.pOverBudget===null)return statCard('Budget succes', successRate!==null?successRate+'%':'—', srText, srColor);
+        const pIn=Math.round((1-fc.pOverBudget)*100);
+        const c=pIn>=70?'var(--g)':pIn>=40?'var(--w)':'var(--r)';
+        const sub=fc.uncertainty>0?'± '+fmt(fc.uncertainty)+' onzekerheid':'op huidig tempo';
+        return statCard('Kans binnen budget', pIn+'%', sub, c);
+      })()}
       ${statCard('Trend p/maand', trendVal, trendSub, trendReliable?trendColor:'var(--n3)')}
       ${statCard('Volatiliteit', volVal, volSub, volColor)}
       ${statCard('Huidig tempo', siVal, siText, siColor)}
@@ -4514,7 +4618,7 @@ function buildUitgegevenDetail(m){
         <div class="tx-cat-dot" style="background:${clr.c}"></div>
         <div class="tx-body">
           <div class="tx-detail">${esc(tx.detail||cat.name)}</div>
-          <div class="tx-meta">${cat.name} &nbsp;·&nbsp; ${fmtTs(tx.ts)}</div>
+          <div class="tx-meta">${esc(cat.name)} &nbsp;·&nbsp; ${fmtTs(tx.ts)}</div>
         </div>
         <div class="tx-amount">${fmt(tx.amount)}</div>
       </div>`;
@@ -4553,7 +4657,7 @@ function buildUitgegevenDetail(m){
         </div>
         <!-- Naam + balk -->
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:600;color:var(--n0);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cat.name}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--n0);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cat.name)}</div>
           <div style="position:relative;height:6px;background:rgba(0,0,0,.07);border-radius:3px;overflow:hidden">
             <div style="position:absolute;top:0;left:0;height:100%;width:${Math.min(barW,100)}%;background:${barColor};border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1)"></div>
             ${isOver?`<div style="position:absolute;top:0;left:0;height:100%;width:100%;background:${barColor};opacity:.35;border-radius:3px"></div>`:''}
@@ -5120,15 +5224,15 @@ return`<div class="hist-item" data-hm="${m}"><div class="hist-head"><div class="
 $$('.hist-item').forEach(item=>item.addEventListener('click',()=>{viewMonth=new Date(item.dataset.hm+'-01');showScreen('dashboard')}))}
 // === WIZARD ===
 function periodLabel(p){return p==='m'?'Per maand':p==='q'?'Per kwartaal':'Per jaar'}
-function renderGroup(g){const c=col(g.color);return`<div class="group open" data-gid="${g.id}"><div class="group-head"><div class="group-icon" style="background:${c.bg};color:${c.c}">${ic(g.icon)}</div><div class="group-name">${esc(g.name)}</div><div class="group-total" data-gt="${g.id}">€0/mnd</div><div class="group-arrow">${ic('chevDown')}</div></div><div class="group-body"><div class="group-items">${g.items.map(i=>`<div class="sub-item${i.enabled?'':' off'}"><div class="sub-check ${i.enabled?'on':''}" data-chk="${i.id}">${ic('check')}</div><div class="sub-info">${i.editable?`<input type="text" class="sub-name-input" data-nme="${i.id}" value="${i.name}" placeholder="Naam" ${i.enabled?'':'disabled'}>`:
-`<div class="sub-name">${i.name}</div>`}<div class="sub-period" data-plbl="${i.id}">${periodLabel(i.period)}</div></div><input type="text" class="sub-input" data-inp="${i.id}" value="${i.amount||''}" placeholder="0" inputmode="decimal" ${i.enabled?'':'disabled'}><div class="period-toggle"><button class="period-btn ${i.period==='m'?'on':''}" data-pid="${i.id}" data-p="m" ${i.enabled?'':'disabled'}>M</button><button class="period-btn ${i.period==='q'?'on':''}" data-pid="${i.id}" data-p="q" ${i.enabled?'':'disabled'}>K</button><button class="period-btn ${i.period==='y'?'on':''}" data-pid="${i.id}" data-p="y" ${i.enabled?'':'disabled'}>J</button></div></div>`).join('')}</div></div></div>`}
+function renderGroup(g){const c=col(g.color);return`<div class="group open" data-gid="${g.id}"><div class="group-head"><div class="group-icon" style="background:${c.bg};color:${c.c}">${ic(g.icon)}</div><div class="group-name">${esc(g.name)}</div><div class="group-total" data-gt="${g.id}">€0/mnd</div><div class="group-arrow">${ic('chevDown')}</div></div><div class="group-body"><div class="group-items">${g.items.map(i=>`<div class="sub-item${i.enabled?'':' off'}"><div class="sub-check ${i.enabled?'on':''}" data-chk="${i.id}">${ic('check')}</div><div class="sub-info">${i.editable?`<input type="text" class="sub-name-input" data-nme="${i.id}" value="${esc(i.name)}" placeholder="Naam" ${i.enabled?'':'disabled'}>`:
+`<div class="sub-name">${esc(i.name)}</div>`}<div class="sub-period" data-plbl="${i.id}">${periodLabel(i.period)}</div></div><input type="text" class="sub-input" data-inp="${i.id}" value="${i.amount||''}" placeholder="0" inputmode="decimal" ${i.enabled?'':'disabled'}><div class="period-toggle"><button class="period-btn ${i.period==='m'?'on':''}" data-pid="${i.id}" data-p="m" ${i.enabled?'':'disabled'}>M</button><button class="period-btn ${i.period==='q'?'on':''}" data-pid="${i.id}" data-p="q" ${i.enabled?'':'disabled'}>K</button><button class="period-btn ${i.period==='y'?'on':''}" data-pid="${i.id}" data-p="y" ${i.enabled?'':'disabled'}>J</button></div></div>`).join('')}</div></div></div>`}
 function bindGroups(){$$('.group-head').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));$$('.sub-check').forEach(chk=>{chk.addEventListener('click',e=>{e.stopPropagation();const iid=chk.dataset.chk;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item){item.enabled=!item.enabled;chk.classList.toggle('on',item.enabled);const row=chk.closest('.sub-item');row.classList.toggle('off',!item.enabled);row.querySelector('.sub-input').disabled=!item.enabled;row.querySelectorAll('.period-btn').forEach(b=>b.disabled=!item.enabled);const nmeInp=row.querySelector('.sub-name-input');if(nmeInp)nmeInp.disabled=!item.enabled}});calcFixed()})});$$('.sub-name-input').forEach(inp=>{inp.addEventListener('input',()=>{const iid=inp.dataset.nme;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item)item.name=inp.value||'Andere'})});inp.addEventListener('click',e=>e.stopPropagation())});$$('.sub-input').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const iid=inp.dataset.inp;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item)item.amount=calc(inp.value)||parseFloat(inp.value)||0});calcFixed()})});$$('.period-btn').forEach(btn=>{btn.addEventListener('click',()=>{if(btn.disabled)return;const iid=btn.dataset.pid;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item){item.period=btn.dataset.p;btn.closest('.period-toggle').querySelectorAll('.period-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelector(`[data-plbl="${iid}"]`).textContent=periodLabel(btn.dataset.p)}});calcFixed()})})}
 function calcFixed(){let total=0;wData.fixedGroups.forEach(g=>{let gt=0;g.items.forEach(i=>{if(!i.enabled)return;const a=i.amount||0;if(i.period==='m')gt+=a;else if(i.period==='q')gt+=a/3;else gt+=a/12});const el=document.querySelector(`[data-gt="${g.id}"]`);if(el)el.textContent=fmt(gt)+'/mnd';total+=gt});if($('wf-total'))$('wf-total').textContent=fmt(total);if($('wf-free')){const f=getWizIncome()-total;$('wf-free').textContent=fmt(f);$('wf-free').style.color=f>=0?'var(--emerald-400)':'var(--rose-400)'}}
 function getWizIncome(){return wData.income.monthly+(wData.income.maaltijdcheques||0)+((wData.income.endYear?.amount||0)/12)+((wData.income.vacation?.amount||0)/12)+((wData.income.refund?.amount||0)/12)+(wData.income.otherMonthly||0)+((wData.income.otherYearly?.amount||0)/12)}
 function getWizFixed(){let t=0;wData.fixedGroups.forEach(g=>g.items.forEach(i=>{if(!i.enabled)return;if(i.period==='m')t+=i.amount||0;else if(i.period==='q')t+=(i.amount||0)/3;else t+=(i.amount||0)/12}));return t}
 function openNewCatModal(type){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nc-name" placeholder="Bijv. Hobby's"></div><div class="field"><div class="field-label">Icoon</div><div class="icon-grid" id="nc-icons">${Object.keys(IC).slice(0,21).map(n=>`<button class="icon-opt" data-ic="${n}">${ic(n)}</button>`).join('')}</div></div><div class="field"><div class="field-label">Kleur</div><div class="color-dots">${COLORS.map(c=>`<button class="color-dot" data-col="${c.n}" style="background:${c.c}"></button>`).join('')}</div></div>${type==='monthly'?`<div class="field"><div class="field-label">Type</div><div class="cost-type-select"><button class="cost-type-opt semi on" data-ct="semi"><span class="cost-type-pill semi" style="pointer-events:none">Semi-vast</span></button><button class="cost-type-opt variable" data-ct="variable"><span class="cost-type-pill variable" style="pointer-events:none">Variabel</span></button></div></div>`:''}<div class="field"><div class="field-label">${type==='reserve'?'Jaarbedrag':'Maandbudget'}</div><div class="field-money"><input type="text" class="field-input" id="nc-budget" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nc-save">Toevoegen</button>`;enableCalc($('nc-budget'));let sIcon='folder',sColor='emerald',sCostType='semi';$$('#nc-icons .icon-opt').forEach(o=>o.addEventListener('click',()=>{$$('#nc-icons .icon-opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');sIcon=o.dataset.ic}));$$('.color-dot').forEach(d=>d.addEventListener('click',()=>{$$('.color-dot').forEach(x=>x.classList.remove('on'));d.classList.add('on');sColor=d.dataset.col}));$$('.cost-type-opt').forEach(b=>b.addEventListener('click',()=>{$$('.cost-type-opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');sCostType=b.dataset.ct}));$('nc-save').onclick=()=>{const name=$('nc-name').value.trim();const budget=calc($('nc-budget').value)||parseFloat($('nc-budget').value)||0;if(name){wData.categories.push({id:genId(),name,icon:sIcon,color:sColor,budget,costType:sCostType});renderWizard(3);modal.classList.remove('open')}};modal.classList.add('open')}
-function openAddFixedItemModal(){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nf-name" placeholder="Bijv. Internet"></div><div class="field"><div class="field-label">Categorie</div><select class="field-input" id="nf-cat">${wData.fixedGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}</select></div><div class="field"><div class="field-label">Bedrag</div><div class="field-money"><input type="text" class="field-input" id="nf-amount" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nf-save">Toevoegen</button>`;enableCalc($('nf-amount'));$('nf-save').onclick=()=>{const name=$('nf-name').value.trim();if(name){const g=wData.fixedGroups.find(x=>x.id===$('nf-cat').value);if(g){g.items.push({id:genId(),name,amount:calc($('nf-amount').value)||parseFloat($('nf-amount').value)||0,period:'m',enabled:false});renderWizard(2);modal.classList.remove('open')}}};modal.classList.add('open')}
-function renderCatSetup(c){const clr=col(c.color);return`<div class="cat-setup"><div class="cat-setup-icon" style="background:${clr.bg};color:${clr.c}">${ic(c.icon)}</div><div class="cat-setup-name">${c.name}</div><input type="text" class="cat-setup-input" data-cinp="${c.id}" value="${c.budget||''}" placeholder="0" inputmode="decimal"><button class="cat-setup-del" data-cdel="${c.id}">${ic('x')}</button></div>`}
+function openAddFixedItemModal(){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nf-name" placeholder="Bijv. Internet"></div><div class="field"><div class="field-label">Categorie</div><select class="field-input" id="nf-cat">${wData.fixedGroups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></div><div class="field"><div class="field-label">Bedrag</div><div class="field-money"><input type="text" class="field-input" id="nf-amount" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nf-save">Toevoegen</button>`;enableCalc($('nf-amount'));$('nf-save').onclick=()=>{const name=$('nf-name').value.trim();if(name){const g=wData.fixedGroups.find(x=>x.id===$('nf-cat').value);if(g){g.items.push({id:genId(),name,amount:calc($('nf-amount').value)||parseFloat($('nf-amount').value)||0,period:'m',enabled:false});renderWizard(2);modal.classList.remove('open')}}};modal.classList.add('open')}
+function renderCatSetup(c){const clr=col(c.color);return`<div class="cat-setup"><div class="cat-setup-icon" style="background:${clr.bg};color:${clr.c}">${ic(c.icon)}</div><div class="cat-setup-name">${esc(c.name)}</div><input type="text" class="cat-setup-input" data-cinp="${c.id}" value="${c.budget||''}" placeholder="0" inputmode="decimal"><button class="cat-setup-del" data-cdel="${c.id}">${ic('x')}</button></div>`}
 function bindCats(){$$('[data-cinp]').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const c=wData.categories.find(x=>x.id===inp.dataset.cinp);if(c)c.budget=calc(inp.value)||parseFloat(inp.value)||0;calcCats()})});$$('[data-cdel]').forEach(btn=>btn.addEventListener('click',()=>{wData.categories=wData.categories.filter(c=>c.id!==btn.dataset.cdel);renderWizard(4)}))}
 function calcCats(){const t=wData.categories.reduce((s,c)=>s+(c.budget||0),0);const buf=getWizIncome()-getWizFixed()-t;if($('wc-total'))$('wc-total').textContent=fmt(t);if($('wc-buffer')){$('wc-buffer').textContent=fmt(buf);$('wc-buffer').style.color=buf>=0?'var(--emerald-400)':'var(--rose-400)'}}
 function handleWizardNext(){switch(wStep){case 1:wData.income.monthly=calc($('wi-monthly').value)||parseFloat($('wi-monthly').value)||0;wData.income.maaltijdcheques=calc($('wi-cheques').value)||parseFloat($('wi-cheques').value)||0;wData.income.endYear={amount:calc($('wi-ey').value)||parseFloat($('wi-ey').value)||0,month:parseInt($('wi-ey-m').value)};wData.income.vacation={amount:calc($('wi-vac').value)||parseFloat($('wi-vac').value)||0,month:parseInt($('wi-vac-m').value)};wData.income.refund={amount:calc($('wi-ref').value)||parseFloat($('wi-ref').value)||0,month:parseInt($('wi-ref-m').value)};wData.income.otherMonthly=calc($('wi-other-m').value)||parseFloat($('wi-other-m').value)||0;wData.income.otherYearly={amount:calc($('wi-other-y').value)||parseFloat($('wi-other-y').value)||0,month:parseInt($('wi-other-y-m').value)};wData.income.oneTime={amount:calc($('wi-once').value)||parseFloat($('wi-once').value)||0,month:parseInt($('wi-once-m').value)};break;case 4:S.income=wData.income;S.fixedGroups=wData.fixedGroups;S.categories=[...wData.categories.map(c=>({...c,type:'monthly'}))];S.init=true;save();showScreen('dashboard');return}renderWizard(wStep+1)}
@@ -5310,7 +5414,7 @@ function exportXLSX(){
   showToast('✓ CSV gedownload');
 }
 function exportBackup(){const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`buddy-budget-backup-${new Date().toISOString().split('T')[0]}.json`;a.click()}
-async function importJSON(file){try{const text=await file.text();const data=JSON.parse(text);if(!data.categories){showToast('⚠ Ongeldig backup-bestand',3000);return;}if(!confirm('Huidige data overschrijven met deze backup?'))return;Object.assign(S,data);if(!S.monthlyData)S.monthlyData={};if(!S.transactions)S.transactions=[];save();location.reload();}catch(e){showToast('⚠ Fout bij importeren: '+e.message,4000);}}
+async function importJSON(file){try{if(file.size>10*1024*1024){showToast('⚠ Bestand te groot (max 10MB)',3000);return;}const text=await file.text();const data=JSON.parse(text);if(!data||typeof data!=='object'||!Array.isArray(data.categories)){showToast('⚠ Ongeldig backup-bestand',3000);return;}if(data.categories.length>1000||data.transactions&&data.transactions.length>100000){showToast('⚠ Backup bevat verdacht veel items',3500);return;}if(!confirm('Huidige data overschrijven met deze backup?'))return;Object.assign(S,data);if(!S.monthlyData||typeof S.monthlyData!=='object')S.monthlyData={};if(!Array.isArray(S.transactions))S.transactions=[];save();location.reload();}catch(e){showToast('⚠ Fout bij importeren: '+e.message,4000);}}
 
 
 // === INIT ===
