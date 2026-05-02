@@ -991,10 +991,9 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="header"><div class="header-row"><div class="logo" onclick="showScreen('dashboard')" style="cursor:pointer"><div class="logo-icon"><svg viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="7" ry="5.5"/><path d="M8.5 7.5 Q10 5 11.5 7.5"/><line x1="10.2" y1="7.5" x2="11.8" y2="7.5"/><ellipse cx="18.8" cy="13.5" rx="1.8" ry="1.5"/><circle cx="13.5" cy="11" r=".8" fill="white" stroke="none"/><line x1="8.5" y1="18.5" x2="8" y2="22"/><line x1="13.5" y1="18.5" x2="14" y2="22"/><path d="M4 13.5 Q1.5 11 2.5 9"/></svg></div><span class="logo-text">Buddy Budget</span></div></div><div class="header-sub">Instellingen</div></div>
 <div class="screen-pad">
 <div class="set-section"><div class="set-title">Budget</div><div class="set-list">
-<div class="set-row" id="s-income"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg><span>Inkomen aanpassen</span></div>
-<div class="set-row" id="s-cats"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Maandcategorieën beheren</span></div>
+<div class="set-row" id="s-cats"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Maandbudgetten beheren</span></div>
 <div class="set-row" id="s-fixed"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Vaste kosten aanpassen</span></div>
-<div class="set-row" id="s-wizard"><svg viewBox="0 0 24 24"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="m3 21 9-9"/></svg><span>Wizard opnieuw</span></div>
+<div class="set-row" id="s-wizard"><svg viewBox="0 0 24 24"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="m3 21 9-9"/></svg><span>Wizard opnieuw starten</span></div>
 </div></div>
 <div class="set-section"><div class="set-title">Export</div><div class="set-list">
 <div class="set-row" id="s-xlsx"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><div><span>Maandoverzicht CSV</span><div class="set-row-sub">Totalen per categorie per maand</div></div></div>
@@ -1028,6 +1027,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">Buddy Budget · v2026.05</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -5446,9 +5446,8 @@ $('d-del-month').onclick=()=>{
   );
 };
 $('d-next').onclick=()=>{const now=new Date();if(!(viewMonth.getMonth()===now.getMonth()&&viewMonth.getFullYear()===now.getFullYear())){viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1);updateDash()}};
-$('s-income').onclick=()=>openIncomeModal();
 $('s-fixed').onclick=()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.length?JSON.parse(JSON.stringify(S.fixedGroups)):JSON.parse(JSON.stringify(FIXED_GROUPS)),categories:S.categories.filter(c=>c.type==='monthly').map(c=>({...c}))};showScreen('wizard');renderWizard(2)};
-$('s-cats').onclick=()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.length?JSON.parse(JSON.stringify(S.fixedGroups)):JSON.parse(JSON.stringify(FIXED_GROUPS)),categories:S.categories.filter(c=>c.type==='monthly').map(c=>({...c}))};showScreen('wizard');renderWizard(4)};
+$('s-cats').onclick=()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.length?JSON.parse(JSON.stringify(S.fixedGroups)):JSON.parse(JSON.stringify(FIXED_GROUPS)),categories:S.categories.filter(c=>c.type==='monthly').map(c=>({...c}))};showScreen('wizard');renderWizard(3)};
 $('s-wizard').onclick=()=>openConfirmModal('Wizard opnieuw starten','Instellingen bewaard, maar je past ze stap voor stap opnieuw in.','Opnieuw starten',()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.length?JSON.parse(JSON.stringify(S.fixedGroups)):JSON.parse(JSON.stringify(FIXED_GROUPS)),categories:S.categories.filter(c=>c.type==='monthly').map(c=>({...c}))};showScreen('wizard');renderWizard(1)},false);
 $('s-xlsx').onclick=exportXLSX;$('s-xlsx-detail').onclick=exportXLSXDetail;$('s-backup').onclick=exportBackup;
 $('s-import').onchange=e=>{if(e.target.files[0]){importJSON(e.target.files[0]);e.target.value=''}};
