@@ -2041,6 +2041,8 @@ function renderQuickEntry(focusCatId){
 
   // ── Opslaan: verplicht detail valideren ───────────────────────────────
   $('qe-save').onclick=()=>{
+    // Forceer eerst commit van actief input — voorkomt race op mobiel toetsenbord
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
     let added=0,hasError=false;
     $$('.qe-amount-input').forEach(inp=>{
       const catId=inp.dataset.qid;
