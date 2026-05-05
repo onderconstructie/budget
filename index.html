@@ -1082,6 +1082,8 @@ const fmt=(n,d=0)=>'€'+(Number(n)||0).toLocaleString('nl-NL',{minimumFractionD
 // Bedragen in meldingen: gekleurde pill-badge die direct opvalt in lopende tekst
 const fmtPos=(n)=>`<span style="display:inline-block;padding:1px 6px;background:rgba(22,163,74,.13);color:var(--g);border-radius:4px;font-weight:700;font-family:var(--mono);font-size:.92em;white-space:nowrap">+${fmt(Math.abs(n))}</span>`;
 const fmtNeg=(n)=>`<span style="display:inline-block;padding:1px 6px;background:rgba(220,38,38,.13);color:var(--r);border-radius:4px;font-weight:700;font-family:var(--mono);font-size:.92em;white-space:nowrap">\u2212${fmt(Math.abs(n))}</span>`;
+// Neutraal bedrag in meldingen — voor referentiewaarden zonder positief/negatief signaal
+const fmtN=(n)=>`<span style="display:inline-block;padding:1px 6px;background:rgba(0,0,0,.06);color:var(--n1);border-radius:4px;font-weight:700;font-family:var(--mono);font-size:.92em;white-space:nowrap">${fmt(n)}</span>`;
 const fmtAmt=(n,positive)=>positive!==false&&n>=0?fmtPos(n):fmtNeg(n);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const mkd=(d=viewMonth)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -1440,13 +1442,13 @@ function updateDashTip(m,spent,budget){
         type='success';
       } else if(pct>1){
         const overCat=cats.map(c=>({c,s:getCatSpent(c.id,m)})).filter(r=>r.c.budget>0&&r.s>r.c.budget).sort((a,b)=>(b.s-b.c.budget)-(a.s-a.c.budget))[0];
-        if(overCat){tip=`Budget overschreden, hoofdzakelijk door <strong>${esc(overCat.c.name)}</strong> (+${fmt(Math.round(overCat.s-overCat.c.budget))}).`;type='danger';}
+        if(overCat){tip=`Budget overschreden, hoofdzakelijk door <strong>${esc(overCat.c.name)}</strong> (${fmtNeg(Math.round(overCat.s-overCat.c.budget))}).`;type='danger';}
       }
     }
   } else if(spent===0){
     if(pace.dayOfMonth<=3){
       const fc=getFixedCosts();
-      if(fc>0){tip=`Dag ${pace.dayOfMonth} — je vaste kosten (${fmt(Math.round(fc))}) lopen al. Variabele uitgaven zijn nog niet ingegeven.`;type='info';}
+      if(fc>0){tip=`Dag ${pace.dayOfMonth} — je vaste kosten (${fmtN(Math.round(fc))}) lopen al. Variabele uitgaven zijn nog niet ingegeven.`;type='info';}
     }
   } else {
     // Lopende maand — tijd-bewuste inzichten
@@ -1467,7 +1469,7 @@ function updateDashTip(m,spent,budget){
     if(!tip&&todaySpent>0&&dailyAvg>0&&todaySpent>dailyAvg*2.2){
       // Vandaag bijzonder hoge dag
       const topTx=todayTxs.sort((a,b)=>b.amount-a.amount)[0];
-      tip=`Vandaag al <strong>${fmt(Math.round(todaySpent))}</strong> ingegeven — ${Math.round(todaySpent/dailyAvg)}× je daggemiddelde (${fmt(dailyAvg)}).${topTx?` Grootste post: ${esc(topTx.detail||'—')} (${fmt(topTx.amount)}).`:''}`;
+      tip=`Vandaag al ${fmtNeg(Math.round(todaySpent))} ingegeven — ${Math.round(todaySpent/dailyAvg)}× je daggemiddelde (${fmtN(dailyAvg)}).${topTx?` Grootste post: ${esc(topTx.detail||'—')} (${fmtNeg(topTx.amount)}).`:''}`;
       type='warn';
     }
 
@@ -1488,7 +1490,7 @@ function updateDashTip(m,spent,budget){
       }).length);
       const wkdDailyAvg=weekendDays>0?Math.round(wkdSpent/weekendDays):0;
       if(wkdDailyAvg>dailyAvg*1.4&&dailyAvg>0){
-        tip=`In het weekend geef je gem. ${fmt(wkdDailyAvg)}/dag uit, vs ${fmt(dailyAvg)} op een weekdag. ${dayName.charAt(0).toUpperCase()+dayName.slice(1)} is een risicodag.`;
+        tip=`In het weekend geef je gem. ${fmtNeg(wkdDailyAvg)}/dag uit, vs ${fmtN(dailyAvg)} op een weekdag. ${dayName.charAt(0).toUpperCase()+dayName.slice(1)} is een risicodag.`;
         type='warn';
       }
     }
@@ -1502,7 +1504,7 @@ function updateDashTip(m,spent,budget){
       if(structOver){
         const vals=hist.slice(0,3).map(h=>getCatSpent(structOver.id,h.mk));
         const avgOver=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
-        tip=`<strong>${esc(structOver.name)}</strong>: 3 maanden op rij boven budget (gem. ${fmt(avgOver)} vs ${fmt(structOver.budget)}). Pas het budget aan naar de realiteit.`;
+        tip=`<strong>${esc(structOver.name)}</strong>: 3 maanden op rij boven budget (gem. ${fmtNeg(avgOver)} vs ${fmtN(structOver.budget)}). Pas het budget aan naar de realiteit.`;
         type='warn';
       }
     }
@@ -1514,7 +1516,7 @@ function updateDashTip(m,spent,budget){
       const minOld=Math.min(...older),minNew=Math.min(...newer);
       if(minNew>minOld*1.15&&minNew>0&&minOld>0){
         const rise=Math.round((minNew-minOld)/minOld*100);
-        tip=`Je goedkoopste maanden kosten nu <strong>${rise}% meer</strong> dan vroeger (${fmt(Math.round(minOld))} → ${fmt(Math.round(minNew))}). Stille uitgavengroei.`;
+        tip=`Je goedkoopste maanden kosten nu <strong>${rise}% meer</strong> dan vroeger (${fmtPos(Math.round(minOld))} → ${fmtNeg(Math.round(minNew))}). Stille uitgavengroei.`;
         type='warn';
       }
     }
@@ -1525,10 +1527,10 @@ function updateDashTip(m,spent,budget){
       if(prevSpent>budget*1.08&&pace.pctElapsed>0.25){
         const proj=pace.dayOfMonth>0?Math.round(spent/pace.dayOfMonth*pace.daysInMonth):spent;
         if(proj<prevSpent*0.88){
-          tip=`Vorige maand ${fmt(Math.round(prevSpent-budget))} over — je tempo ligt nu duidelijk lager. Goede bijsturing.`;
+          tip=`Vorige maand ${fmtNeg(Math.round(prevSpent-budget))} over — je tempo ligt nu duidelijk lager. Goede bijsturing.`;
           type='success';
         } else if(proj>budget*0.97&&pace.pctElapsed>0.35){
-          tip=`Na een dure vorige maand (+${fmt(Math.round(prevSpent-budget))}) koers je deze maand niet op herstel. Prognose: ${fmt(proj)}.`;
+          tip=`Na een dure vorige maand (${fmtNeg(Math.round(prevSpent-budget))}) koers je deze maand niet op herstel. Prognose: ${fmtNeg(proj)}.`;
           type='warn';
         }
       }
@@ -1543,7 +1545,7 @@ function updateDashTip(m,spent,budget){
         type='success';
       } else if(diff>=35&&pace.daysLeft>5){
         const proj=Math.round(spent/pace.pctElapsed);
-        tip=`Op dag ${pace.dayOfMonth} zit je <strong>${diff}% boven</strong> je historisch gemiddelde. Prognose op huidig tempo: ${fmt(proj)}.`;
+        tip=`Op dag ${pace.dayOfMonth} zit je <strong>${diff}% boven</strong> je historisch gemiddelde. Prognose op huidig tempo: ${fmtNeg(proj)}.`;
         type='warn';
       }
     }
@@ -1556,7 +1558,7 @@ function updateDashTip(m,spent,budget){
       const topCat=cats.find(c=>c.id===topCatId);
       if(topCat&&catCounts[topCatId]>=2){
         const catSpentToday=todayTxs.filter(tx=>tx.catId===topCatId).reduce((s,tx)=>s+tx.amount,0);
-        tip=`Vandaag al ${catCounts[topCatId]}× ingegeven bij <strong>${esc(topCat.name)}</strong> (${fmt(Math.round(catSpentToday))} vandaag).`;
+        tip=`Vandaag al ${catCounts[topCatId]}× ingegeven bij <strong>${esc(topCat.name)}</strong> (${fmtN(Math.round(catSpentToday))} vandaag).`;
         type='info';
       }
     }
@@ -2800,7 +2802,7 @@ function updateSmartInsights(){
       if(top){
         const pctOfGap=Math.round(top.delta/gap*100);
         signals.push({type:'good',icon:'check',
-          title:`${MONTHS[parseInt(bestMk.split('-')[1])-1]} (${fmt(best.spent)}) vs ${MONTHS[parseInt(worstMk.split('-')[1])-1]} (${fmt(worst.spent)})`,
+          title:`${MONTHS[parseInt(bestMk.split('-')[1])-1]} (${fmtPos(best.spent)}) vs ${MONTHS[parseInt(worstMk.split('-')[1])-1]} (${fmtNeg(worst.spent)})`,
           body:`Verschil: <strong>${fmt(gap)}</strong>. <strong>${esc(top.c.name)}</strong> verklaart ${pctOfGap}% van dat verschil (${fmt(top.bestVal)} → ${fmtNeg(top.worstVal)}). Daar zit je grootste hefboom.`});
       }
     }
@@ -2877,7 +2879,7 @@ function updateSmartInsights(){
     const pct=Math.round(Math.abs(change)/Math.max(Math.abs(older),1)*100);
     if(Math.abs(change)>30&&pct>=15){
       signals.push({type:change<0?'warn':'good',icon:change<0?'zap':'check',
-        title:`Vrije kasstroom ${change<0?'daalt':'stijgt'} met ${fmt(Math.abs(change))}/mnd`,
+        title:`Vrije kasstroom ${change<0?'daalt':'stijgt'} met ${change<0?fmtNeg(Math.abs(change)):fmtPos(Math.abs(change))}/mnd`,
         body:`Recent gem. vrij: ${fmtPos(Math.round(recent))}/mnd vs ${fmt(Math.round(older))} eerder. ${change<0?`Op jaarbasis ${fmtNeg(Math.abs(change)*12)} minder beschikbaar.`:`Op jaarbasis ${fmtPos(change*12)} extra armslag.`}`});
     }
   }
@@ -2917,7 +2919,7 @@ function updateSmartInsights(){
         if(reductionPct<=30){
           signals.push({type:'warn',icon:'zap',
             title:`Spaardoel mist ${fmtNeg(gap)}/mnd`,
-            body:`Concrete weg: <strong>${reductionPct}% minder bij ${esc(top.c.name)}</strong> (gem. ${fmt(Math.round(top.mean))}/mnd) sluit de kloof. Die post is ook variabel (CV ${Math.round(top.cv*100)}%), dus realistisch te beïnvloeden.`});
+            body:`Concrete weg: <strong>${reductionPct}% minder bij ${esc(top.c.name)}</strong> (gem. ${fmtN(Math.round(top.mean))}/mnd) sluit de kloof. Die post is ook variabel (CV ${Math.round(top.cv*100)}%), dus realistisch te beïnvloeden.`});
         } else {
           signals.push({type:'warn',icon:'zap',
             title:`Spaardoel mist ${fmtNeg(gap)}/mnd`,
@@ -2942,7 +2944,7 @@ function updateSmartInsights(){
       const maxVar=free-targetSave;
       signals.push({type:'warn',icon:'alert',
         title:`${pct}% van inkomen gaat naar vaste kosten`,
-        body:`Slechts ${fmt(Math.round(free))} blijft over voor variabele uitgaven én sparen. Om je ${target}%-spaardoel te halen, mag je niet meer dan <strong>${fmt(Math.round(maxVar))}/mnd</strong> aan boodschappen, vrije tijd, etc. uitgeven. Krap.`});
+        body:`Slechts ${fmtN(Math.round(free))} blijft over voor variabele uitgaven én sparen. Om je ${target}%-spaardoel te halen, mag je niet meer dan ${fmtNeg(Math.round(maxVar))}/mnd aan boodschappen, vrije tijd, etc. uitgeven. Krap.`});
     }
   }
 
@@ -2961,8 +2963,8 @@ function updateSmartInsights(){
           body:`Je huidig tempo levert ${fmtPos(Math.round(yearlySaved))}/jaar — dat is ${fmtPos(Math.round(diff))} bóven je ${target}%-doel. Houden zo.`});
       } else if(diff<-500){
         signals.push({type:'info',icon:'activity',
-          title:`Jaarprognose: ${fmt(Math.round(yearlySaved))} gespaard`,
-          body:`Je huidig tempo brengt je op ${fmt(Math.round(yearlySaved))}/jaar. Doel was ${fmt(Math.round(yearlyTarget))} (${target}%). Verschil: ${fmtNeg(Math.abs(Math.round(diff)))}.`});
+          title:`Jaarprognose: ${fmtN(Math.round(yearlySaved))} gespaard`,
+          body:`Je huidig tempo brengt je op ${fmtN(Math.round(yearlySaved))}/jaar. Doel was ${fmtN(Math.round(yearlyTarget))} (${target}%). Verschil: ${fmtNeg(Math.abs(Math.round(diff)))}.`});
       }
     }
   }
@@ -3052,7 +3054,7 @@ function updateSmartInsights(){
     const yearlyShift=monthlyShift*12;
     if(Math.abs(yearlyShift)>=300){
       signals.push({type:yearlyShift>0?'warn':'good',icon:yearlyShift>0?'zap':'check',
-        title:`Onderliggende trend: ${yearlyShift>0?'+':''}${fmt(Math.round(yearlyShift))}/jaar`,
+        title:`Onderliggende trend: ${yearlyShift>0?fmtNeg(Math.round(yearlyShift)):fmtPos(Math.round(-yearlyShift))}/jaar`,
         body:`Na correctie voor seizoenseffecten ${yearlyShift>0?`stijgen je uitgaven structureel met ${fmtNeg(Math.round(monthlyShift))}/maand`:`dalen je uitgaven structureel met ${fmtPos(Math.round(-monthlyShift))}/maand`}. Dit is je échte trend, los van pieken in december of stille zomermaanden.`});
     }
   }
@@ -3893,13 +3895,13 @@ function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worst
     const over=totalSpent-yb;
     if(over>0){
       signals.push({type:'danger',icon:'alert',
-        title:`${fmt(Math.round(over))} over jaarbudget`,
-        body:`${Math.round(totalSpent/yb*100)}% van ${fmt(yb)} jaarbudget benut over ${monthsFilled} maanden.`});
+        title:`${fmtNeg(Math.round(over))} over jaarbudget`,
+        body:`${Math.round(totalSpent/yb*100)}% van ${fmtN(yb)} jaarbudget benut over ${monthsFilled} maanden.`});
     }else{
       const onPace=budget>0&&curMonthIdx>=0?Math.round((totalSpent/(curMonthIdx||1))*12):0;
       signals.push({type:'success',icon:'check',
-        title:`${fmt(Math.round(-over))} onder jaarbudget`,
-        body:`${Math.round(totalSpent/yb*100)}% benut${onPace>0?' — op jaarbasis ca. '+fmt(onPace):''}. Goed op schema.`});
+        title:`${fmtPos(Math.round(-over))} onder jaarbudget`,
+        body:`${Math.round(totalSpent/yb*100)}% benut${onPace>0?' — op jaarbasis ca. '+fmtN(onPace):''}. Goed op schema.`});
     }
   }
 
@@ -3913,7 +3915,7 @@ function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worst
     if(Math.abs(trend)>=10){
       signals.push({type:trend>0?'warning':'success',icon:trend>0?'zap':'trending',
         title:`Uitgaven ${trend>0?'stijgen':'dalen'} ${Math.abs(trend)}% in ${y}`,
-        body:`Gem. eerste periode: <strong>${fmt(Math.round(a1))}/mnd</strong>, daarna: <strong>${fmt(Math.round(a2))}/mnd</strong>.`});
+        body:`Gem. eerste periode: ${fmtN(Math.round(a1))}/mnd, daarna: ${fmtN(Math.round(a2))}/mnd.`});
     }
   }
 
@@ -3930,12 +3932,12 @@ function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worst
       const qNames=['Q1 (jan–mrt)','Q2 (apr–jun)','Q3 (jul–sep)','Q4 (okt–dec)'];
       signals.push({type:'info',icon:'activity',
         title:`${qNames[qMaxI]} is je duurste kwartaal`,
-        body:`Gem. ${fmt(Math.round(qMax))}/mnd vs ${fmt(Math.round(qMin))}/mnd in ${qNames[qMinI]} — ${fmt(diff)}/mnd verschil. Houd hier rekening mee bij je budgetplanning.`});
+        body:`Gem. ${fmtNeg(Math.round(qMax))}/mnd vs ${fmtPos(Math.round(qMin))}/mnd in ${qNames[qMinI]} — ${fmtN(diff)}/mnd verschil. Houd hier rekening mee bij je budgetplanning.`});
     } else {
       // Geen seizoenseffect — vertel het
       signals.push({type:'info',icon:'activity',
         title:'Geen sterk seizoenspatroon',
-        body:`Rustigste maand: <strong>${MONTHS[bestI]}</strong> (${fmt(Math.round(data[bestI]))}), drukste: <strong>${MONTHS[worstI]}</strong> (${fmt(Math.round(data[worstI]))}). Redelijk gelijkmatig over het jaar.`});
+        body:`Rustigste maand: <strong>${MONTHS[bestI]}</strong> (${fmtPos(Math.round(data[bestI]))}), drukste: <strong>${MONTHS[worstI]}</strong> (${fmtNeg(Math.round(data[worstI]))}). Redelijk gelijkmatig over het jaar.`});
     }
   }
 
@@ -3948,7 +3950,7 @@ function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worst
       if(Math.abs(yoy)>=5){
         signals.push({type:yoy>10?'warning':yoy<-5?'success':'info',icon:'trending',
           title:`${Math.abs(yoy)}% ${yoy>0?'meer':'minder'} dan ${prev}`,
-          body:`${fmt(Math.round(totalSpent))} dit jaar vs <strong>${fmt(Math.round(prevTotal))}</strong> in ${prev}. Verschil: ${yoy>0?'+':''}${fmt(Math.round(totalSpent-prevTotal))}.`});
+          body:`${fmtN(Math.round(totalSpent))} dit jaar vs ${fmtN(Math.round(prevTotal))} in ${prev}. Verschil: ${yoy>0?fmtNeg(Math.round(totalSpent-prevTotal)):fmtPos(Math.round(prevTotal-totalSpent))}.`});
       }
     }
   }
@@ -4044,11 +4046,11 @@ function renderFcSignals(){
     if(pct>=70){
       signals.push({type:'warning',icon:'alert',
         title:`${pct}% kans dat je over budget gaat`,
-        body:`Op basis van je historische variatie (±${fmt(fc.uncertainty)}) en huidig tempo. Prognose <strong>${fmt(fc.point)}</strong> tegenover budget ${fmt(budget)}.`});
+        body:`Op basis van je historische variatie (±${fmtN(fc.uncertainty)}) en huidig tempo. Prognose ${fmtNeg(fc.point)} tegenover budget ${fmtN(budget)}.`});
     } else if(pct<=15&&fc.point<budget){
       signals.push({type:'success',icon:'check',
         title:`${100-pct}% kans dat je binnen budget blijft`,
-        body:`Met een ruime marge: prognose <strong>${fmt(fc.point)}</strong> ligt comfortabel onder budget ${fmt(budget)}.`});
+        body:`Met een ruime marge: prognose ${fmtPos(fc.point)} ligt comfortabel onder budget ${fmtN(budget)}.`});
     }
   }
 
@@ -4067,7 +4069,7 @@ function renderFcSignals(){
     if(diff>30){
       signals.push({type:'info',icon:'activity',
         title:`Eén uitschieter trekt je prognose omhoog`,
-        body:`<strong>${esc(tx.detail||'—')}</strong> (${fmt(tx.amount)}) maakt ${Math.round(tx.amount/spent*100)}% van deze maand uit. Zonder die uitgave: prognose ${fmt(fc.underlyingPoint)} (in plaats van ${fmt(fc.point)}).`});
+        body:`<strong>${esc(tx.detail||'—')}</strong> (${fmtNeg(tx.amount)}) maakt ${Math.round(tx.amount/spent*100)}% van deze maand uit. Zonder die uitgave: prognose ${fmtPos(fc.underlyingPoint)} (in plaats van ${fmtNeg(fc.point)}).`});
     }
   }
 
@@ -4107,7 +4109,7 @@ function renderFcSignals(){
     } else if(tempoPct<=-25){
       signals.push({type:'success',icon:'check',
         title:`${Math.abs(tempoPct)}% trager dan je eigen gemiddeld tempo`,
-        body:`Op dag ${pace.dayOfMonth} stond je historisch op gem. <strong>${fmt(Math.round(expectedNow))}</strong> — je zit op ${fmt(spent)}. Meer marge dan gewoonlijk.`});
+        body:`Op dag ${pace.dayOfMonth} stond je historisch op gem. ${fmtN(Math.round(expectedNow))} — je zit op ${fmtPos(spent)}. Meer marge dan gewoonlijk.`});
     }
   }
 
@@ -4152,11 +4154,11 @@ function renderFcSignals(){
       const shortfall=lastWeekAvg-rem;
       if(shortfall>20){
         signals.push({type:'warning',icon:'zap',
-          title:`Laatste week kost je gem. ${fmt(Math.round(lastWeekAvg))} — je hebt ${fmt(Math.round(rem))} over`,
+          title:`Laatste week kost je gem. ${fmtNeg(Math.round(lastWeekAvg))} — je hebt ${fmtPos(Math.round(rem))} over`,
           body:`De afgelopen maanden gaf je de laatste ${pace.daysLeft} dagen gem. ${fmtNeg(Math.round(lastWeekAvg))} uit. Dat past nu niet meer binnen je resterende budget.`});
       } else if(rem>0){
         signals.push({type:'info',icon:'activity',
-          title:`Nog ${pace.daysLeft} dagen — historisch kost dat gem. ${fmt(Math.round(lastWeekAvg))}`,
+          title:`Nog ${pace.daysLeft} dagen — historisch kost dat gem. ${fmtN(Math.round(lastWeekAvg))}`,
           body:`Je hebt ${fmtPos(Math.round(rem))} resterend. Op basis van vorige maanden past de rest van de maand er ${shortfall<-10?'ruim':''} in.`});
       }
     }
@@ -5151,10 +5153,10 @@ function buildGespaardDetail(m){
     .map(c=>({c,s:getCatSpent(c.id,mkd())})).filter(r=>r.s>0).sort((a,b)=>b.s-a.s)[0];
   let tip='';
   if(savePct>=target){
-    tip=streak>=3?`Al ${streak} maanden op rij boven je ${target}%-spaardoel.`:`Op jaarbasis spaar je naar schatting ${fmt(yearForecast)}.`;
+    tip=streak>=3?`Al ${streak} maanden op rij boven je ${target}%-spaardoel.`:`Op jaarbasis spaar je naar schatting ${fmtPos(yearForecast)}.`;
   } else if(topVar&&topVar.s>0){
     const sv15=Math.round(topVar.s*0.15);
-    tip=`Grootste variabele post: <strong>${topVar.c.name}</strong> (${fmt(topVar.s)}). 15% besparen = <strong style="color:var(--w)">${fmt(sv15)}/mnd</strong> extra gespaard.`;
+    tip=`Grootste variabele post: <strong>${topVar.c.name}</strong> (${fmtN(topVar.s)}). 15% besparen = ${fmtPos(sv15)}/mnd extra gespaard.`;
   } else {
     tip='Voeg uitgaven in om gepersonaliseerde bespaartips te zien.';
   }
@@ -5338,17 +5340,17 @@ function buildHealthDetail(m){
     if(worst){
       if(worst.avg>0&&worst.s>worst.avg*1.15){
         const rise=Math.round((worst.s-worst.avg)/worst.avg*100);
-        tips.push(`<strong>${esc(worst.cat.name)}</strong>: ${fmt(worst.over)} over budget én ${rise}% boven je eigen historisch gemiddelde. Niet enkel het budget, ook je patroon wijkt af.`);
+        tips.push(`<strong>${esc(worst.cat.name)}</strong>: ${fmtNeg(worst.over)} over budget én ${rise}% boven je eigen historisch gemiddelde. Niet enkel het budget, ook je patroon wijkt af.`);
       } else if(worst.avg>0&&worst.cat.budget>0&&worst.avg>worst.cat.budget){
-        tips.push(`<strong>${esc(worst.cat.name)}</strong> overschrijdt al meerdere maanden het budget (historisch gem. ${fmt(worst.avg)} vs budget ${fmt(worst.cat.budget)}). Overweeg het budget aan te passen naar de realiteit.`);
+        tips.push(`<strong>${esc(worst.cat.name)}</strong> overschrijdt al meerdere maanden het budget (historisch gem. ${fmtNeg(worst.avg)} vs budget ${fmtN(worst.cat.budget)}). Overweeg het budget aan te passen naar de realiteit.`);
       } else {
         // Zoek welke winkel de overschrijding veroorzaakte
         const txs=getCatTransactions(worst.cat.id,m);
         const topTx=txs.sort((a,b)=>b.amount-a.amount)[0];
         if(topTx&&topTx.amount>worst.cat.budget*0.3){
-          tips.push(`<strong>${esc(worst.cat.name)}</strong>: de uitgave aan <strong>${esc(topTx.detail||'—')}</strong> (${fmt(topTx.amount)}) neemt ${Math.round(topTx.amount/worst.s*100)}% van deze categorie in.`);
+          tips.push(`<strong>${esc(worst.cat.name)}</strong>: de uitgave aan <strong>${esc(topTx.detail||'—')}</strong> (${fmtNeg(topTx.amount)}) neemt ${Math.round(topTx.amount/worst.s*100)}% van deze categorie in.`);
         } else {
-          tips.push(`<strong>${esc(worst.cat.name)}</strong> overschreden met ${fmt(worst.over)}. ${overCats.length>1?`${overCats.length-1} andere categorie${overCats.length>2?'ën':''} ook over.`:''}`);
+          tips.push(`<strong>${esc(worst.cat.name)}</strong> overschreden met ${fmtNeg(worst.over)}. ${overCats.length>1?`${overCats.length-1} andere categorie${overCats.length>2?'ën':''} ook over.`:''}`);
         }
       }
     }
@@ -5365,13 +5367,13 @@ function buildHealthDetail(m){
       const histAvg=topVar.histVals.length?Math.round(topVar.histVals.reduce((a,v)=>a+v,0)/topVar.histVals.length):0;
       if(histAvg>0&&topVar.s>histAvg*1.1){
         const overAvg=Math.round(topVar.s-histAvg);
-        tips.push(`Je spaart ${Math.round(savePct)}% — doel is ${target}%. <strong>${esc(topVar.c.name)}</strong> ligt ${fmt(overAvg)} boven je gemiddelde. Terugkeren naar normaal = ${fmt(overAvg*12)} extra spaargeld per jaar.`);
+        tips.push(`Je spaart ${Math.round(savePct)}% — doel is ${target}%. <strong>${esc(topVar.c.name)}</strong> ligt ${fmtNeg(overAvg)} boven je gemiddelde. Terugkeren naar normaal = ${fmtPos(overAvg*12)} extra spaargeld per jaar.`);
       } else {
         const save15=Math.round(topVar.s*0.15);
         if(save15>=gap){
-          tips.push(`Je spaart ${Math.round(savePct)}% — doel is ${target}%. 15% minder bij <strong>${esc(topVar.c.name)}</strong> (−${fmt(save15)}) dekt het volledige tekort van ${fmt(gap)}.`);
+          tips.push(`Je spaart ${Math.round(savePct)}% — doel is ${target}%. 15% minder bij <strong>${esc(topVar.c.name)}</strong> (${fmtPos(save15)}) dekt het volledige tekort van ${fmtNeg(gap)}.`);
         } else {
-          tips.push(`Je spaart ${Math.round(savePct)}% — ${fmt(gap)} tekort op het ${target}%-doel. Verdeeld over je top-2 variabele posten is dat een aanpassing van ${fmt(Math.round(gap/2))} elk.`);
+          tips.push(`Je spaart ${Math.round(savePct)}% — ${fmtNeg(gap)} tekort op het ${target}%-doel. Verdeeld over je top-2 variabele posten is dat een aanpassing van ${fmtN(Math.round(gap/2))} elk.`);
         }
       }
     }
@@ -5386,7 +5388,7 @@ function buildHealthDetail(m){
       return{cat,cv:st.cv,mean:st.mean};
     }).filter(r=>r.cv>0.35&&r.mean>20).sort((a,b)=>b.cv-a.cv)[0];
     if(volatiel){
-      tips.push(`<strong>${esc(volatiel.cat.name)}</strong> varieert sterk van maand tot maand (CV ${Math.round(volatiel.cv*100)}%). Moeilijk te budgetteren — overweeg een bufferbudget van ${fmt(Math.round(volatiel.mean*1.3))}/mnd.`);
+      tips.push(`<strong>${esc(volatiel.cat.name)}</strong> varieert sterk van maand tot maand (CV ${Math.round(volatiel.cv*100)}%). Moeilijk te budgetteren — overweeg een bufferbudget van ${fmtN(Math.round(volatiel.mean*1.3))}/mnd.`);
     }
   }
 
@@ -5396,7 +5398,7 @@ function buildHealthDetail(m){
     const diff=expectedNow>0?Math.round((spent/expectedNow-1)*100):0;
     if(diff<=-20&&spent>0){
       const vrij=budget>0?Math.round(budget-spent):0;
-      tips.push(`Je loopt ${Math.abs(diff)}% achter op je eigen gemiddeld tempo. ${vrij>0?`Nog ${fmt(vrij)} vrij — goed moment om een geplande uitgave te doen of extra te sparen.`:''}`);
+      tips.push(`Je loopt ${Math.abs(diff)}% achter op je eigen gemiddeld tempo. ${vrij>0?`Nog ${fmtPos(vrij)} vrij — goed moment om een geplande uitgave te doen of extra te sparen.`:''}`);
     }
   }
 
@@ -5405,7 +5407,7 @@ function buildHealthDetail(m){
     const underBudget=cats.filter(cat=>cat.budget>0&&getCatSpent(cat.id,m)>0&&getCatSpent(cat.id,m)<cat.budget*0.7);
     if(underBudget.length>=2&&hist.length>=2){
       const saving=underBudget.reduce((s,cat)=>s+cat.budget-getCatSpent(cat.id,m),0);
-      tips.push(`<strong>${underBudget.length} categorieën</strong> lopen minstens 30% onder budget (samen ${fmt(Math.round(saving))} vrij). Bewust of vergeten in te geven?`);
+      tips.push(`<strong>${underBudget.length} categorieën</strong> lopen minstens 30% onder budget (samen ${fmtPos(Math.round(saving))} vrij). Bewust of vergeten in te geven?`);
     } else if(finalScore>=80){
       tips.push('Alles goed onder controle deze maand. Consistent gedrag over meerdere maanden is de sterkste indicator van financiële gezondheid.');
     }
