@@ -1079,9 +1079,9 @@ let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:
 let charts={},wStep=1,wData={},viewMonth=new Date();
 const $=id=>document.getElementById(id),$$=sel=>document.querySelectorAll(sel),genId=()=>Math.random().toString(36).substr(2,9);
 const fmt=(n,d=0)=>'€'+(Number(n)||0).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d});
-// Bedragen in meldingen: altijd gekleurd + prefix, nooit een kaal minteken
-const fmtPos=(n)=>`<strong style="color:var(--g)">+${fmt(Math.abs(n))}</strong>`;
-const fmtNeg=(n)=>`<strong style="color:var(--r)">\u2212${fmt(Math.abs(n))}</strong>`;
+// Bedragen in meldingen: gekleurde pill-badge die direct opvalt in lopende tekst
+const fmtPos=(n)=>`<span style="display:inline-block;padding:1px 6px;background:rgba(22,163,74,.13);color:var(--g);border-radius:4px;font-weight:700;font-family:var(--mono);font-size:.92em;white-space:nowrap">+${fmt(Math.abs(n))}</span>`;
+const fmtNeg=(n)=>`<span style="display:inline-block;padding:1px 6px;background:rgba(220,38,38,.13);color:var(--r);border-radius:4px;font-weight:700;font-family:var(--mono);font-size:.92em;white-space:nowrap">\u2212${fmt(Math.abs(n))}</span>`;
 const fmtAmt=(n,positive)=>positive!==false&&n>=0?fmtPos(n):fmtNeg(n);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const mkd=(d=viewMonth)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
