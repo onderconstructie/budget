@@ -1324,7 +1324,7 @@ function updateDash(){
       const fixedPct=income>0?Math.round(fixed2/income*100):0;
       const key='fix-tip:'+m;
       if(dismissedAlerts.has(key)){tipEl.innerHTML='';}
-      else{const {id,btn}=_mkAlertBtn(key,()=>{const el=$('d-tip');if(el)el.innerHTML=''});tipEl.innerHTML=`<div class="alert info" data-aid="${id}" style="margin-bottom:8px"><div class="alert-icon">${ic('zap')}</div><div class="alert-content"><div class="alert-title">Vaste kosten deze maand</div><div class="alert-text">${fmt(Math.round(fixed2))} gaat automatisch van je rekening (${fixedPct}% van inkomen). Dit is al verrekend.</div></div>${btn}</div>`;}
+      else{const {id,btn}=_mkAlertBtn(key,()=>{const el=$('d-tip');if(el)el.innerHTML=''});tipEl.innerHTML=`<div class="alert info" data-aid="${id}" style="margin-bottom:8px"><div class="alert-icon">${ic('zap')}</div><div class="alert-content"><div class="alert-title">Vaste kosten deze maand</div><div class="alert-text">${fmtN(Math.round(fixed2))} gaat automatisch van je rekening (${fixedPct}% van inkomen). Dit is al verrekend.</div></div>${btn}</div>`;}
     }
   } else {
     // Toon contexttiip via updateDashTip
@@ -1603,16 +1603,16 @@ function updateDashAlerts(m){
       let extra='';
       if(totalSlack>=over){
         const topSlack=slack[0];
-        extra=` ${topSlack?esc(topSlack.c.name)+' heeft nog '+fmt(Math.round(topSlack.rem))+' vrij.':'Andere budgetten hebben samen '+fmt(totalSlack)+' over.'}`;
+        extra=` ${topSlack?esc(topSlack.c.name)+' heeft nog '+fmtPos(Math.round(topSlack.rem))+' vrij.':'Andere budgetten hebben samen '+fmtPos(totalSlack)+' over.'}`;
       } else if(totalSlack>0){
-        extra=` Andere budgetten hebben samen nog ${fmt(totalSlack)} — onvoldoende om het volledig op te vangen.`;
+        extra=` Andere budgetten hebben samen nog ${fmtPos(totalSlack)} — onvoldoende om het volledig op te vangen.`;
       } else {
         extra=` Alle andere budgetten zijn ook (bijna) uitgeput.`;
       }
       alerts.push({
         type:'danger',catId:cat.id,key:'danger-'+cat.id,
         title:`${esc(cat.name)} overschreden`,
-        text:`${fmt(over)} te veel t.o.v. budget.${extra}`
+        text:`${fmtNeg(over)} te veel t.o.v. budget.${extra}`
       });
     } else if(paceRatio>1.25&&pace.isCurrentMonth&&pace.daysLeft>3){
       const projected=Math.round((s/Math.max(pace.dayOfMonth,1))*pace.daysInMonth);
@@ -1623,14 +1623,14 @@ function updateDashAlerts(m){
         const histAvg=histVals.length?Math.round(histVals.reduce((a,v)=>a+v,0)/histVals.length):0;
         let extra='';
         if(histAvg>0&&projected>histAvg*1.1){
-          extra=` Historisch gemiddelde: ${fmt(histAvg)} — prognose ligt daar <strong>${Math.round((projected-histAvg)/histAvg*100)}%</strong> boven.`;
+          extra=` Historisch gemiddelde: ${fmtN(histAvg)} — prognose ligt daar <strong>${Math.round((projected-histAvg)/histAvg*100)}%</strong> boven.`;
         } else if(histAvg>0&&projected<=histAvg*1.05){
-          extra=` Historisch betaal je gemiddeld ${fmt(histAvg)} hier — nog binnen normaal bereik.`;
+          extra=` Historisch betaal je gemiddeld ${fmtN(histAvg)} hier — nog binnen normaal bereik.`;
         }
         alerts.push({
           type:'warning',catId:cat.id,key:'warning-'+cat.id,
           title:`${esc(cat.name)} op gespannen tempo`,
-          text:`Prognose: ${fmt(projected)} (+${fmt(overshoot)} vs budget).${extra}`
+          text:`Prognose: ${fmtNeg(projected)} (${fmtNeg(overshoot)} boven budget).${extra}`
         });
       }
     }
@@ -5576,14 +5576,14 @@ case 4:{
     <div class="alert-icon">${ic('alert')}</div>
     <div class="alert-content">
       <div class="alert-title">Geen budgetten ingesteld</div>
-      <div class="alert-text">Je volledige beschikbare bedrag (${fmt(inc-fix)}) valt nu in de buffer. Ga terug om categorieën te verdelen.</div>
+      <div class="alert-text">Je volledige beschikbare bedrag (${fmtPos(inc-fix)}) valt nu in de buffer. Ga terug om categorieën te verdelen.</div>
     </div>
   </div>`:''}
   ${buf<0?`<div class="alert danger mt-4">
     <div class="alert-icon">${ic('alert')}</div>
     <div class="alert-content">
       <div class="alert-title">Negatieve buffer</div>
-      <div class="alert-text">Je vaste kosten en budgetten overstijgen je inkomen met ${fmt(Math.abs(buf))}. Pas stap 2 of 3 aan.</div>
+      <div class="alert-text">Je vaste kosten en budgetten overstijgen je inkomen met ${fmtNeg(Math.abs(buf))}. Pas stap 2 of 3 aan.</div>
     </div>
   </div>`:''}
   ${buf>0&&buf<inc*0.1&&hasCats?`<div class="alert warning mt-4">
