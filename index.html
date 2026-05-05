@@ -1091,9 +1091,9 @@ function calc(expr){try{const c=String(expr).replace(/\s/g,'');if(!/^[\d+\-*/().
 let calcTarget=null;
 function enableCalc(inp){inp.style.fontFamily='var(--font-mono)';const ev=()=>{const r=calc(inp.value);if(r!==null&&/[+\-*/]/.test(inp.value)){inp.value=r;inp.dispatchEvent(new Event('input',{bubbles:true}))}};inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ev()}});inp.addEventListener('blur',()=>{ev();setTimeout(()=>{if(calcTarget===inp)hideCalcBar()},150)});inp.addEventListener('focus',()=>{calcTarget=inp;$('calc-bar').classList.add('show')})}
 function hideCalcBar(){calcTarget=null;$('calc-bar').classList.remove('show')}
-function save(){localStorage.setItem(STORAGE,JSON.stringify(S));_incomeCache=null;_fixedCache=null;}
+function save(){localStorage.setItem(STORAGE,JSON.stringify(S));_invalidateCaches();}
 let _incomeCache=null,_fixedCache=null;
-function load(){_incomeCache=null;_fixedCache=null;const d=localStorage.getItem(STORAGE);if(d){try{const p=JSON.parse(d);S={...S,...p};if(!S.monthlyData)S.monthlyData={};if(p.transactions&&!Object.keys(S.monthlyData).length){p.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});save()}return true}catch{}}return false}
+function load(){_invalidateCaches();const d=localStorage.getItem(STORAGE);if(d){try{const p=JSON.parse(d);S={...S,...p};if(!S.monthlyData)S.monthlyData={};if(p.transactions&&!Object.keys(S.monthlyData).length){p.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});save()}return true}catch{}}return false}
 function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active');$$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===id));const nav=['dashboard','analytics','settings'].includes(id);document.querySelector('.nav').style.display=nav?'block':'none';const fab=$('fab');if(fab){fab.style.display=nav?'flex':'none';fab.classList.remove('fab-dim');}if(id==='dashboard')updateDash();if(id==='analytics')updateAnalytics();}
 function initDetailModal(){
   const bg=$('detail-modal-bg');
@@ -1179,9 +1179,38 @@ function _snapshotFixedIfNeeded(){
   }
 }
 function getReserved(){return 0;} // reserveringen verwijderd
-function getMonthBudget(){return S.categories.filter(c=>c.type==='monthly').reduce((s,c)=>s+c.budget,0)}
+let _budgetCache=null,_txIndex=null;
+function _invalidateCaches(){_incomeCache=null;_fixedCache=null;_budgetCache=null;_txIndex=null;_histCache={};}
+function getMonthBudget(){
+  if(_budgetCache!==null)return _budgetCache;
+  return _budgetCache=S.categories.reduce((s,c)=>c.type==='monthly'?s+c.budget:s,0);
+}
 function getCatSpent(catId,m){return S.monthlyData[m]?.[catId]||0}
-function getMonthSpent(m){return S.categories.filter(c=>c.type==='monthly').reduce((s,c)=>s+getCatSpent(c.id,m),0)}
+function getMonthSpent(m){
+  const md=S.monthlyData[m];if(!md)return 0;
+  let total=0;
+  for(const c of S.categories){if(c.type==='monthly')total+=md[c.id]||0;}
+  return total;
+}
+// Bouw of haal transactie-index op: {month: {catId: [tx, tx], _all: [tx, tx]}}, gesorteerd op ts desc
+function _buildTxIndex(){
+  const idx={};
+  const txs=S.transactions||[];
+  for(const tx of txs){
+    if(!idx[tx.month])idx[tx.month]={_all:[]};
+    if(!idx[tx.month][tx.catId])idx[tx.month][tx.catId]=[];
+    idx[tx.month][tx.catId].push(tx);
+    idx[tx.month]._all.push(tx);
+  }
+  // Sorteer alle bins op ts desc
+  for(const m in idx){
+    idx[m]._all.sort((a,b)=>b.ts-a.ts);
+    for(const k in idx[m]){
+      if(k!=='_all')idx[m][k].sort((a,b)=>b.ts-a.ts);
+    }
+  }
+  return idx;
+}
 function setCatAmount(catId,m,amount){if(!S.monthlyData[m])S.monthlyData[m]={};S.monthlyData[m][catId]=Math.max(0,amount);save()}
 function addTransaction(catId,m,amount,detail){
   if(!S.transactions)S.transactions=[];
@@ -1203,10 +1232,17 @@ function getCatSuggestions(catId,limit=8){
   return result.slice(0,limit);
 }
 function getCatTransactions(catId,month){
-  return(S.transactions||[]).filter(t=>t.catId===catId&&(!month||t.month===month)).sort((a,b)=>b.ts-a.ts);
+  if(!_txIndex)_txIndex=_buildTxIndex();
+  if(month){return _txIndex[month]?.[catId]?.slice()||[];}
+  // Geen maandfilter: itereer alle maanden
+  const out=[];
+  for(const m in _txIndex){if(_txIndex[m][catId])out.push(..._txIndex[m][catId]);}
+  return out.sort((a,b)=>b.ts-a.ts);
 }
 function getAllTransactions(month){
-  return(S.transactions||[]).filter(t=>!month||t.month===month).sort((a,b)=>b.ts-a.ts);
+  if(!_txIndex)_txIndex=_buildTxIndex();
+  if(month){return _txIndex[month]?._all?.slice()||[];}
+  return (S.transactions||[]).slice().sort((a,b)=>b.ts-a.ts);
 }
 // === DASHBOARD ===
 function updateDash(){
@@ -2400,7 +2436,10 @@ function normCdf(z){
 }
 
 // Haal N maanden history op (exclusief huidige maand)
+let _histCache={};
 function getMonthHistory(n=12){
+  const key=viewMonth.getFullYear()+'-'+viewMonth.getMonth()+':'+n;
+  if(_histCache[key])return _histCache[key];
   const res=[];
   for(let i=1;i<=n;i++){
     const d=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-i,1);
@@ -2408,7 +2447,7 @@ function getMonthHistory(n=12){
     const spent=getMonthSpent(mk);
     res.push({month:d,mk,spent,index:-i});
   }
-  return res;
+  return _histCache[key]=res;
 }
 
 // Maandeinde-prognose met betrouwbandbreedtes
