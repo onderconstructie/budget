@@ -1094,7 +1094,13 @@ async function fetchStooqPrice(ticker){
   const clean=ticker.trim().toLowerCase();
   if(!/^[a-z0-9._-]{1,20}$/.test(clean))throw new Error('Ticker bevat ongeldige tekens');
   const url=`https://stooq.com/q/l/?s=${encodeURIComponent(clean)}&f=sd2t2ohlcv&h&e=csv`;
-  const resp=await fetch(url);
+  let resp;
+  try{
+    resp=await fetch(url);
+  }catch(e){
+    // Typisch een CORS-fout: de browser blokkeert de fetch silently → TypeError
+    throw new Error('Netwerk geblokkeerd (CORS)');
+  }
   if(!resp.ok)throw new Error('HTTP '+resp.status);
   const text=await resp.text();
   const lines=text.trim().split('\n');
@@ -2818,7 +2824,10 @@ function renderWealth(){
 
     <!-- SPAARREKENINGEN -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px">Spaarrekeningen</div>
+      <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        Spaarrekeningen
+      </div>
       <button onclick="openAccountModal()" style="background:none;border:none;color:var(--a);font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px">+ Toevoegen</button>
     </div>
     <div style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden;margin-bottom:18px">
@@ -2836,7 +2845,10 @@ function renderWealth(){
 
     <!-- BEURSPORTEFEUILLE -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px">Beursportefeuille</div>
+      <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        Beursportefeuille
+      </div>
       <button onclick="openHoldingModal()" style="background:none;border:none;color:var(--a);font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px">+ Toevoegen</button>
     </div>
     <div style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden;margin-bottom:14px">
@@ -2981,16 +2993,26 @@ function openHoldingModal(holdingId){
         <input type="text" class="field-input" id="h-url" value="${esc(h.url||'')}" placeholder="https://..." autocomplete="off">
       </div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:18px">
+    <!-- Refresh + link knoppen: altijd zichtbaar, ook bij toevoegen -->
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button id="h-refresh" style="flex:1;padding:10px;border:1px solid var(--l1);background:transparent;color:var(--n1);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <span id="h-refresh-label">Koers ophalen</span>
+      </button>
+      <button id="h-link" style="flex:1;padding:10px;border:1px solid var(--l1);background:transparent;color:${h.url?'var(--n1)':'var(--n4)'};border-radius:var(--r6);font-size:11px;font-weight:600;cursor:${h.url?'pointer':'not-allowed'};display:flex;align-items:center;justify-content:center;gap:6px" ${h.url?'':'disabled'}>
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
+        Open link
+      </button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-ghost" style="flex:1" id="h-cancel">Annuleer</button>
       <button class="btn btn-primary" style="flex:1" id="h-save">${isEdit?'Opslaan':'Toevoegen'}</button>
     </div>
-    ${isEdit?`<div style="display:flex;gap:8px;margin-top:8px">
-      <button id="h-refresh" style="flex:1;padding:9px;border:1px solid var(--l1);background:transparent;color:var(--n1);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">🔄 Koers ophalen</button>
-      ${h.url?`<button onclick="window.open('${esc(h.url)}','_blank','noopener')" style="flex:1;padding:9px;border:1px solid var(--l1);background:transparent;color:var(--n1);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">📈 Open link</button>`:''}
-    </div>
-    <button id="h-delete" style="margin-top:8px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Holding verwijderen</button>`:''}`;
+    ${isEdit?`<button id="h-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Holding verwijderen</button>`:''}`;
   $('h-cancel').onclick=()=>modal.classList.remove('open');
+  if($('h-link')&&h.url){
+    $('h-link').onclick=()=>window.open(h.url,'_blank','noopener');
+  }
   $('h-save').onclick=()=>{
     if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
     const name=($('h-name').value||'').trim();
@@ -3018,22 +3040,25 @@ function openHoldingModal(holdingId){
     renderWealth();
     showToast('✓ Opgeslagen',1500);
   };
+  // Refresh-knop werkt voor zowel nieuwe als bestaande holdings
+  $('h-refresh').onclick=async()=>{
+    const t=($('h-ticker').value||'').trim();
+    if(!t){showToast('Geef eerst een ticker in',2200);$('h-ticker').focus();return;}
+    const btn=$('h-refresh'),lbl=$('h-refresh-label');
+    btn.disabled=true;lbl.textContent='Bezig…';
+    try{
+      const r=await fetchStooqPrice(t);
+      $('h-last').value=r.price;
+      lbl.textContent=`${r.price} (${r.date})`;
+      btn.style.color='var(--g)';
+      setTimeout(()=>{lbl.textContent='Koers ophalen';btn.style.color='';btn.disabled=false;},2500);
+    }catch(e){
+      lbl.textContent=e.message;
+      btn.style.color='var(--r)';
+      setTimeout(()=>{lbl.textContent='Koers ophalen';btn.style.color='';btn.disabled=false;},4000);
+    }
+  };
   if(isEdit){
-    $('h-refresh').onclick=async()=>{
-      const t=$('h-ticker').value.trim();
-      if(!t){showToast('⚠ Geen ticker',2000);return;}
-      const btn=$('h-refresh');btn.disabled=true;btn.textContent='⏳ Bezig…';
-      try{
-        const r=await fetchStooqPrice(t);
-        $('h-last').value=r.price;
-        btn.textContent='✓ '+r.price+' ('+r.date+')';
-        setTimeout(()=>{btn.textContent='🔄 Koers ophalen';btn.disabled=false;},2200);
-      }catch(e){
-        btn.textContent='✗ '+e.message;
-        btn.style.color='var(--r)';
-        setTimeout(()=>{btn.textContent='🔄 Koers ophalen';btn.style.color='';btn.disabled=false;},3500);
-      }
-    };
     $('h-delete').onclick=()=>{
       if(!confirm('Deze holding verwijderen?'))return;
       S.wealth.holdings=S.wealth.holdings.filter(x=>x.id!==h.id);
@@ -3050,20 +3075,25 @@ function openHoldingModal(holdingId){
 async function refreshAllPrices(){
   const holdings=(S.wealth?.holdings||[]).filter(h=>h.ticker);
   if(holdings.length===0)return;
-  let ok=0,fail=0;
-  showToast('🔄 '+holdings.length+' tickers ophalen…',2000);
+  let ok=0,fail=0,corsFail=false;
+  showToast('Koersen ophalen voor '+holdings.length+' tickers…',2000);
   for(const h of holdings){
     try{
       const r=await fetchStooqPrice(h.ticker);
       h.lastPrice=r.price;
       h.lastUpdate=Date.now();
       ok++;
-    }catch(e){fail++;}
+    }catch(e){
+      fail++;
+      if(e.message.includes('CORS'))corsFail=true;
+    }
   }
   S.wealth.lastSync=Date.now();
   save();
   renderWealth();
-  showToast(`✓ ${ok} bijgewerkt${fail?', '+fail+' mislukt':''}`,2500);
+  if(ok>0)showToast(`✓ ${ok} bijgewerkt${fail?', '+fail+' mislukt':''}`,2800);
+  else if(corsFail)showToast('Browser blokkeert Stooq (CORS). Tik op een holding voor details.',4500);
+  else showToast(`Geen koersen opgehaald (${fail} mislukt)`,3500);
 }
 
 function updateAnalytics(){
