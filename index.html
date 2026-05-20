@@ -900,6 +900,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   <div class="an-tabs">
     <button class="an-tab active" data-tab="trends">Trends</button>
     <button class="an-tab" data-tab="prognose">Prognose</button>
+    <button class="an-tab" data-tab="vermogen">Vermogen</button>
   </div>
   <div class="an-swipe-hint" id="an-swipe-dots">
     <div class="an-swipe-dot on"></div>
@@ -977,6 +978,12 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
     </div>
   </div>
 
+  <div class="an-panel" id="an-vermogen">
+    <div style="overflow-y:auto;padding-bottom:calc(96px + var(--safe-b))">
+      <div id="vermogen-body" style="padding:12px 16px 0"></div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -993,7 +1000,6 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Budget</div><div class="set-list">
 <div class="set-row" id="s-cats"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Maandbudgetten beheren</span></div>
 <div class="set-row" id="s-fixed"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Vaste kosten aanpassen</span></div>
-<div class="set-row" id="s-wealth"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Vermogen beheren</span></div>
 <div class="set-row" id="s-wizard"><svg viewBox="0 0 24 24"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="m3 21 9-9"/></svg><span>Wizard opnieuw starten</span></div>
 </div></div>
 <div class="set-section"><div class="set-title">Export</div><div class="set-list">
@@ -1036,18 +1042,6 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   </p>
 </div>
 </div>
-</div>
-<!-- WEALTH SCREEN -->
-<div id="wealth" class="screen">
-  <div class="header">
-    <div class="header-row">
-      <button class="month-nav-btn" onclick="showScreen('settings')" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <span class="logo-text" style="flex:1;text-align:center">Vermogen</span>
-      <div style="width:28px"></div>
-    </div>
-    <div class="header-sub" id="wealth-total">€0</div>
-  </div>
-  <div class="screen-pad" id="wealth-body"></div>
 </div>
 <!-- NAV -->
 <nav class="nav"><div class="nav-inner">
@@ -1138,7 +1132,7 @@ function hideCalcBar(){calcTarget=null;$('calc-bar').classList.remove('show')}
 function save(){localStorage.setItem(STORAGE,JSON.stringify(S));_invalidateCaches();}
 let _incomeCache=null,_fixedCache=null;
 function load(){_invalidateCaches();const d=localStorage.getItem(STORAGE);if(d){try{const p=JSON.parse(d);S={...S,...p};if(!S.monthlyData)S.monthlyData={};if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null};if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};if(p.transactions&&!Object.keys(S.monthlyData).length){p.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});save()}return true}catch{}}return false}
-function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active');$$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===id));const nav=['dashboard','analytics','settings'].includes(id);document.querySelector('.nav').style.display=nav?'block':'none';const fab=$('fab');if(fab){fab.style.display=nav?'flex':'none';fab.classList.remove('fab-dim');}if(id==='dashboard')updateDash();if(id==='analytics')updateAnalytics();if(id==='wealth')renderWealth();}
+function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active');$$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===id));const nav=['dashboard','analytics','settings'].includes(id);document.querySelector('.nav').style.display=nav?'block':'none';const fab=$('fab');if(fab){fab.style.display=nav?'flex':'none';fab.classList.remove('fab-dim');}if(id==='dashboard')updateDash();if(id==='analytics')updateAnalytics();}
 function initDetailModal(){
   const bg=$('detail-modal-bg');
   if(bg)bg.addEventListener('click',function(e){if(e.target===this)closeDetailModal()});
@@ -1161,7 +1155,7 @@ function initDetailModal(){
     else{modal.style.transform='';modal.style.transition='transform .3s cubic-bezier(.32,0,.18,1)';}
   },{passive:true});
 }
-const AN_TABS=['trends','prognose'];
+const AN_TABS=['trends','prognose','vermogen'];
 let anTabIdx=0;
 function setAnTab(idx){
   idx=Math.max(0,Math.min(AN_TABS.length-1,idx));
@@ -1417,6 +1411,93 @@ function updateDash(){
   updateHealthScore(m,spent,budget);
   checkFreshStart(m);
 }
+function updateWealthCard(){
+  const el=$('d-wealth-card');
+  if(!el)return;
+  if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null};
+  const w=S.wealth;
+  const tot=getTotalWealth();
+  const hasWealth=tot.total>0||(w.accounts?.length||0)>0||(w.holdings?.length||0)>0;
+
+  // Empty state: subtiele uitnodiging, geen opdringerige knop
+  if(!hasWealth){
+    el.innerHTML=`<div onclick="showScreen('wealth')" style="margin-top:18px;padding:14px 16px;background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:12px">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(14,165,233,.12);color:#0ea5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--n0)">Vermogen bijhouden</div>
+        <div style="font-size:11px;color:var(--n3);margin-top:2px">Spaarrekeningen en beleggingen op één plek</div>
+      </div>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--n3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+    return;
+  }
+
+  // Bereken maandelijkse buffer = inkomen - vaste kosten - maandbudgetten (de structurele spaarcapaciteit)
+  const income=getMonthlyIncome();
+  const fixed=getFixedCosts();
+  const budget=getMonthBudget();
+  const monthlyBuffer=Math.max(0,income-fixed-budget);
+
+  // Slim signaal: vergelijk buffer-aanwas (jaarlijks) met vermogensgroei sinds laatste sync
+  // Voor nu: toon totaal + verdeling + buffer-context. Latere groei-detectie kan via snapshots.
+  const accPct=tot.total>0?Math.round(tot.accounts/tot.total*100):0;
+  const hldPct=tot.total>0?100-accPct:0;
+
+  // Buffer-relatie: hoeveel jaar buffer zit in vermogen?
+  let bufferYears=null;
+  if(monthlyBuffer>0&&tot.total>0){
+    bufferYears=tot.total/(monthlyBuffer*12);
+  }
+
+  // Holding evolutie sinds aankoop
+  let totalPnL=0,totalCost=0;
+  (w.holdings||[]).forEach(h=>{
+    totalPnL+=getHoldingPnL(h);
+    totalCost+=getHoldingCost(h);
+  });
+  const pnlPct=totalCost>0?(totalPnL/totalCost*100):0;
+  const pnlColor=totalPnL>0?'var(--g)':totalPnL<0?'var(--r)':'var(--n3)';
+
+  el.innerHTML=`
+    <div style="margin-top:18px">
+      <div class="dh-label" style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px">Vermogen</span>
+        <button onclick="showScreen('wealth')" style="background:none;border:none;color:var(--a);font-size:11px;font-weight:700;cursor:pointer;padding:0">Beheren →</button>
+      </div>
+      <div onclick="showScreen('wealth')" style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);padding:14px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+        <!-- Hoofdregel: totaal + winst/verlies -->
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+          <span style="font-size:22px;font-weight:800;color:var(--n0);font-family:var(--mono)">${fmt(Math.round(tot.total))}</span>
+          ${totalCost>0?`<span style="font-size:12px;font-weight:700;color:${pnlColor};font-family:var(--mono)">${totalPnL>=0?'+':''}${fmt(Math.round(totalPnL))} (${totalPnL>=0?'+':''}${pnlPct.toFixed(1)}%)</span>`:''}
+        </div>
+        <!-- Verdelingsbalk: spaarrekeningen vs beleggingen -->
+        ${tot.total>0?`
+          <div style="height:6px;background:var(--l0);border-radius:3px;overflow:hidden;display:flex;margin-bottom:8px">
+            ${accPct>0?`<div style="width:${accPct}%;background:#0ea5e9"></div>`:''}
+            ${hldPct>0?`<div style="width:${hldPct}%;background:var(--a)"></div>`:''}
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--n3)">
+            <span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#0ea5e9;margin-right:5px;vertical-align:middle"></span>Spaarrekeningen ${fmt(Math.round(tot.accounts))}</span>
+            <span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--a);margin-right:5px;vertical-align:middle"></span>Beleggingen ${fmt(Math.round(tot.holdings))}</span>
+          </div>
+        `:''}
+        <!-- Buffer-relatie: contextueel inzicht -->
+        ${monthlyBuffer>0&&bufferYears!==null?`
+          <div style="margin-top:11px;padding-top:10px;border-top:1px solid var(--l0);font-size:11px;color:var(--n2);line-height:1.5">
+            ${bufferYears<0.5
+              ?`Je maandelijkse buffer is ${fmtPos(Math.round(monthlyBuffer))}. Met dit vermogen overbrug je ${(bufferYears*12).toFixed(1)} maand.`
+              :bufferYears<2
+                ?`Met je vermogen overbrug je ongeveer ${bufferYears.toFixed(1)} jaar aan structurele buffer (${fmtPos(Math.round(monthlyBuffer))}/mnd).`
+                :`Vermogen dekt ruim ${Math.round(bufferYears)} jaar aan maandelijkse buffer.`}
+          </div>
+        `:''}
+      </div>
+    </div>
+  `;
+}
+
 function renderCatRowHTML(cat,m){
   const spent=getCatSpent(cat.id,m);
   const rem=cat.budget-spent;
@@ -2299,6 +2380,7 @@ function renderAnalyticsTab(idx){updateAnStats();
   switch(idx){
     case 0:updateSmartInsights();updateEvoChart(anYear);renderEvoCatChips();updateEvoBreakdown();updateYearChart(anYear);updateYearStats(anYear);break;
     case 1:updateForecast();break;
+    case 2:renderVermogenTab();break;
   }
 }
 
@@ -2656,25 +2738,83 @@ return{dayOfMonth,daysInMonth,pctElapsed,isCurrentMonth:isCur,daysLeft};
 }
 
 // ═══ VERMOGEN SCHERM ════════════════════════════════════════════════════
+function renderVermogenTab(){renderWealth();}
+
 function renderWealth(){
   if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null};
   const w=S.wealth;
   const tot=getTotalWealth();
-  $('wealth-total').textContent=fmt(Math.round(tot.total));
+  // Bepaal doelelement: tab-pane (analytics) of legacy screen
+  const target=$('vermogen-body')||$('wealth-body');
+  if(!target)return;
+  if($('wealth-total'))$('wealth-total').textContent=fmt(Math.round(tot.total));
 
   const lastSync=w.lastSync?new Date(w.lastSync).toLocaleString('nl-BE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'nooit';
+  const hasWealth=tot.total>0||(w.accounts?.length||0)>0||(w.holdings?.length||0)>0;
 
-  $('wealth-body').innerHTML=`
-    <!-- TOTAAL OVERZICHT -->
-    <div style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);padding:14px 16px;margin-bottom:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:var(--n3);margin-bottom:8px">
-        <span style="text-transform:uppercase;letter-spacing:.5px;font-weight:700">Verdeling</span>
+  // ── BUFFER-RELATIE: het slimme verband met je cashflow ──────────────────
+  const income=getMonthlyIncome();
+  const fixed=getFixedCosts();
+  const budget=getMonthBudget();
+  const monthlyBuffer=Math.max(0,income-fixed-budget);
+  const yearlyBuffer=monthlyBuffer*12;
+
+  // Hoeveel jaar buffer zit er in het huidige vermogen?
+  const bufferYears=monthlyBuffer>0&&tot.total>0?(tot.total/(monthlyBuffer*12)):null;
+
+  // Holding rendement
+  let totalPnL=0,totalCost=0;
+  (w.holdings||[]).forEach(h=>{totalPnL+=getHoldingPnL(h);totalCost+=getHoldingCost(h);});
+  const pnlPct=totalCost>0?(totalPnL/totalCost*100):0;
+  const pnlColor=totalPnL>0?'var(--g)':totalPnL<0?'var(--r)':'var(--n3)';
+
+  // Verdeling
+  const accPct=tot.total>0?Math.round(tot.accounts/tot.total*100):0;
+  const hldPct=tot.total>0?100-accPct:0;
+
+  target.innerHTML=`
+    <!-- HERO: totaal + rendement -->
+    <div style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);padding:16px 18px;margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Totaal vermogen</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${tot.total>0?'10px':'0'}">
+        <span style="font-size:26px;font-weight:800;color:var(--n0);font-family:var(--mono)">${fmt(Math.round(tot.total))}</span>
+        ${totalCost>0?`<span style="font-size:13px;font-weight:700;color:${pnlColor};font-family:var(--mono)">${totalPnL>=0?'+':''}${fmt(Math.round(totalPnL))} (${totalPnL>=0?'+':''}${pnlPct.toFixed(1)}%)</span>`:''}
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--n2)">Spaarrekeningen</span><span style="font-family:var(--mono);font-weight:700">${fmt(Math.round(tot.accounts))}</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--n2)">Beursportefeuille</span><span style="font-family:var(--mono);font-weight:700">${fmt(Math.round(tot.holdings))}</span></div>
-      </div>
+      ${tot.total>0?`
+        <div style="height:6px;background:var(--l0);border-radius:3px;overflow:hidden;display:flex;margin-bottom:8px">
+          ${accPct>0?`<div style="width:${accPct}%;background:#0ea5e9"></div>`:''}
+          ${hldPct>0?`<div style="width:${hldPct}%;background:var(--a)"></div>`:''}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--n3)">
+          <span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#0ea5e9;margin-right:5px;vertical-align:middle"></span>Spaarrekeningen ${fmtN(Math.round(tot.accounts))}</span>
+          <span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--a);margin-right:5px;vertical-align:middle"></span>Beleggingen ${fmtN(Math.round(tot.holdings))}</span>
+        </div>
+      `:''}
     </div>
+
+    ${!hasWealth?`
+      <!-- EMPTY STATE -->
+      <div style="background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:var(--r8);padding:16px;margin-bottom:18px;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:var(--n0);margin-bottom:6px">Nog geen vermogen toegevoegd</div>
+        <div style="font-size:11px;color:var(--n2);line-height:1.5">Voeg spaarrekeningen en beleggingen toe om je vermogen tegenover je maandelijkse buffer te zien evolueren.</div>
+      </div>
+    `:''}
+
+    <!-- BUFFER-CONTEXT: het samenspel tussen cashflow en vermogen -->
+    ${monthlyBuffer>0?`
+      <div style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);padding:14px 16px;margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Samenspel met je buffer</div>
+        <div style="font-size:12px;color:var(--n1);line-height:1.55">
+          ${hasWealth&&bufferYears!==null
+            ?(bufferYears<0.5
+              ?`Je structurele maandbuffer is ${fmtPos(Math.round(monthlyBuffer))}. Met je huidig vermogen overbrug je <strong>${(bufferYears*12).toFixed(1)} maand</strong>.`
+              :bufferYears<2
+                ?`Je structurele maandbuffer is ${fmtPos(Math.round(monthlyBuffer))} (${fmtN(Math.round(yearlyBuffer))} per jaar). Je vermogen dekt <strong>${bufferYears.toFixed(1)} jaar</strong> aan buffer.`
+                :`Je vermogen (${fmtN(Math.round(tot.total))}) dekt ruim <strong>${Math.round(bufferYears)} jaar</strong> aan maandelijkse buffer (${fmtPos(Math.round(monthlyBuffer))}/mnd).`)
+            :`Je structurele maandbuffer is ${fmtPos(Math.round(monthlyBuffer))} — dat is ${fmtN(Math.round(yearlyBuffer))} per jaar als je het opzij zet.`}
+        </div>
+      </div>
+    `:''}
 
     <!-- SPAARREKENINGEN -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -2684,14 +2824,14 @@ function renderWealth(){
     <div style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden;margin-bottom:18px">
       ${(w.accounts||[]).length===0
         ?`<div style="padding:18px 16px;text-align:center;color:var(--n3);font-size:12px">Nog geen rekeningen.</div>`
-        :(w.accounts||[]).map(a=>`
-          <div onclick="openAccountModal('${a.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--l0);cursor:pointer;-webkit-tap-highlight-color:transparent">
+        :(w.accounts||[]).map((a,i,arr)=>`
+          <div onclick="openAccountModal('${a.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;${i<arr.length-1?'border-bottom:1px solid var(--l0);':''}cursor:pointer;-webkit-tap-highlight-color:transparent">
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:600;color:var(--n0)">${esc(a.name)}</div>
               ${a.institution?`<div style="font-size:10px;color:var(--n3);margin-top:2px">${esc(a.institution)}${a.interest?' &nbsp;·&nbsp; '+a.interest+'%':''}</div>`:''}
             </div>
             <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--n0)">${fmt(a.balance||0)}</div>
-          </div>`).join('').replace(/border-bottom:1px solid var\(--l0\)(?![^<]*<div onclick)(?=[^<]*$)/,'border-bottom:none')}
+          </div>`).join('')}
     </div>
 
     <!-- BEURSPORTEFEUILLE -->
@@ -2702,20 +2842,20 @@ function renderWealth(){
     <div style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden;margin-bottom:14px">
       ${(w.holdings||[]).length===0
         ?`<div style="padding:18px 16px;text-align:center;color:var(--n3);font-size:12px">Nog geen aandelen of trackers.</div>`
-        :(w.holdings||[]).map(h=>{
+        :(w.holdings||[]).map((h,i,arr)=>{
           const value=getHoldingValue(h);
           const cost=getHoldingCost(h);
           const pnl=value-cost;
-          const pnlPct=cost>0?(pnl/cost*100):0;
-          const pnlColor=pnl>0?'var(--g)':pnl<0?'var(--r)':'var(--n3)';
-          return `<div onclick="openHoldingModal('${h.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--l0);cursor:pointer;-webkit-tap-highlight-color:transparent">
+          const pnlPct2=cost>0?(pnl/cost*100):0;
+          const pnlColor2=pnl>0?'var(--g)':pnl<0?'var(--r)':'var(--n3)';
+          return `<div onclick="openHoldingModal('${h.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;${i<arr.length-1?'border-bottom:1px solid var(--l0);':''}cursor:pointer;-webkit-tap-highlight-color:transparent">
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(h.name||h.ticker||'?')}</div>
               <div style="font-size:10px;color:var(--n3);margin-top:2px;font-family:var(--mono)">${esc(h.ticker||'')} &nbsp;·&nbsp; ${h.quantity||0} × ${h.lastPrice?fmt(h.lastPrice):'—'}</div>
             </div>
             <div style="text-align:right">
               <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--n0)">${fmt(Math.round(value))}</div>
-              ${cost>0?`<div style="font-size:10px;color:${pnlColor};font-family:var(--mono);font-weight:700;margin-top:2px">${pnl>=0?'+':''}${fmt(Math.round(pnl))} (${pnl>=0?'+':''}${pnlPct.toFixed(1)}%)</div>`:''}
+              ${cost>0?`<div style="font-size:10px;color:${pnlColor2};font-family:var(--mono);font-weight:700;margin-top:2px">${pnl>=0?'+':''}${fmt(Math.round(pnl))} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
             </div>
           </div>`;
         }).join('')}
@@ -6087,7 +6227,6 @@ $('d-del-month').onclick=()=>{
 $('d-next').onclick=()=>{const now=new Date();if(!(viewMonth.getMonth()===now.getMonth()&&viewMonth.getFullYear()===now.getFullYear())){viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1);updateDash()}};
 $('s-fixed').onclick=()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.length?JSON.parse(JSON.stringify(S.fixedGroups)):JSON.parse(JSON.stringify(FIXED_GROUPS)),categories:S.categories.filter(c=>c.type==='monthly').map(c=>({...c}))};showScreen('wizard');renderWizard(2)};
 $('s-cats').onclick=()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.length?JSON.parse(JSON.stringify(S.fixedGroups)):JSON.parse(JSON.stringify(FIXED_GROUPS)),categories:S.categories.filter(c=>c.type==='monthly').map(c=>({...c}))};showScreen('wizard');renderWizard(3)};
-$('s-wealth').onclick=()=>showScreen('wealth');
 $('s-wizard').onclick=()=>openConfirmModal('Wizard opnieuw starten','Instellingen bewaard, maar je kan ze stap voor stap aanpassen.','Opnieuw starten',()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.length?JSON.parse(JSON.stringify(S.fixedGroups)):JSON.parse(JSON.stringify(FIXED_GROUPS)),categories:S.categories.filter(c=>c.type==='monthly').map(c=>({...c}))};showScreen('wizard');renderWizard(1)},false);
 $('s-xlsx').onclick=exportXLSX;$('s-xlsx-detail').onclick=exportXLSXDetail;$('s-backup').onclick=exportBackup;
 $('s-import').onchange=e=>{if(e.target.files[0]){importJSON(e.target.files[0]);e.target.value=''}};
