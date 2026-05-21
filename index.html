@@ -349,6 +349,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .field-hint .badge{background:var(--a-dim);color:var(--a);padding:2px 5px;border-radius:3px;font-weight:700;font-size:9px}
 .field-money{position:relative}
 .field-money::before{content:'€';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--n3);font-weight:600;font-size:13px}
+.field-money[data-cur="USD"]::before{content:'$'}
+.field-money[data-cur="EUR"]::before{content:'€'}
 .field-money .field-input{padding-left:24px;font-family:var(--mono)}
 
 /* ─────────────────────────────────────────────────────────
@@ -3090,17 +3092,17 @@ function openHoldingModal(holdingId){
       <div style="display:flex;gap:10px">
         <div style="flex:1">
           <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aankoopkoers/stuk</label>
-          <div class="field-money" style="margin:0;position:relative"><input type="text" class="field-input" id="h-avg" value="${h.avgPrice||''}" inputmode="decimal" autocomplete="off"></div>
+          <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0;position:relative" id="h-avg-wrap"><input type="text" class="field-input" id="h-avg" value="${h.avgPrice||''}" inputmode="decimal" autocomplete="off"></div>
         </div>
         <div style="flex:1">
           <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Totaal betaald</label>
-          <div class="field-money" style="margin:0"><input type="text" class="field-input" id="h-total" value="${h.totalCost||((h.quantity||0)*(h.avgPrice||0))||''}" inputmode="decimal" autocomplete="off" placeholder="incl. fees + TOB"></div>
+          <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0" id="h-total-wrap"><input type="text" class="field-input" id="h-total" value="${h.totalCost||((h.quantity||0)*(h.avgPrice||0))||''}" inputmode="decimal" autocomplete="off" placeholder="incl. fees + TOB"></div>
         </div>
       </div>
       <div style="font-size:10px;color:var(--n3);margin-top:-4px;line-height:1.4">Vul één in, het andere wordt berekend op basis van het aantal. Totaal = wat de bank effectief afschreef incl. beurstaks en commissie.</div>
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers ${h.lastPrice?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)">— '+fmt(h.lastPrice)+'</span>':''}</label>
-        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="h-last" value="${h.lastPrice||''}" inputmode="decimal" placeholder="manueel of refresh" autocomplete="off"></div>
+        <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0" id="h-last-wrap"><input type="text" class="field-input" id="h-last" value="${h.lastPrice||''}" inputmode="decimal" placeholder="manueel of refresh" autocomplete="off"></div>
       </div>
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">URL naar live koers (optioneel)</label>
@@ -3127,6 +3129,24 @@ function openHoldingModal(holdingId){
   if($('h-link')&&h.url){
     $('h-link').onclick=()=>window.open(h.url,'_blank','noopener');
   }
+  // Synchroniseer muntsymbool op alle bedrag-velden met de gekozen currency
+  const syncCurrencySymbols=()=>{
+    const cur=$('h-currency').value||'USD';
+    ['h-avg-wrap','h-total-wrap','h-last-wrap'].forEach(id=>{
+      const el=$(id);if(el)el.setAttribute('data-cur',cur);
+    });
+  };
+  $('h-currency').addEventListener('change',syncCurrencySymbols);
+  // Bij ticker-wijziging: auto-detecteer munt en sync symbolen
+  $('h-ticker').addEventListener('input',()=>{
+    const t=($('h-ticker').value||'').trim();
+    if(!t)return;
+    const detected=detectCurrency(t);
+    if($('h-currency').value!==detected){
+      $('h-currency').value=detected;
+      syncCurrencySymbols();
+    }
+  });
   // Bidirectionele sync: aankoopkoers/stuk ↔ totaal betaald, op basis van aantal
   let _syncing=false;
   const syncFromAvg=()=>{
@@ -3195,6 +3215,7 @@ function openHoldingModal(holdingId){
       // Detecteer munt uit ticker en sync de dropdown — Alpha Vantage geeft koers in lokale munt
       const detected=detectCurrency(t);
       $('h-currency').value=detected;
+      syncCurrencySymbols();
       $('h-last').value=r.price;
       const sym=detected==='EUR'?'€':'$';
       lbl.textContent=`${sym}${r.price} (${r.date})`;
