@@ -1082,35 +1082,66 @@ const FIXED_GROUPS=[{id:'wonen',name:'Wonen',icon:'home',color:'emerald',items:[
 const DEFAULT_RESERVES=[];
 const DEFAULT_CATS=[];
 const STORAGE='buddy-budget-v5';
-let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[],lastSync:null},alertState:{dismissed:{},lastActivity:0},init:false};
+let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null},alertState:{dismissed:{},lastActivity:0},init:false};
 let charts={},wStep=1,wData={},viewMonth=new Date();
 const $=id=>document.getElementById(id),$$=sel=>document.querySelectorAll(sel),genId=()=>Math.random().toString(36).substr(2,9);
 
-// ═══ VERMOGEN: Stooq koers ophalen ════════════════════════════════════════
-// Privacy: één directe GET request naar stooq.com per ticker.
-// Stooq krijgt enkel het IP-adres + ticker te zien, geen account, geen email.
-async function fetchStooqPrice(ticker){
+// ═══ VERMOGEN: Alpha Vantage koers ophalen ════════════════════════════════
+// Vereist een gratis API key, in te stellen in de Vermogen-tab.
+// Key wordt lokaal opgeslagen in localStorage, nooit gelogd in console/toast/export.
+// Provider ziet IP + ticker, gekoppeld aan jouw API-key account.
+async function fetchAlphaVantagePrice(ticker){
   if(!ticker||typeof ticker!=='string')throw new Error('Ongeldige ticker');
-  const clean=ticker.trim().toLowerCase();
-  if(!/^[a-z0-9._-]{1,20}$/.test(clean))throw new Error('Ticker bevat ongeldige tekens');
-  const url=`https://stooq.com/q/l/?s=${encodeURIComponent(clean)}&f=sd2t2ohlcv&h&e=csv`;
+  const clean=ticker.trim().toUpperCase();
+  if(!/^[A-Z0-9.-]{1,20}$/.test(clean))throw new Error('Ticker bevat ongeldige tekens');
+  const key=(S.wealth?.apiKey||'').trim();
+  if(!key)throw new Error('Geen API key');
+  if(!/^[A-Z0-9]{8,32}$/.test(key))throw new Error('API key ongeldig');
+  const url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(clean)}&apikey=${encodeURIComponent(key)}`;
   let resp;
-  try{
-    resp=await fetch(url);
-  }catch(e){
-    // Typisch een CORS-fout: de browser blokkeert de fetch silently → TypeError
-    throw new Error('Netwerk geblokkeerd (CORS)');
-  }
+  try{resp=await fetch(url);}catch(e){throw new Error('Netwerk geblokkeerd');}
   if(!resp.ok)throw new Error('HTTP '+resp.status);
-  const text=await resp.text();
-  const lines=text.trim().split('\n');
-  if(lines.length<2)throw new Error('Geen data');
-  const cols=lines[1].split(',');
-  if(cols.length<7)throw new Error('Onverwacht antwoord');
-  const close=parseFloat(cols[6]);
-  if(!isFinite(close)||cols[1]==='N/D')throw new Error('Ticker niet gevonden');
-  return{price:close,date:cols[1],time:cols[2]||''};
+  const data=await resp.json();
+  if(data['Note']||data['Information'])throw new Error('Rate limit (25/dag)');
+  if(data['Error Message'])throw new Error('Ticker niet gevonden');
+  const q=data['Global Quote'];
+  if(!q||!q['05. price'])throw new Error('Geen koers');
+  const price=parseFloat(q['05. price']);
+  if(!isFinite(price)||price<=0)throw new Error('Ongeldige koers');
+  return{price,date:q['07. latest trading day']||''};
 }
+
+// USD → EUR omrekeningskoers. Idem privacy-overwegingen.
+async function fetchUsdEurRate(){
+  const key=(S.wealth?.apiKey||'').trim();
+  if(!key)throw new Error('Geen API key');
+  const url=`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=EUR&apikey=${encodeURIComponent(key)}`;
+  let resp;
+  try{resp=await fetch(url);}catch(e){throw new Error('Netwerk geblokkeerd');}
+  if(!resp.ok)throw new Error('HTTP '+resp.status);
+  const data=await resp.json();
+  if(data['Note']||data['Information'])throw new Error('Rate limit');
+  const r=data['Realtime Currency Exchange Rate'];
+  if(!r||!r['5. Exchange Rate'])throw new Error('Geen wisselkoers');
+  const rate=parseFloat(r['5. Exchange Rate']);
+  if(!isFinite(rate)||rate<=0)throw new Error('Ongeldige koers');
+  return{rate,date:r['6. Last Refreshed']||''};
+}
+
+// Converteer holding waarde naar EUR. Gebruikt gecachte USD/EUR rate.
+function getHoldingValueEur(h){
+  const val=getHoldingValue(h);
+  if((h.currency||'USD')==='EUR')return val;
+  const rate=S.wealth?.usdEurRate||0.92;  // fallback indien nog niet opgehaald
+  return val*rate;
+}
+function getHoldingCostEur(h){
+  const cost=getHoldingCost(h);
+  if((h.currency||'USD')==='EUR')return cost;
+  const rate=S.wealth?.usdEurRate||0.92;
+  return cost*rate;
+}
+function getHoldingPnLEur(h){return getHoldingValueEur(h)-getHoldingCostEur(h);}
 
 // Vermogensberekeningen
 function getHoldingValue(h){return(h.quantity||0)*(h.lastPrice||0);}
@@ -1118,8 +1149,10 @@ function getHoldingCost(h){return(h.quantity||0)*(h.avgPrice||0);}
 function getHoldingPnL(h){return getHoldingValue(h)-getHoldingCost(h);}
 function getTotalWealth(){
   const w=S.wealth||{accounts:[],holdings:[]};
+  // Spaarrekeningen zijn altijd in EUR
   const acc=(w.accounts||[]).reduce((s,a)=>s+(a.balance||0),0);
-  const hld=(w.holdings||[]).reduce((s,h)=>s+getHoldingValue(h),0);
+  // Holdings worden geconverteerd naar EUR
+  const hld=(w.holdings||[]).reduce((s,h)=>s+getHoldingValueEur(h),0);
   return{accounts:acc,holdings:hld,total:acc+hld};
 }
 const fmt=(n,d=0)=>'€'+(Number(n)||0).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -1137,7 +1170,7 @@ function enableCalc(inp){inp.style.fontFamily='var(--font-mono)';const ev=()=>{c
 function hideCalcBar(){calcTarget=null;$('calc-bar').classList.remove('show')}
 function save(){localStorage.setItem(STORAGE,JSON.stringify(S));_invalidateCaches();}
 let _incomeCache=null,_fixedCache=null;
-function load(){_invalidateCaches();const d=localStorage.getItem(STORAGE);if(d){try{const p=JSON.parse(d);S={...S,...p};if(!S.monthlyData)S.monthlyData={};if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null};if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};if(p.transactions&&!Object.keys(S.monthlyData).length){p.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});save()}return true}catch{}}return false}
+function load(){_invalidateCaches();const d=localStorage.getItem(STORAGE);if(d){try{const p=JSON.parse(d);S={...S,...p};if(!S.monthlyData)S.monthlyData={};if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null};else{if(S.wealth.apiKey===undefined)S.wealth.apiKey='';if(S.wealth.usdEurRate===undefined)S.wealth.usdEurRate=null;if(S.wealth.usdEurUpdated===undefined)S.wealth.usdEurUpdated=null;}if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};if(p.transactions&&!Object.keys(S.monthlyData).length){p.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});save()}return true}catch{}}return false}
 function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active');$$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===id));const nav=['dashboard','analytics','settings'].includes(id);document.querySelector('.nav').style.display=nav?'block':'none';const fab=$('fab');if(fab){fab.style.display=nav?'flex':'none';fab.classList.remove('fab-dim');}if(id==='dashboard')updateDash();if(id==='analytics')updateAnalytics();}
 function initDetailModal(){
   const bg=$('detail-modal-bg');
@@ -2855,7 +2888,10 @@ function renderWealth(){
       ${(w.holdings||[]).length===0
         ?`<div style="padding:18px 16px;text-align:center;color:var(--n3);font-size:12px">Nog geen aandelen of trackers.</div>`
         :(w.holdings||[]).map((h,i,arr)=>{
-          const value=getHoldingValue(h);
+          const cur=h.currency||'USD';
+          const sym=cur==='EUR'?'€':'$';
+          const value=getHoldingValue(h);            // in eigen munt
+          const valueEur=getHoldingValueEur(h);      // omgerekend
           const cost=getHoldingCost(h);
           const pnl=value-cost;
           const pnlPct2=cost>0?(pnl/cost*100):0;
@@ -2863,11 +2899,12 @@ function renderWealth(){
           return `<div onclick="openHoldingModal('${h.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;${i<arr.length-1?'border-bottom:1px solid var(--l0);':''}cursor:pointer;-webkit-tap-highlight-color:transparent">
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(h.name||h.ticker||'?')}</div>
-              <div style="font-size:10px;color:var(--n3);margin-top:2px;font-family:var(--mono)">${esc(h.ticker||'')} &nbsp;·&nbsp; ${h.quantity||0} × ${h.lastPrice?fmt(h.lastPrice):'—'}</div>
+              <div style="font-size:10px;color:var(--n3);margin-top:2px;font-family:var(--mono)">${esc(h.ticker||'')} &nbsp;·&nbsp; ${h.quantity||0} × ${sym}${h.lastPrice?h.lastPrice.toFixed(2):'—'}</div>
             </div>
             <div style="text-align:right">
-              <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--n0)">${fmt(Math.round(value))}</div>
-              ${cost>0?`<div style="font-size:10px;color:${pnlColor2};font-family:var(--mono);font-weight:700;margin-top:2px">${pnl>=0?'+':''}${fmt(Math.round(pnl))} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
+              <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--n0)">${sym}${Math.round(value).toLocaleString('nl-BE')}</div>
+              ${cur!=='EUR'&&valueEur>0?`<div style="font-size:10px;color:var(--n3);font-family:var(--mono);margin-top:2px">≈ ${fmt(Math.round(valueEur))}</div>`:''}
+              ${cost>0?`<div style="font-size:10px;color:${pnlColor2};font-family:var(--mono);font-weight:700;margin-top:2px">${pnl>=0?'+':''}${sym}${Math.round(pnl).toLocaleString('nl-BE')} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
             </div>
           </div>`;
         }).join('')}
@@ -2878,14 +2915,61 @@ function renderWealth(){
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         Koersen vernieuwen
       </button>
-      <div style="font-size:10px;color:var(--n3);text-align:center;margin-top:8px">Laatste sync: ${lastSync}</div>
+      <div style="font-size:10px;color:var(--n3);text-align:center;margin-top:8px">
+        Laatste sync: ${lastSync}${S.wealth.usdEurRate?` &nbsp;·&nbsp; 1$ = ${S.wealth.usdEurRate.toFixed(4)}€`:''}
+      </div>
     `:''}
 
+    <!-- API KEY SECTIE -->
+    <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--l0)">
+      <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Alpha Vantage API key
+      </div>
+      ${(S.wealth?.apiKey||'').trim()
+        ?`<div style="display:flex;gap:8px;align-items:center;background:var(--s0);border:1px solid var(--l0);border-radius:var(--r6);padding:10px 12px">
+            <div style="flex:1;font-family:var(--mono);font-size:12px;color:var(--n2)">${'•'.repeat(8)}${esc((S.wealth.apiKey||'').slice(-4))}</div>
+            <button onclick="changeApiKey()" style="background:none;border:none;color:var(--a);font-size:11px;font-weight:700;cursor:pointer;padding:2px 4px">Wijzigen</button>
+            <button onclick="clearApiKey()" style="background:none;border:none;color:var(--r);font-size:11px;font-weight:700;cursor:pointer;padding:2px 4px">Wissen</button>
+          </div>`
+        :`<div style="display:flex;gap:6px">
+            <input type="text" class="field-input" id="api-key-input" placeholder="Plak je gratis Alpha Vantage key" autocomplete="off" style="font-family:var(--mono);flex:1">
+            <button onclick="saveApiKey()" class="btn btn-primary" style="padding:0 14px;font-size:12px">Opslaan</button>
+          </div>
+          <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.5">Gratis aan te vragen op <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener" style="color:var(--a)">alphavantage.co</a>. 25 koersaanvragen per dag in de gratis tier.</div>`}
+    </div>
+
     <!-- PRIVACY-NOTITIE -->
-    <div style="margin-top:18px;padding:11px 12px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:var(--r6);font-size:10px;line-height:1.5;color:var(--n2)">
-      <strong style="color:var(--n1)">Privacy:</strong> koersen worden opgehaald via stooq.com. Stooq ziet enkel je IP-adres en welke tickers je opvraagt — geen account nodig. De koersen worden lokaal bewaard tot je manueel vernieuwt.
+    <div style="margin-top:14px;padding:11px 12px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:var(--r6);font-size:10px;line-height:1.5;color:var(--n2)">
+      <strong style="color:var(--n1)">Privacy:</strong> koersen worden opgehaald via Alpha Vantage. Bij elke refresh ziet Alpha Vantage je IP-adres en welke tickers je opvraagt, gekoppeld aan je API key. Koersen worden lokaal bewaard tot je manueel vernieuwt. De API key staat alleen in je browser — niet in de export.
     </div>
   `;
+}
+
+// API key beheer — nooit loggen of in toasts tonen
+function saveApiKey(){
+  const inp=$('api-key-input');
+  const v=(inp?.value||'').trim();
+  if(!/^[A-Z0-9]{8,32}$/.test(v)){showToast('Ongeldige sleutel (alleen letters en cijfers, 8-32 tekens)',3000);return;}
+  if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null};
+  S.wealth.apiKey=v;
+  save();
+  renderWealth();
+  showToast('✓ API key bewaard',1800);
+}
+function changeApiKey(){
+  if(!S.wealth)return;
+  S.wealth.apiKey='';
+  save();
+  renderWealth();
+}
+function clearApiKey(){
+  if(!confirm('API key wissen? Refresh van koersen werkt dan niet meer.'))return;
+  if(!S.wealth)return;
+  S.wealth.apiKey='';
+  save();
+  renderWealth();
+  showToast('✓ Wijgewist',1500);
 }
 
 function openAccountModal(accountId){
@@ -2971,8 +3055,8 @@ function openHoldingModal(holdingId){
       </div>
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Ticker</label>
-        <input type="text" class="field-input" id="h-ticker" value="${esc(h.ticker||'')}" placeholder="bv. IWDA.UK, AAPL.US, ABI.BR" autocomplete="off" style="font-family:var(--mono);text-transform:uppercase">
-        <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Stooq formaat: <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">AAPL.US</code>, <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ABI.BR</code>, <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">IWDA.UK</code></div>
+        <input type="text" class="field-input" id="h-ticker" value="${esc(h.ticker||'')}" placeholder="bv. AAPL, VOO, IBM" autocomplete="off" style="font-family:var(--mono);text-transform:uppercase">
+        <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Alpha Vantage formaat: <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">AAPL</code> (US), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">RDS.L</code> (Londen), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">SAP.DEX</code> (Frankfurt)</div>
       </div>
       <div style="display:flex;gap:10px">
         <div style="flex:1">
@@ -2980,13 +3064,22 @@ function openHoldingModal(holdingId){
           <input type="text" class="field-input" id="h-qty" value="${h.quantity||''}" inputmode="decimal" placeholder="0" autocomplete="off">
         </div>
         <div style="flex:1">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aankoopkoers</label>
-          <div class="field-money" style="margin:0"><input type="text" class="field-input" id="h-avg" value="${h.avgPrice||''}" inputmode="decimal" autocomplete="off"></div>
+          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Munt</label>
+          <select class="field-input" id="h-currency" style="width:100%">
+            <option value="USD" ${(h.currency||'USD')==='USD'?'selected':''}>USD ($)</option>
+            <option value="EUR" ${h.currency==='EUR'?'selected':''}>EUR (€)</option>
+          </select>
         </div>
       </div>
-      <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers ${h.lastPrice?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)">— laatst: '+fmt(h.lastPrice)+'</span>':''}</label>
-        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="h-last" value="${h.lastPrice||''}" inputmode="decimal" placeholder="manueel of via refresh-knop" autocomplete="off"></div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aankoopkoers</label>
+          <div class="field-money" style="margin:0;position:relative"><input type="text" class="field-input" id="h-avg" value="${h.avgPrice||''}" inputmode="decimal" autocomplete="off"></div>
+        </div>
+        <div style="flex:1">
+          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers ${h.lastPrice?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)">— '+fmt(h.lastPrice)+'</span>':''}</label>
+          <div class="field-money" style="margin:0"><input type="text" class="field-input" id="h-last" value="${h.lastPrice||''}" inputmode="decimal" placeholder="manueel of refresh" autocomplete="off"></div>
+        </div>
       </div>
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">URL naar live koers (optioneel)</label>
@@ -3023,6 +3116,7 @@ function openHoldingModal(holdingId){
       name,
       ticker:ticker.toUpperCase(),
       quantity:parseFloat($('h-qty').value)||0,
+      currency:$('h-currency').value||'USD',
       avgPrice:calc($('h-avg').value)||parseFloat($('h-avg').value)||0,
       lastPrice:calc($('h-last').value)||parseFloat($('h-last').value)||0,
       url:($('h-url').value||'').trim(),
@@ -3040,14 +3134,15 @@ function openHoldingModal(holdingId){
     renderWealth();
     showToast('✓ Opgeslagen',1500);
   };
-  // Refresh-knop werkt voor zowel nieuwe als bestaande holdings
+  // Refresh-knop werkt voor zowel nieuwe als bestaande holdings (via Alpha Vantage)
   $('h-refresh').onclick=async()=>{
     const t=($('h-ticker').value||'').trim();
     if(!t){showToast('Geef eerst een ticker in',2200);$('h-ticker').focus();return;}
+    if(!(S.wealth?.apiKey||'').trim()){showToast('Stel eerst je Alpha Vantage API key in',3000);return;}
     const btn=$('h-refresh'),lbl=$('h-refresh-label');
     btn.disabled=true;lbl.textContent='Bezig…';
     try{
-      const r=await fetchStooqPrice(t);
+      const r=await fetchAlphaVantagePrice(t);
       $('h-last').value=r.price;
       lbl.textContent=`${r.price} (${r.date})`;
       btn.style.color='var(--g)';
@@ -3075,24 +3170,41 @@ function openHoldingModal(holdingId){
 async function refreshAllPrices(){
   const holdings=(S.wealth?.holdings||[]).filter(h=>h.ticker);
   if(holdings.length===0)return;
-  let ok=0,fail=0,corsFail=false;
-  showToast('Koersen ophalen voor '+holdings.length+' tickers…',2000);
-  for(const h of holdings){
+  if(!(S.wealth?.apiKey||'').trim()){showToast('Stel eerst je Alpha Vantage API key in',3000);return;}
+  let ok=0,fail=0,rateOk=false,rateLimit=false;
+  // Stel limiet expliciet — vermijd snel opgebruiken bij grote portefeuilles
+  const needsUsd=holdings.some(h=>(h.currency||'USD')==='USD');
+  const totalCalls=holdings.length+(needsUsd?1:0);
+  showToast(`Koersen ophalen (${totalCalls} calls)…`,2200);
+  // 1) Wisselkoers eerst, indien USD-holdings aanwezig
+  if(needsUsd){
     try{
-      const r=await fetchStooqPrice(h.ticker);
+      const r=await fetchUsdEurRate();
+      S.wealth.usdEurRate=r.rate;
+      S.wealth.usdEurUpdated=Date.now();
+      rateOk=true;
+    }catch(e){
+      if(e.message.includes('Rate limit'))rateLimit=true;
+    }
+  }
+  // 2) Per holding de koers
+  for(const h of holdings){
+    if(rateLimit)break;
+    try{
+      const r=await fetchAlphaVantagePrice(h.ticker);
       h.lastPrice=r.price;
       h.lastUpdate=Date.now();
       ok++;
     }catch(e){
       fail++;
-      if(e.message.includes('CORS'))corsFail=true;
+      if(e.message.includes('Rate limit')){rateLimit=true;break;}
     }
   }
   S.wealth.lastSync=Date.now();
   save();
   renderWealth();
-  if(ok>0)showToast(`✓ ${ok} bijgewerkt${fail?', '+fail+' mislukt':''}`,2800);
-  else if(corsFail)showToast('Browser blokkeert Stooq (CORS). Tik op een holding voor details.',4500);
+  if(rateLimit)showToast(`Alpha Vantage rate limit bereikt (25/dag). ${ok} opgehaald.`,4500);
+  else if(ok>0)showToast(`✓ ${ok} koers${ok!==1?'en':''} bijgewerkt${fail?`, ${fail} mislukt`:''}${rateOk?', wisselkoers ververst':''}`,3000);
   else showToast(`Geen koersen opgehaald (${fail} mislukt)`,3500);
 }
 
@@ -6222,8 +6334,14 @@ function exportXLSX(){
   csvDownload(`buddy-budget-${new Date().toISOString().split('T')[0]}.csv`,[header,...rows]);
   showToast('✓ CSV gedownload');
 }
-function exportBackup(){const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`buddy-budget-backup-${new Date().toISOString().split('T')[0]}.json`;a.click()}
-async function importJSON(file){try{if(file.size>10*1024*1024){showToast('⚠ Bestand te groot (max 10MB)',3000);return;}const text=await file.text();const data=JSON.parse(text);if(!data||typeof data!=='object'||!Array.isArray(data.categories)){showToast('⚠ Ongeldig backup-bestand',3000);return;}if(data.categories.length>1000||data.transactions&&data.transactions.length>100000){showToast('⚠ Backup bevat verdacht veel items',3500);return;}if(!confirm('Huidige data overschrijven met deze backup?'))return;Object.assign(S,data);if(!S.monthlyData||typeof S.monthlyData!=='object')S.monthlyData={};if(!Array.isArray(S.transactions))S.transactions=[];save();location.reload();}catch(e){showToast('⚠ Fout bij importeren: '+e.message,4000);}}
+function exportBackup(){
+  // API key wordt uit de export geweerd voor veiligheid
+  const safe=JSON.parse(JSON.stringify(S));
+  if(safe.wealth)safe.wealth.apiKey='';
+  const blob=new Blob([JSON.stringify(safe,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`buddy-budget-backup-${new Date().toISOString().split('T')[0]}.json`;a.click()
+}
+async function importJSON(file){try{if(file.size>10*1024*1024){showToast('⚠ Bestand te groot (max 10MB)',3000);return;}const text=await file.text();const data=JSON.parse(text);if(!data||typeof data!=='object'||!Array.isArray(data.categories)){showToast('⚠ Ongeldig backup-bestand',3000);return;}if(data.categories.length>1000||data.transactions&&data.transactions.length>100000){showToast('⚠ Backup bevat verdacht veel items',3500);return;}if(!confirm('Huidige data overschrijven met deze backup?'))return;const oldKey=S.wealth?.apiKey||'';Object.assign(S,data);if(!S.monthlyData||typeof S.monthlyData!=='object')S.monthlyData={};if(!Array.isArray(S.transactions))S.transactions=[];if(S.wealth&&!S.wealth.apiKey&&oldKey)S.wealth.apiKey=oldKey;save();location.reload();}catch(e){showToast('⚠ Fout bij importeren: '+e.message,4000);}}
 
 
 // === INIT ===
