@@ -702,6 +702,16 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .wp-stat-row .wp-stat-input{display:flex;align-items:center;gap:6px}
 .wp-stat-row input{width:64px;text-align:center;font-family:var(--mono);padding:7px 8px}
 .wp-stat-row .wp-stat-unit{font-size:10px;color:var(--n3);min-width:40px;text-align:left}
+/* Beschikbaarheids-groepen in Vermogen */
+.wp-group{margin-bottom:16px}
+.wp-group:last-child{margin-bottom:0}
+.wp-group-header{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.wp-group-title{font-size:11px;font-weight:700;color:var(--n1);display:inline-flex;align-items:center;gap:8px}
+.wp-group-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.wp-group-subtotal{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--n2)}
+.wp-row-type-pill{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;line-height:1.5}
+.wp-type-cash{background:rgba(14,165,233,.13);color:#0284c7}
+.wp-type-invest{background:rgba(233,30,140,.13);color:var(--a)}
 /* Event modal segmented controls */
 .ev-segment{display:flex;gap:0;background:var(--l0);border-radius:var(--r6);padding:3px}
 .ev-seg-btn{flex:1;border:none;background:transparent;color:var(--n2);font-family:var(--sans);font-size:12px;font-weight:600;padding:8px 6px;border-radius:calc(var(--r6) - 3px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;-webkit-tap-highlight-color:transparent}
@@ -1095,7 +1105,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.007</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.010</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -2982,87 +2992,98 @@ function renderWealth(){
     `:''}
 
     <!-- SPAARREKENINGEN -->
+    <!-- VERMOGENS-ITEMS GEGROEPEERD OP BESCHIKBAARHEID -->
     <div class="wp-section">
       <div class="wp-label-row">
         <div class="wp-label">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-          Spaarrekeningen
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Mijn vermogen
         </div>
-        <button class="wp-add-btn" onclick="openAccountModal()">+ Toevoegen</button>
-      </div>
-      <div class="wp-card">
-        ${(w.accounts||[]).length===0
-          ?`<div class="wp-empty">Nog geen rekeningen.</div>`
-          :(w.accounts||[]).map(a=>{
-            const av=a.availability||'vrij';
-            const blocked=isBlocked(a);
-            const t=blocked?timeUntilUnblock(a):null;
-            let badge='';
-            if(av==='gereserveerd')badge='<span class="wp-badge wp-badge-reserved">Gereserveerd</span>';
-            else if(blocked)badge='<span class="wp-badge wp-badge-blocked">Geblokkeerd</span>';
-            const metaParts=[];
-            if(a.institution)metaParts.push(esc(a.institution));
-            if(a.interest)metaParts.push(a.interest+'%');
-            if(av==='gereserveerd'&&a.purpose)metaParts.push(esc(a.purpose));
-            else if(blocked&&t)metaParts.push(`vrij in ${t.years>0?t.years+' jaar ':''}${t.months>0||t.years===0?t.months+' mnd':''}`);
-            return `<div class="wp-row" onclick="openAccountModal('${a.id}')">
-              <div style="flex:1;min-width:0">
-                <div class="wp-row-title">${esc(a.name)}${badge}</div>
-                ${metaParts.length?`<div class="wp-row-meta">${metaParts.join(' &nbsp;·&nbsp; ')}</div>`:''}
-              </div>
-              <div class="wp-row-amount">${fmt(a.balance||0)}</div>
-            </div>`;
-          }).join('')}
-      </div>
-    </div>
-
-    <!-- BEURSPORTEFEUILLE -->
-    <div class="wp-section">
-      <div class="wp-label-row">
-        <div class="wp-label">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-          Beursportefeuille
+        <div style="display:flex;gap:4px">
+          <button class="wp-add-btn" onclick="openAccountModal()" title="Spaarrekening toevoegen">+ Rekening</button>
+          <button class="wp-add-btn" onclick="openHoldingModal()" title="Aandeel of ETF toevoegen">+ Aandeel/ETF</button>
         </div>
-        <button class="wp-add-btn" onclick="openHoldingModal()">+ Toevoegen</button>
       </div>
-      <div class="wp-card">
-        ${(w.holdings||[]).length===0
-          ?`<div class="wp-empty">Nog geen aandelen of trackers.</div>`
-          :(w.holdings||[]).map(h=>{
-            const cur=h.currency||'USD';
-            const sym=cur==='EUR'?'€':'$';
-            const value=getHoldingValue(h);
-            const valueEur=getHoldingValueEur(h);
-            const cost=getHoldingCost(h);
-            const pnl=value-cost;
-            const pnlPct2=cost>0?(pnl/cost*100):0;
-            const pnlColor2=pnl>0?'var(--g)':pnl<0?'var(--r)':'var(--n3)';
-            const av=h.availability||'vrij';
-            const blocked=isBlocked(h);
-            const t=blocked?timeUntilUnblock(h):null;
-            let badge='';
-            if(av==='gereserveerd')badge='<span class="wp-badge wp-badge-reserved">Gereserveerd</span>';
-            else if(blocked)badge='<span class="wp-badge wp-badge-blocked">Geblokkeerd</span>';
-            const metaParts=[];
-            if(h.ticker)metaParts.push(`<span style="font-family:var(--mono)">${esc(h.ticker)}</span>`);
-            metaParts.push(`<span style="font-family:var(--mono)">${h.quantity||0} × ${sym}${h.lastPrice?h.lastPrice.toFixed(2):'—'}</span>`);
-            if(av==='gereserveerd'&&h.purpose)metaParts.push(esc(h.purpose));
-            else if(blocked&&t)metaParts.push(`vrij in ${t.years>0?t.years+'j ':''}${t.months>0||t.years===0?t.months+'m':''}`);
-            return `<div class="wp-row" onclick="openHoldingModal('${h.id}')">
-              <div style="flex:1;min-width:0">
-                <div class="wp-row-title">${esc(h.name||h.ticker||'?')}${badge}</div>
-                <div class="wp-row-meta">${metaParts.join(' &nbsp;·&nbsp; ')}</div>
-              </div>
-              <div style="text-align:right;flex-shrink:0">
-                <div class="wp-row-amount">${sym}${Math.round(value).toLocaleString('nl-BE')}</div>
-                ${cur!=='EUR'&&valueEur>0?`<div class="wp-row-amount-sub">≈ ${fmt(Math.round(valueEur))}</div>`:''}
-                ${cost>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnl>=0?'+':''}${sym}${Math.round(pnl).toLocaleString('nl-BE')} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
-              </div>
-            </div>`;
-          }).join('')}
-      </div>
+      ${(()=>{
+        // Bouw items lijst met type-info
+        const allItems=[];
+        (w.accounts||[]).forEach(a=>{
+          allItems.push({type:'account',item:a,value:a.balance||0,availability:a.availability||'vrij',blocked:isBlocked(a)});
+        });
+        (w.holdings||[]).forEach(h=>{
+          allItems.push({type:'holding',item:h,value:getHoldingValueEur(h),availability:h.availability||'vrij',blocked:isBlocked(h)});
+        });
+        if(allItems.length===0){
+          return `<div class="wp-card"><div class="wp-empty">Nog geen rekeningen, aandelen of ETFs toegevoegd.<br><span style="font-size:10px;color:var(--n4)">Begin met de + knoppen hierboven.</span></div></div>`;
+        }
+        const groups=[
+          {key:'vrij',title:'Vrij beschikbaar',color:'var(--g)',items:allItems.filter(x=>!x.blocked&&x.availability==='vrij')},
+          {key:'gereserveerd',title:'Gereserveerd',color:'#0ea5e9',items:allItems.filter(x=>!x.blocked&&x.availability==='gereserveerd')},
+          {key:'geblokkeerd',title:'Geblokkeerd',color:'var(--n3)',items:allItems.filter(x=>x.blocked)}
+        ].filter(g=>g.items.length>0);
+        return groups.map(g=>{
+          const subtotal=g.items.reduce((s,x)=>s+x.value,0);
+          return `<div class="wp-group">
+            <div class="wp-group-header">
+              <span class="wp-group-title"><span class="wp-group-dot" style="background:${g.color}"></span>${g.title}</span>
+              <span class="wp-group-subtotal">${fmt(Math.round(subtotal))}</span>
+            </div>
+            <div class="wp-card" style="margin-top:6px">
+              ${g.items.map(x=>{
+                if(x.type==='account'){
+                  const a=x.item;
+                  const blocked=isBlocked(a);
+                  const t=blocked?timeUntilUnblock(a):null;
+                  const metaParts=[];
+                  metaParts.push('<span class="wp-row-type-pill wp-type-cash">Cash</span>');
+                  if(a.institution)metaParts.push(esc(a.institution));
+                  if(a.interest)metaParts.push(a.interest+'%');
+                  if(a.availability==='gereserveerd'&&a.purpose)metaParts.push(esc(a.purpose));
+                  else if(blocked&&t)metaParts.push(`vrij in ${t.years>0?t.years+' jaar ':''}${t.months>0||t.years===0?t.months+' mnd':''}`);
+                  return `<div class="wp-row" onclick="openAccountModal('${a.id}')">
+                    <div style="flex:1;min-width:0">
+                      <div class="wp-row-title">${esc(a.name)}</div>
+                      <div class="wp-row-meta">${metaParts.join(' &nbsp;·&nbsp; ')}</div>
+                    </div>
+                    <div class="wp-row-amount">${fmt(a.balance||0)}</div>
+                  </div>`;
+                } else {
+                  const h=x.item;
+                  const cur=h.currency||'USD';
+                  const sym=cur==='EUR'?'€':'$';
+                  const value=getHoldingValue(h);
+                  const valueEur=getHoldingValueEur(h);
+                  const cost=getHoldingCost(h);
+                  const pnl=value-cost;
+                  const pnlPct2=cost>0?(pnl/cost*100):0;
+                  const pnlColor2=pnl>0?'var(--g)':pnl<0?'var(--r)':'var(--n3)';
+                  const blocked=isBlocked(h);
+                  const t=blocked?timeUntilUnblock(h):null;
+                  const metaParts=[];
+                  metaParts.push('<span class="wp-row-type-pill wp-type-invest">Belegging</span>');
+                  if(h.ticker)metaParts.push(`<span style="font-family:var(--mono)">${esc(h.ticker)}</span>`);
+                  metaParts.push(`<span style="font-family:var(--mono)">${h.quantity||0} × ${sym}${h.lastPrice?h.lastPrice.toFixed(2):'—'}</span>`);
+                  if(h.availability==='gereserveerd'&&h.purpose)metaParts.push(esc(h.purpose));
+                  else if(blocked&&t)metaParts.push(`vrij in ${t.years>0?t.years+'j ':''}${t.months>0||t.years===0?t.months+'m':''}`);
+                  return `<div class="wp-row" onclick="openHoldingModal('${h.id}')">
+                    <div style="flex:1;min-width:0">
+                      <div class="wp-row-title">${esc(h.name||h.ticker||'?')}</div>
+                      <div class="wp-row-meta">${metaParts.join(' &nbsp;·&nbsp; ')}</div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0">
+                      <div class="wp-row-amount">${sym}${Math.round(value).toLocaleString('nl-BE')}</div>
+                      ${cur!=='EUR'&&valueEur>0?`<div class="wp-row-amount-sub">≈ ${fmt(Math.round(valueEur))}</div>`:''}
+                      ${cost>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnl>=0?'+':''}${sym}${Math.round(pnl).toLocaleString('nl-BE')} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
+                    </div>
+                  </div>`;
+                }
+              }).join('')}
+            </div>
+          </div>`;
+        }).join('');
+      })()}
       ${(w.holdings||[]).length>0?`
-        <button onclick="refreshAllPrices()" style="width:100%;padding:11px;margin-top:10px;border:1px solid var(--l1);background:transparent;border-radius:var(--r6);font-size:12px;font-weight:600;color:var(--n1);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent">
+        <button onclick="refreshAllPrices()" style="width:100%;padding:11px;margin-top:14px;border:1px solid var(--l1);background:transparent;border-radius:var(--r6);font-size:12px;font-weight:600;color:var(--n1);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           Koersen vernieuwen
         </button>
@@ -3133,14 +3154,31 @@ function projectWealth(){
   if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
   const p=S.plan;
   const tot=getTotalWealth();
-  // Splits liquide vermogen netjes in cash (rendementsloos) en holdings (renderend)
-  // Cash = spaarrekeningen (vrij + gereserveerd, niet-geblokkeerd)
-  // Holdings = aandelen/ETFs (vrij + gereserveerd, niet-geblokkeerd)
-  const cashAccounts=(S.wealth?.accounts||[]).filter(a=>!isBlocked(a));
-  const liveHoldings=(S.wealth?.holdings||[]).filter(h=>!isBlocked(h));
-  const startCash=cashAccounts.reduce((s,a)=>s+(a.balance||0),0);
-  const startInvest=liveHoldings.reduce((s,h)=>s+getHoldingValueEur(h),0);
+  // Splits liquide vermogen in:
+  //  - cashFree: vrij beschikbaar cash
+  //  - cashLinked[eventId]: reserveringen specifiek gekoppeld aan een (enabled) plan-event
+  //  - cashReservedOther: gereserveerd zonder koppeling (of gekoppeld aan disabled/onbestaand event)
+  //  - invest: alle live holdings (één pot, renderend)
+  const enabledEventIds=new Set((S.plan?.events||[]).filter(e=>e.enabled!==false).map(e=>e.id));
+  let startCashFree=0;
+  const startCashLinked={};  // {eventId: amount}
+  let startCashReservedOther=0;
+  (S.wealth?.accounts||[]).forEach(a=>{
+    if(isBlocked(a))return;
+    const bal=a.balance||0;
+    if(a.availability==='gereserveerd'){
+      if(a.linkedEventId&&enabledEventIds.has(a.linkedEventId)){
+        startCashLinked[a.linkedEventId]=(startCashLinked[a.linkedEventId]||0)+bal;
+      } else {
+        startCashReservedOther+=bal;
+      }
+    } else {
+      startCashFree+=bal;
+    }
+  });
+  const startInvest=(S.wealth?.holdings||[]).filter(h=>!isBlocked(h)).reduce((s,h)=>s+getHoldingValueEur(h),0);
   const startBlocked=tot.geblokkeerd;
+  const startCash=startCashFree+startCashReservedOther+Object.values(startCashLinked).reduce((s,v)=>s+v,0);
   const startLiquid=startCash+startInvest;
 
   const income=getMonthlyIncome();
@@ -3151,21 +3189,32 @@ function projectWealth(){
 
   const startYear=new Date().getFullYear();
   const muReturn=(p.returnRate||0)/100;
-  const sigmaReturn=0.15; // typische jaarlijkse volatiliteit wereldwijde aandelen ~15%
+  const sigmaReturn=0.15;
   const infl=(p.inflation||0)/100;
   const horizon=Math.max(1,Math.min(30,p.horizon||15));
 
-  // Pre-bereken event impact per jaar (met enabled-flag, default true)
-  const eventImpactByYear={};
+  // Pre-bereken events: per jaar de actieve events (volledige objecten, niet alleen totaal)
+  // Zo kunnen we per event de gekoppelde bucket aanspreken
+  const activeEventsByYear={};
   (p.events||[]).forEach(e=>{
     if(e.enabled===false)return;
     const s=e.startYear||startYear;
     const ed=e.endYear||s;
     for(let y=s;y<=ed;y++){
-      eventImpactByYear[y]=(eventImpactByYear[y]||0)+(e.amount||0);
+      if(!activeEventsByYear[y])activeEventsByYear[y]=[];
+      activeEventsByYear[y].push(e);
     }
   });
-  // Geblokkeerde items met hun aandeel van initiële `blocked` en vrijgavejaar
+  // Event-eindjaar per id: in dat jaar geven we eventueel overschot van linked-bucket terug aan cashFree
+  const eventLastYear={};
+  (p.events||[]).forEach(e=>{
+    if(e.enabled===false)return;
+    const s=e.startYear||startYear;
+    const ed=e.endYear||s;
+    eventLastYear[e.id]=ed;
+  });
+
+  // Geblokkeerde items
   const blockedItems=[];
   (S.wealth?.holdings||[]).concat(S.wealth?.accounts||[]).forEach(it=>{
     if(it.availability!=='geblokkeerd'||!it.unblockDate)return;
@@ -3174,13 +3223,12 @@ function projectWealth(){
     const isHolding=it.lastPrice!==undefined;
     if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding,name:it.name||''});
   });
-  // Groepeer per vrijgavejaar
   const unblockShareByYear={};
   blockedItems.forEach(bi=>{
     unblockShareByYear[bi.unblockYear]=(unblockShareByYear[bi.unblockYear]||0)+bi.share;
   });
 
-  // Box-Muller normaal verdeelde willekeurigheid
+  // Box-Muller
   const randn=()=>{
     let u=0,v=0;
     while(u===0)u=Math.random();
@@ -3188,49 +3236,76 @@ function projectWealth(){
     return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
   };
 
-  // Monte Carlo: N paden, cash en invest apart bijgehouden
+  // Monte Carlo
   const N=500;
   const allLiquid=[],allBlocked=[];
   for(let n=0;n<N;n++){
-    let cash=startCash;
+    let cashFree=startCashFree;
+    const cashLinked={...startCashLinked};
+    let cashReservedOther=startCashReservedOther;
     let invest=startInvest;
     let blocked=startBlocked;
-    const liquidPath=[cash+invest];
+    const totalCash=()=>cashFree+cashReservedOther+Object.values(cashLinked).reduce((s,v)=>s+v,0);
+    const liquidPath=[totalCash()+invest];
     const blockedPath=[blocked];
     for(let y=1;y<=horizon;y++){
       const year=startYear+y;
-      // 1. Rendement: alleen op holdings (cash blijft cash). Geblokkeerd typisch belegd ~ zelfde model.
+      // 1. Rendement op invest en blocked (cash krijgt geen rendement)
       const rInvest=muReturn+sigmaReturn*randn();
       invest*=(1+rInvest);
       const rBlocked=muReturn+sigmaReturn*randn();
       blocked*=(1+rBlocked);
-      // 2. Buffer toevoegen aan cash (gebruiker kan later kiezen om manueel te beleggen)
-      const realBuffer=yearlyBuffer*Math.pow(1-infl,y);
-      cash+=realBuffer;
-      // 3. Events groeien mee met inflatie. Eerst van cash, dan van invest indien cash onvoldoende.
-      const eventInflated=(eventImpactByYear[year]||0)*Math.pow(1+infl,y);
-      if(eventInflated>0){
-        // Uitgave
-        if(cash>=eventInflated){
-          cash-=eventInflated;
-        } else {
-          const remainder=eventInflated-cash;
-          cash=0;
-          invest-=remainder;
+      // 2. Buffer-aangroei (loonindexatie meebewegend met inflatie) → naar cashFree
+      cashFree+=yearlyBuffer*Math.pow(1+infl,y);
+      // 3. Per event: spendeer in volgorde linked → free → other-reserved → invest
+      const evts=activeEventsByYear[year]||[];
+      for(const e of evts){
+        const eAmountInflated=(e.amount||0)*Math.pow(1+infl,y);
+        if(eAmountInflated>0){
+          // Uitgave
+          let remaining=eAmountInflated;
+          // a) eigen gekoppelde reservering
+          if(cashLinked[e.id]>0){
+            const take=Math.min(remaining,cashLinked[e.id]);
+            cashLinked[e.id]-=take;
+            remaining-=take;
+          }
+          // b) vrij cash
+          if(remaining>0&&cashFree>0){
+            const take=Math.min(remaining,cashFree);
+            cashFree-=take;
+            remaining-=take;
+          }
+          // c) andere reserveringen (laatste cash-redmiddel)
+          if(remaining>0&&cashReservedOther>0){
+            const take=Math.min(remaining,cashReservedOther);
+            cashReservedOther-=take;
+            remaining-=take;
+          }
+          // d) beleggingen verkopen
+          if(remaining>0){
+            invest-=remaining;
+          }
+        } else if(eAmountInflated<0){
+          // Extra inkomst → naar cashFree
+          cashFree+=-eAmountInflated;
         }
-      } else if(eventInflated<0){
-        // Extra inkomst → naar cash
-        cash-=eventInflated;
       }
-      // 4. Vrijgave: pad-specifiek aandeel van blocked schuift over.
-      // Holdings → invest, spaarrekeningen → cash. Voor v1: alles naar cash (gebruiker beslist achteraf wat herbeleggen).
+      // 4. Events die dit jaar eindigen: overschot van linked-bucket → cashFree
+      for(const eid in cashLinked){
+        if(eventLastYear[eid]===year&&cashLinked[eid]>0){
+          cashFree+=cashLinked[eid];
+          cashLinked[eid]=0;
+        }
+      }
+      // 5. Vrijgave geblokkeerd
       if(unblockShareByYear[year]){
         const transfer=blocked*unblockShareByYear[year];
-        cash+=transfer;
+        cashFree+=transfer;
         blocked-=transfer;
         if(blocked<0)blocked=0;
       }
-      liquidPath.push(cash+invest);
+      liquidPath.push(totalCash()+invest);
       blockedPath.push(blocked);
     }
     allLiquid.push(liquidPath);
@@ -3263,8 +3338,8 @@ function projectWealth(){
       const eEnd=e.endYear||eStart;
       return year>=eStart&&year<=eEnd&&y>0;
     });
-    const eventTotal=(eventImpactByYear[year]||0)*Math.pow(1+infl,y);
-    series.push({year,p10,p50,p90,blocked:blocked50,blocked10,blocked90,total:p50+blocked50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1-infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
+    const eventTotal=((activeEventsByYear[year]||[]).reduce((s,e)=>s+(e.amount||0),0))*Math.pow(1+infl,y);
+    series.push({year,p10,p50,p90,blocked:blocked50,blocked10,blocked90,total:p50+blocked50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1+infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
   }
   series._meta={startCash,startInvest,startBlocked,blockedItems,unblockShareByYear,startYear};
   return series;
@@ -3338,10 +3413,15 @@ function renderPlanTab(){
     <!-- HERO -->
     <div class="wp-card-pad wp-section">
       <div class="wp-label" style="margin-bottom:8px">Verwacht over ${p.horizon} jaar</div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
         <span style="font-size:28px;font-weight:800;color:var(--n0);font-family:var(--mono);line-height:1">${fmt(Math.round(endMedian))}</span>
         <span style="font-size:12px;font-weight:700;color:${endMedian>=startVal?'var(--g)':'var(--r)'};font-family:var(--mono)">${endMedian>=startVal?'+':''}${fmt(Math.round(endMedian-startVal))}</span>
       </div>
+      ${(()=>{
+        const realValue=endMedian/Math.pow(1+(p.inflation||0)/100,p.horizon);
+        const inflShown=p.inflation>0&&p.horizon>=5;
+        return inflShown?`<div style="font-size:10px;color:var(--n3);font-family:var(--mono);margin-bottom:10px">≈ ${fmt(Math.round(realValue))} in koopkracht van vandaag</div>`:'<div style="margin-bottom:6px"></div>';
+      })()}
       <div style="font-size:11px;color:var(--n2);line-height:1.6">
         ${(()=>{
           const spread=Math.round(endHigh-endLow);
@@ -3419,10 +3499,16 @@ function renderPlanTab(){
             const years=(e.endYear&&e.endYear!==e.startYear)?(e.endYear-e.startYear+1):1;
             const totalImpact=Math.abs(e.amount||0)*years;
             const opacity=enabled?'1':'.55';
+            // Vind gekoppelde reserveringen voor dit event (cash + beleggingen)
+            const linkedReserved=
+              (S.wealth?.accounts||[]).filter(a=>a.linkedEventId===e.id&&a.availability==='gereserveerd').reduce((s,a)=>s+(a.balance||0),0)+
+              (S.wealth?.holdings||[]).filter(h=>h.linkedEventId===e.id&&h.availability==='gereserveerd').reduce((s,h)=>s+getHoldingValueEur(h),0);
+            const coverPct=totalImpact>0?Math.min(100,Math.round(linkedReserved/totalImpact*100)):0;
             return `<div class="wp-row" style="opacity:${opacity}" onclick="openEventModal('${e.id}')">
               <div style="flex:1;min-width:0">
                 <div class="wp-row-title">${esc(e.name)}${!enabled?'<span class="wp-badge wp-badge-blocked" style="margin-left:6px">Uit</span>':''}</div>
                 <div class="wp-row-meta">${period}${years>1?` &nbsp;·&nbsp; ${years} jaar`:''}</div>
+                ${linkedReserved>0&&!positive?`<div class="wp-row-meta" style="margin-top:4px;color:#0284c7"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><path d="M20 6L9 17l-5-5"/></svg>Reservering ${fmt(Math.round(linkedReserved))}${coverPct<100?` (${coverPct}% gedekt)`:' (volledig gedekt)'}</div>`:''}
               </div>
               <div style="text-align:right;flex-shrink:0">
                 <div class="wp-row-amount" style="color:${color}">${sym}${fmt(Math.abs(e.amount||0))}${years>1?'/jaar':''}</div>
@@ -3725,6 +3811,14 @@ function openAccountModal(accountId){
       <div id="acc-purpose-wrap" style="display:${av==='gereserveerd'?'block':'none'}">
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Waarvoor gereserveerd?</label>
         <input type="text" class="field-input" id="acc-purpose" value="${esc(a.purpose||'')}" placeholder="bv. onderhoudsgeld kinderen, grote kosten" autocomplete="off">
+        ${(S.plan?.events||[]).length>0?`
+          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin:10px 0 5px">Koppel aan plan-event (optioneel)</label>
+          <select class="field-input" id="acc-linked-event" style="width:100%">
+            <option value="">— Geen koppeling —</option>
+            ${(S.plan.events||[]).slice().sort((x,y)=>(x.startYear||0)-(y.startYear||0)).map(ev=>`<option value="${ev.id}" ${a.linkedEventId===ev.id?'selected':''}>${esc(ev.name)} (${ev.endYear&&ev.endYear!==ev.startYear?ev.startYear+'–'+ev.endYear:ev.startYear})</option>`).join('')}
+          </select>
+          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Bij gekoppelde events wordt deze reservering eerst aangesproken voor díé uitgaven.</div>
+        `:''}
       </div>
       <div id="acc-unblock-wrap" style="display:${av==='geblokkeerd'?'block':'none'}">
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vrij vanaf</label>
@@ -3756,6 +3850,7 @@ function openAccountModal(accountId){
       interest:parseFloat($('acc-int').value)||0,
       availability,
       purpose:availability==='gereserveerd'?($('acc-purpose').value||'').trim():'',
+      linkedEventId:availability==='gereserveerd'&&$('acc-linked-event')?($('acc-linked-event').value||''):'',
       unblockDate:availability==='geblokkeerd'?($('acc-unblock').value||''):'',
       lastUpdate:Date.now()
     };
@@ -3791,7 +3886,7 @@ function openHoldingModal(holdingId){
   if(isEdit&&!h)return;
   const modal=$('m-new');
   $('m-new-body').innerHTML=`
-    <div style="text-align:center;padding:4px 0 16px"><div style="font-size:15px;font-weight:700;color:var(--n0)">${isEdit?'Holding aanpassen':'Nieuwe holding'}</div></div>
+    <div style="text-align:center;padding:4px 0 16px"><div style="font-size:15px;font-weight:700;color:var(--n0)">${isEdit?'Belegging aanpassen':'Nieuw aandeel of ETF'}</div></div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
@@ -3845,6 +3940,13 @@ function openHoldingModal(holdingId){
       <div id="h-purpose-wrap" style="display:${h.availability==='gereserveerd'?'block':'none'}">
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Waarvoor gereserveerd?</label>
         <input type="text" class="field-input" id="h-purpose" value="${esc(h.purpose||'')}" placeholder="bv. studies kinderen, renovatie" autocomplete="off">
+        ${(S.plan?.events||[]).length>0?`
+          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin:10px 0 5px">Koppel aan plan-event (optioneel)</label>
+          <select class="field-input" id="h-linked-event" style="width:100%">
+            <option value="">— Geen koppeling —</option>
+            ${(S.plan.events||[]).slice().sort((x,y)=>(x.startYear||0)-(y.startYear||0)).map(ev=>`<option value="${ev.id}" ${h.linkedEventId===ev.id?'selected':''}>${esc(ev.name)} (${ev.endYear&&ev.endYear!==ev.startYear?ev.startYear+'–'+ev.endYear:ev.startYear})</option>`).join('')}
+          </select>
+        `:''}
       </div>
       <div id="h-unblock-wrap" style="display:${h.availability==='geblokkeerd'?'block':'none'}">
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vrij vanaf</label>
@@ -3867,7 +3969,7 @@ function openHoldingModal(holdingId){
       <button class="btn btn-ghost" style="flex:1" id="h-cancel">Annuleer</button>
       <button class="btn btn-primary" style="flex:1" id="h-save">${isEdit?'Opslaan':'Toevoegen'}</button>
     </div>
-    ${isEdit?`<button id="h-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Holding verwijderen</button>`:''}`;
+    ${isEdit?`<button id="h-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Verwijderen</button>`:''}`;
   $('h-cancel').onclick=()=>modal.classList.remove('open');
   if($('h-link')&&h.url){
     $('h-link').onclick=()=>window.open(h.url,'_blank','noopener');
@@ -3941,6 +4043,7 @@ function openHoldingModal(holdingId){
       url:($('h-url').value||'').trim(),
       availability,
       purpose:availability==='gereserveerd'?($('h-purpose').value||'').trim():'',
+      linkedEventId:availability==='gereserveerd'&&$('h-linked-event')?($('h-linked-event').value||''):'',
       unblockDate:availability==='geblokkeerd'?($('h-unblock').value||''):'',
       lastUpdate:h.lastUpdate||null
     };
@@ -3982,7 +4085,7 @@ function openHoldingModal(holdingId){
   };
   if(isEdit){
     $('h-delete').onclick=()=>{
-      if(!confirm('Deze holding verwijderen?'))return;
+      if(!confirm('Deze belegging verwijderen?'))return;
       S.wealth.holdings=S.wealth.holdings.filter(x=>x.id!==h.id);
       save();
       modal.classList.remove('open');
