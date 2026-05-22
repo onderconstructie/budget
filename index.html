@@ -573,9 +573,6 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .an-tab{flex:1;padding:9px 4px;background:none;border:none;color:var(--n3);font-family:var(--sans);font-size:11px;font-weight:700;cursor:pointer;position:relative;transition:color .15s;letter-spacing:-.1px}
 .an-tab::after{content:'';position:absolute;bottom:-1px;left:10%;right:10%;height:2.5px;background:linear-gradient(90deg,var(--a),#9d1060);transform:scaleX(0);transition:transform .2s cubic-bezier(.4,0,.2,1);border-radius:2px 2px 0 0}
 .an-tab.active{color:var(--a)}.an-tab.active::after{transform:scaleX(1)}
-.an-swipe-hint{display:flex;justify-content:center;gap:5px;padding:5px 0 0;flex-shrink:0}
-.an-swipe-dot{width:5px;height:5px;border-radius:50%;background:rgba(0,0,0,.12);transition:all .25s}
-.an-swipe-dot.on{background:var(--a);width:14px;border-radius:3px}
 /* Body */
 .an-body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .an-panel{display:none;flex:1;flex-direction:column;min-height:0;overflow:hidden}
@@ -705,6 +702,28 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .wp-stat-row .wp-stat-input{display:flex;align-items:center;gap:6px}
 .wp-stat-row input{width:64px;text-align:center;font-family:var(--mono);padding:7px 8px}
 .wp-stat-row .wp-stat-unit{font-size:10px;color:var(--n3);min-width:40px;text-align:left}
+/* Event modal segmented controls */
+.ev-segment{display:flex;gap:0;background:var(--l0);border-radius:var(--r6);padding:3px}
+.ev-seg-btn{flex:1;border:none;background:transparent;color:var(--n2);font-family:var(--sans);font-size:12px;font-weight:600;padding:8px 6px;border-radius:calc(var(--r6) - 3px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.ev-seg-btn.active{background:var(--w);color:var(--n0);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+/* Toggle switch */
+.ev-switch{position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0}
+.ev-switch input{opacity:0;width:0;height:0}
+.ev-switch span{position:absolute;cursor:pointer;inset:0;background:var(--l1);border-radius:22px;transition:.2s}
+.ev-switch span::before{content:'';position:absolute;height:16px;width:16px;left:3px;top:3px;background:var(--w);border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.ev-switch input:checked+span{background:var(--g)}
+.ev-switch input:checked+span::before{transform:translateX(16px)}
+/* Compact aannames-strip onder hero */
+.plan-assum-strip{display:flex;align-items:center;gap:0;padding:10px 14px;margin-bottom:18px;background:rgba(0,0,0,.025);border-radius:var(--r6);font-size:11px}
+.plan-assum-item{display:inline-flex;align-items:baseline;gap:5px;flex:1;justify-content:center;min-width:0}
+.plan-assum-num{font-family:var(--mono);font-weight:700;color:var(--n0);font-size:13px}
+.plan-assum-lbl{color:var(--n3);font-size:10px;letter-spacing:-.1px;white-space:nowrap}
+.plan-assum-sep{width:1px;height:18px;background:var(--l1);flex-shrink:0}
+.plan-assum-edit{background:none;border:none;color:var(--n3);cursor:pointer;padding:6px;margin-left:6px;border-radius:var(--r4);display:inline-flex;align-items:center;justify-content:center;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.plan-assum-edit:hover{color:var(--a)}
+.plan-assum-edit.active{color:var(--a)}
+.plan-assum-detail{margin-bottom:18px;animation:planAssumOpen .2s ease}
+@keyframes planAssumOpen{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .fc-section-hd{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .fc-section-title{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3)}
 .fc-band-bar{position:relative;height:24px;background:rgba(0,0,0,.06);border-radius:6px;overflow:hidden;margin-bottom:8px}
@@ -939,6 +958,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   <div class="an-swipe-hint" id="an-swipe-dots">
     <div class="an-swipe-dot on"></div>
     <div class="an-swipe-dot"></div>
+    <div class="an-swipe-dot"></div>
+    <div class="an-swipe-dot"></div>
   </div>
 </div>
 <div class="an-body">
@@ -1074,7 +1095,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.003</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.005</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -3112,13 +3133,14 @@ function projectWealth(){
   if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
   const p=S.plan;
   const tot=getTotalWealth();
-  // Startpunt: vandaag, toegankelijk + geblokkeerd apart bijhouden
-  let liquid=tot.vrij+tot.gereserveerd;
-  let blocked=tot.geblokkeerd;
-  // Welke holdings zijn belegd (rendementsgevoelig)? Alles dat niet pure cash is.
-  const beleggingsdeel=(S.wealth?.holdings||[]).reduce((s,h)=>s+getHoldingValueEur(h),0);
-  const cashdeel=tot.total-beleggingsdeel;
-  const beleggingsAandeel=tot.total>0?beleggingsdeel/tot.total:0;
+  const startLiquid=tot.vrij+tot.gereserveerd;
+  const startBlocked=tot.geblokkeerd;
+  // Belegd-aandeel van het liquide vermogen (alleen niet-geblokkeerde holdings tellen)
+  const beleggingsdeel=(S.wealth?.holdings||[]).reduce((s,h)=>{
+    if(isBlocked(h))return s;
+    return s+getHoldingValueEur(h);
+  },0);
+  const beleggingsAandeel=startLiquid>0?Math.min(1,beleggingsdeel/startLiquid):0;
 
   const income=getMonthlyIncome();
   const fixed=getFixedCosts();
@@ -3127,57 +3149,106 @@ function projectWealth(){
   const yearlyBuffer=monthlyBuffer*12;
 
   const startYear=new Date().getFullYear();
-  const r=(p.returnRate||0)/100;     // rendement op belegd vermogen
-  const infl=(p.inflation||0)/100;    // inflatie op uitgaven → buffer krimpt
+  const muReturn=(p.returnRate||0)/100;
+  const sigmaReturn=0.15; // typische jaarlijkse volatiliteit wereldwijde aandelen ~15%
+  const infl=(p.inflation||0)/100;
   const horizon=Math.max(1,Math.min(30,p.horizon||15));
 
-  const series=[];
-  // Jaar 0 = startpunt vandaag
-  series.push({year:startYear,liquid,blocked,total:liquid+blocked,buffer:yearlyBuffer,events:[]});
+  // Pre-bereken event impact per jaar (met enabled-flag, default true)
+  const eventImpactByYear={};
+  (p.events||[]).forEach(e=>{
+    if(e.enabled===false)return;
+    const s=e.startYear||startYear;
+    const ed=e.endYear||s;
+    for(let y=s;y<=ed;y++){
+      eventImpactByYear[y]=(eventImpactByYear[y]||0)+(e.amount||0);
+    }
+  });
+  // Geblokkeerde items met hun aandeel van initiële `blocked` en vrijgavejaar
+  // Bij vrijgave: pad-specifiek bedrag = currentBlocked × itemShare → verschuift naar liquid
+  const blockedItems=[];
+  (S.wealth?.holdings||[]).concat(S.wealth?.accounts||[]).forEach(it=>{
+    if(it.availability!=='geblokkeerd'||!it.unblockDate)return;
+    const y=new Date(it.unblockDate).getFullYear();
+    const baseVal=it.lastPrice!==undefined?getHoldingValueEur(it):(it.balance||0);
+    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked});
+  });
+  // Groepeer per vrijgavejaar (som van shares per jaar)
+  const unblockShareByYear={};
+  blockedItems.forEach(bi=>{
+    unblockShareByYear[bi.unblockYear]=(unblockShareByYear[bi.unblockYear]||0)+bi.share;
+  });
 
-  for(let y=1;y<=horizon;y++){
+  // Box-Muller voor normaal-verdeelde willekeurige getallen
+  const randn=()=>{
+    let u=0,v=0;
+    while(u===0)u=Math.random();
+    while(v===0)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  };
+
+  // Monte Carlo: N paden
+  const N=500;
+  const allLiquid=[],allBlocked=[];
+  for(let n=0;n<N;n++){
+    let liquid=startLiquid;
+    let blocked=startBlocked;
+    const liquidPath=[liquid];
+    const blockedPath=[blocked];
+    for(let y=1;y<=horizon;y++){
+      const year=startYear+y;
+      // Rendement EERST op bestaand vermogen (vóór nieuwe buffer)
+      const r=muReturn+sigmaReturn*randn();
+      liquid+=liquid*beleggingsAandeel*r;
+      const rBlocked=muReturn+sigmaReturn*randn();
+      blocked*=(1+rBlocked);
+      // Daarna buffer toevoegen (eind van jaar conventie)
+      const realBuffer=yearlyBuffer*Math.pow(1-infl,y);
+      liquid+=realBuffer;
+      // Events groeien mee met inflatie (een uitgave in jaar N is N-jaar inflatie duurder)
+      const eventNominal=eventImpactByYear[year]||0;
+      const eventInflated=eventNominal*Math.pow(1+infl,y);
+      liquid-=eventInflated;
+      // Vrijgave: schuif pad-specifiek aandeel van blocked naar liquid
+      if(unblockShareByYear[year]){
+        const transfer=blocked*unblockShareByYear[year];
+        liquid+=transfer;
+        blocked-=transfer;
+        if(blocked<0)blocked=0;
+      }
+      liquidPath.push(liquid);
+      blockedPath.push(blocked);
+    }
+    allLiquid.push(liquidPath);
+    allBlocked.push(blockedPath);
+  }
+
+  // Bereken percentielen per jaar
+  const percentile=(arr,p)=>{
+    const sorted=[...arr].sort((a,b)=>a-b);
+    const idx=p*(sorted.length-1);
+    const lo=Math.floor(idx),hi=Math.ceil(idx);
+    if(lo===hi)return sorted[lo];
+    return sorted[lo]+(sorted[hi]-sorted[lo])*(idx-lo);
+  };
+
+  const series=[];
+  for(let y=0;y<=horizon;y++){
     const year=startYear+y;
-    // Stap 1: buffer aangroei (toenemend met inflatie? nee, buffer = inkomen - uitgaven, beide stijgen typisch samen)
-    // Maar we kunnen inflatie laten knagen aan de buffer (uitgaven groeien sneller dan inkomen → buffer daalt reëel)
-    const realBuffer=yearlyBuffer*Math.pow(1-infl,y);  // gecorrigeerd voor inflatie
-    liquid+=realBuffer;
-    // Stap 2: rendement op het belegd deel van liquide vermogen
-    // Vereenvoudiging: pas rendement toe op het belegd-aandeel van het huidige liquide vermogen
-    liquid+=liquid*beleggingsAandeel*r;
-    // Rendement op geblokkeerd (pensioensparen blijft renderen)
-    blocked+=blocked*r;
-    // Stap 3: events van dat jaar verwerken
-    const yearEvents=(p.events||[]).filter(e=>{
+    const liquidYr=allLiquid.map(p=>p[y]);
+    const blockedYr=allBlocked.map(p=>p[y]);
+    const p10=percentile(liquidYr,0.10);
+    const p50=percentile(liquidYr,0.50);
+    const p90=percentile(liquidYr,0.90);
+    const blocked50=percentile(blockedYr,0.50);
+    const events=(p.events||[]).filter(e=>{
+      if(e.enabled===false)return false;
       const eStart=e.startYear||year;
       const eEnd=e.endYear||eStart;
-      return year>=eStart&&year<=eEnd;
+      return year>=eStart&&year<=eEnd&&y>0;
     });
-    const yearImpact=yearEvents.reduce((s,e)=>s+(e.amount||0),0);
-    liquid-=yearImpact;  // negatieve amount = besparing/extra inkomst → liquid+=|amount|
-    // Stap 4: geblokkeerd vermogen wordt vrij na zijn datum
-    const unblockedThisYear=(S.wealth?.holdings||[]).concat(S.wealth?.accounts||[])
-      .filter(it=>it.availability==='geblokkeerd'&&it.unblockDate)
-      .filter(it=>{
-        const d=new Date(it.unblockDate);
-        return d.getFullYear()===year;
-      });
-    let unblockedAmount=0;
-    unblockedThisYear.forEach(it=>{
-      if(it.lastPrice!==undefined){
-        // Holding: bereken huidige waarde + rendement tot vrijgavejaar
-        const baseVal=getHoldingValueEur(it);
-        const yearsToUnblock=new Date(it.unblockDate).getFullYear()-startYear;
-        unblockedAmount+=baseVal*Math.pow(1+r,Math.max(0,yearsToUnblock));
-      }else{
-        unblockedAmount+=it.balance||0;
-      }
-    });
-    if(unblockedAmount>0){
-      liquid+=unblockedAmount;
-      blocked-=unblockedAmount;
-      if(blocked<0)blocked=0;
-    }
-    series.push({year,liquid,blocked,total:liquid+blocked,buffer:realBuffer,events:yearEvents,unblockedAmount});
+    const eventTotal=(eventImpactByYear[year]||0)*Math.pow(1+infl,y);
+    series.push({year,p10,p50,p90,blocked:blocked50,total:p50+blocked50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1-infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,beleggingsAandeel,unblockedAmount:0});
   }
   return series;
 }
@@ -3189,78 +3260,49 @@ function renderPlanTab(){
   if(!target)return;
   const series=projectWealth();
   const startVal=series[0].total;
-  const endVal=series[series.length-1].total;
-  const minPoint=series.reduce((m,s)=>s.liquid<m.liquid?s:m,series[0]);
-  const hasEvents=(p.events||[]).length>0;
+  const endRow=series[series.length-1];
+  const endMedian=endRow.p50+endRow.blocked;
+  const endLow=endRow.p10+endRow.blocked;
+  const endHigh=endRow.p90+endRow.blocked;
+  const activeEvents=(p.events||[]).filter(e=>e.enabled!==false);
+  const hasActiveEvents=activeEvents.length>0;
+  const monthlyBuffer=series[0].monthlyBuffer||0;
+  const yearlyBuffer=series[0].yearlyBuffer||0;
 
-  // Detecteer risico-jaar: liquid onder bv. 6 maanden buffer
-  const monthlyBuffer=series[0].buffer/12;
+  // Risico-jaar: P10 (slecht scenario) onder 6 maanden buffer
   const riskThreshold=monthlyBuffer*6;
-  const riskYear=series.find(s=>s.liquid<riskThreshold&&monthlyBuffer>0);
+  const riskYear=series.find(s=>s.p10<riskThreshold&&monthlyBuffer>0);
+  const medianRiskYear=series.find(s=>s.p50<riskThreshold&&monthlyBuffer>0);
+
+  // Aannames-strip (compact, één regel)
+  const assumStrip=`<div id="plan-assum-strip" class="plan-assum-strip">
+    <span class="plan-assum-item"><span class="plan-assum-num">${p.horizon}</span><span class="plan-assum-lbl">jaar horizon</span></span>
+    <span class="plan-assum-sep"></span>
+    <span class="plan-assum-item"><span class="plan-assum-num">${p.returnRate}%</span><span class="plan-assum-lbl">rendement</span></span>
+    <span class="plan-assum-sep"></span>
+    <span class="plan-assum-item"><span class="plan-assum-num">${p.inflation}%</span><span class="plan-assum-lbl">inflatie</span></span>
+    <button class="plan-assum-edit" onclick="togglePlanAssumptions()" aria-label="Aanpassen">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </button>
+  </div>`;
 
   target.innerHTML=`
     <!-- HERO -->
     <div class="wp-card-pad wp-section">
-      <div class="wp-label" style="margin-bottom:8px">Vermogen over ${p.horizon} jaar</div>
+      <div class="wp-label" style="margin-bottom:8px">Verwacht over ${p.horizon} jaar</div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
-        <span style="font-size:28px;font-weight:800;color:var(--n0);font-family:var(--mono);line-height:1">${fmt(Math.round(endVal))}</span>
-        <span style="font-size:12px;font-weight:700;color:${endVal>=startVal?'var(--g)':'var(--r)'};font-family:var(--mono)">${endVal>=startVal?'+':''}${fmt(Math.round(endVal-startVal))}</span>
+        <span style="font-size:28px;font-weight:800;color:var(--n0);font-family:var(--mono);line-height:1">${fmt(Math.round(endMedian))}</span>
+        <span style="font-size:12px;font-weight:700;color:${endMedian>=startVal?'var(--g)':'var(--r)'};font-family:var(--mono)">${endMedian>=startVal?'+':''}${fmt(Math.round(endMedian-startVal))}</span>
       </div>
-      <div style="font-size:11px;color:var(--n2);line-height:1.55">
-        Vandaag ${fmtN(Math.round(startVal))} → ${series[series.length-1].year} ${fmtN(Math.round(endVal))}.
-        ${monthlyBuffer>0?`Buffer ${fmtPos(Math.round(monthlyBuffer))}/mnd${hasEvents?', na verwerking van je geplande gebeurtenissen.':'.'}`:''}
-      </div>
-    </div>
-
-    <!-- GRAFIEK -->
-    <div class="wp-card-pad wp-section">
-      <div style="position:relative;height:200px;margin-bottom:10px"><canvas id="plan-chart"></canvas></div>
-      <div style="display:flex;justify-content:center;gap:16px;font-size:10px;color:var(--n3)">
-        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--g);margin-right:6px"></span>Toegankelijk</span>
-        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--n3);margin-right:6px"></span>Geblokkeerd</span>
+      <div style="font-size:11px;color:var(--n2);line-height:1.6">
+        Vandaag ${fmtN(Math.round(startVal))}, in een goed scenario ${fmtN(Math.round(endHigh))}, in een slechter scenario ${fmtN(Math.round(endLow))}.
+        ${monthlyBuffer>0?`<div style="margin-top:6px;color:var(--n3)">Maandbuffer ${fmtPos(Math.round(monthlyBuffer))} → ${fmtN(Math.round(yearlyBuffer))} per jaar opzij.${hasActiveEvents?' Geplande events meegenomen.':''}</div>`:'<div style="margin-top:6px;color:var(--n3)">Geen positieve maandbuffer — de projectie houdt enkel rekening met je huidige vermogen en geplande events.</div>'}
       </div>
     </div>
 
-    ${riskYear?`
-      <div class="alert warning wp-section" style="margin-bottom:18px"><div class="alert-icon">${ic('zap')}</div><div class="alert-content"><div class="alert-title">Krap moment voorzien in ${riskYear.year}</div><div class="alert-text">Toegankelijk vermogen zakt onder ${fmtN(Math.round(riskThreshold))} (~6 maanden buffer). Plan eventueel buffer-versterking of spreid grote uitgaven.</div></div></div>
-    `:''}
-
-    <!-- EVENTS -->
-    <div class="wp-section">
-      <div class="wp-label-row">
-        <div class="wp-label">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          Geplande gebeurtenissen
-        </div>
-        <button class="wp-add-btn" onclick="openEventModal()">+ Toevoegen</button>
-      </div>
-      <div class="wp-card">
-        ${(p.events||[]).length===0
-          ?`<div class="wp-empty">Nog geen geplande gebeurtenissen.<br><span style="font-size:10px;color:var(--n4)">Toekomstige grote uitgaven (studies, renovaties, auto…) of inkomenswijzigingen.</span></div>`
-          :(p.events||[]).slice().sort((a,b)=>(a.startYear||0)-(b.startYear||0)).map(e=>{
-            const positive=(e.amount||0)<0;
-            const sym=positive?'+':'−';
-            const color=positive?'var(--g)':'var(--r)';
-            const period=(e.endYear&&e.endYear!==e.startYear)?`${e.startYear}–${e.endYear}`:`${e.startYear}`;
-            const years=(e.endYear&&e.endYear!==e.startYear)?(e.endYear-e.startYear+1):1;
-            const totalImpact=Math.abs(e.amount||0)*years;
-            return `<div class="wp-row" onclick="openEventModal('${e.id}')">
-              <div style="flex:1;min-width:0">
-                <div class="wp-row-title">${esc(e.name)}</div>
-                <div class="wp-row-meta">${period}${years>1?` &nbsp;·&nbsp; ${years} jaar`:''}</div>
-              </div>
-              <div style="text-align:right;flex-shrink:0">
-                <div class="wp-row-amount" style="color:${color}">${sym}${fmt(Math.abs(e.amount||0))}/jaar</div>
-                ${years>1?`<div class="wp-row-amount-sub">Totaal ${sym}${fmt(totalImpact)}</div>`:''}
-              </div>
-            </div>`;
-          }).join('')}
-      </div>
-    </div>
-
-    <!-- AANNAMES -->
-    <div class="wp-section">
-      <div class="wp-label">Aannames</div>
+    <!-- AANNAMES STRIP -->
+    ${assumStrip}
+    <div id="plan-assum-detail" class="plan-assum-detail" style="display:none">
       <div class="wp-card-pad" style="padding:6px 16px">
         <div class="wp-stat-row">
           <label>Horizon</label>
@@ -3284,7 +3326,56 @@ function renderPlanTab(){
           </div>
         </div>
       </div>
-      <div class="wp-hint" style="margin-top:8px">Schattingen die meteen worden toegepast op de projectie. Wereldwijde aandelen leverden historisch ~5–7%/jaar gemiddeld; geen garantie voor de toekomst.</div>
+      <div class="wp-hint" style="margin-top:8px">Schattingen die meteen worden toegepast. Wereldwijde aandelen leverden historisch ~5–7%/jaar; geen garantie voor de toekomst.</div>
+    </div>
+
+    <!-- GRAFIEK -->
+    <div class="wp-card-pad wp-section">
+      <div style="position:relative;height:220px;margin-bottom:10px"><canvas id="plan-chart"></canvas></div>
+      <div style="display:flex;justify-content:center;gap:16px;font-size:10px;color:var(--n3);flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--g);margin-right:6px"></span>Mediaan</span>
+        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:8px;background:rgba(22,163,74,.18);margin-right:6px;border-radius:2px"></span>Bereik (80%)</span>
+        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--n3);margin-right:6px;border-top:1px dashed var(--n3)"></span>Geblokkeerd</span>
+      </div>
+    </div>
+
+    ${riskYear?`
+      <div class="alert ${riskYear===medianRiskYear?'danger':'warning'} wp-section" style="margin-bottom:18px"><div class="alert-icon">${ic('zap')}</div><div class="alert-content"><div class="alert-title">${riskYear===medianRiskYear?`Krap moment verwacht in ${riskYear.year}`:`Risico op krap moment in ${riskYear.year}`}</div><div class="alert-text">${riskYear===medianRiskYear?`Mediaan-scenario zakt onder ${fmtN(Math.round(riskThreshold))} (≈ 6 maanden buffer).`:`In een slecht scenario (P10) zakt toegankelijk vermogen onder ${fmtN(Math.round(riskThreshold))}.`} Plan eventueel buffer-versterking of spreid grote uitgaven.</div></div></div>
+    `:''}
+
+    <!-- EVENTS -->
+    <div class="wp-section">
+      <div class="wp-label-row">
+        <div class="wp-label">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Geplande gebeurtenissen
+        </div>
+        <button class="wp-add-btn" onclick="openEventModal()">+ Toevoegen</button>
+      </div>
+      <div class="wp-card">
+        ${(p.events||[]).length===0
+          ?`<div class="wp-empty">Nog geen geplande gebeurtenissen.<br><span style="font-size:10px;color:var(--n4)">Toekomstige grote uitgaven (studies, renovaties, auto…) of inkomenswijzigingen.</span></div>`
+          :(p.events||[]).slice().sort((a,b)=>(a.startYear||0)-(b.startYear||0)).map(e=>{
+            const positive=(e.amount||0)<0;
+            const sym=positive?'+':'−';
+            const enabled=e.enabled!==false;
+            const color=enabled?(positive?'var(--g)':'var(--r)'):'var(--n3)';
+            const period=(e.endYear&&e.endYear!==e.startYear)?`${e.startYear}–${e.endYear}`:`${e.startYear}`;
+            const years=(e.endYear&&e.endYear!==e.startYear)?(e.endYear-e.startYear+1):1;
+            const totalImpact=Math.abs(e.amount||0)*years;
+            const opacity=enabled?'1':'.55';
+            return `<div class="wp-row" style="opacity:${opacity}" onclick="openEventModal('${e.id}')">
+              <div style="flex:1;min-width:0">
+                <div class="wp-row-title">${esc(e.name)}${!enabled?'<span class="wp-badge wp-badge-blocked" style="margin-left:6px">Uit</span>':''}</div>
+                <div class="wp-row-meta">${period}${years>1?` &nbsp;·&nbsp; ${years} jaar`:''}</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div class="wp-row-amount" style="color:${color}">${sym}${fmt(Math.abs(e.amount||0))}${years>1?'/jaar':''}</div>
+                ${years>1?`<div class="wp-row-amount-sub">Totaal ${sym}${fmt(totalImpact)}</div>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+      </div>
     </div>
   `;
 
@@ -3310,88 +3401,182 @@ function drawPlanChart(series){
   if(!cv||!window.Chart)return;
   if(cv._chart)cv._chart.destroy();
   const labels=series.map(s=>s.year);
-  const accessible=series.map(s=>Math.round(s.liquid));
+  const p50=series.map(s=>Math.round(s.p50));
+  const p10=series.map(s=>Math.round(s.p10));
+  const p90=series.map(s=>Math.round(s.p90));
   const blocked=series.map(s=>Math.round(s.blocked));
+  // Markeer event-jaren met dot op de mediaan-lijn
+  const eventDots=series.map(s=>s.events&&s.events.length>0?Math.round(s.p50):null);
+  // X-as ticks beperken voor leesbaarheid
+  const stepX=labels.length>20?5:(labels.length>10?3:2);
   cv._chart=new Chart(cv.getContext('2d'),{
     type:'line',
     data:{
       labels,
       datasets:[
-        {label:'Toegankelijk',data:accessible,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.12)',fill:true,tension:.25,pointRadius:0,pointHoverRadius:5,borderWidth:2},
-        {label:'Geblokkeerd',data:blocked,borderColor:'#737373',backgroundColor:'rgba(115,115,115,.08)',fill:true,tension:.25,pointRadius:0,pointHoverRadius:5,borderWidth:1.5,borderDash:[4,3]}
+        // P90 (bovenkant band, onzichtbare lijn, fill naar P10)
+        {label:'P90',data:p90,borderColor:'transparent',backgroundColor:'rgba(22,163,74,.13)',fill:'+1',pointRadius:0,pointHoverRadius:0,tension:.25,borderWidth:0,order:3},
+        // P10 (onderkant band)
+        {label:'P10',data:p10,borderColor:'transparent',backgroundColor:'transparent',fill:false,pointRadius:0,pointHoverRadius:0,tension:.25,borderWidth:0,order:4},
+        // Mediaan (hoofdlijn)
+        {label:'Mediaan',data:p50,borderColor:'#16a34a',backgroundColor:'transparent',fill:false,tension:.25,pointRadius:0,pointHoverRadius:5,borderWidth:2.5,order:1},
+        // Geblokkeerd (stippellijn)
+        {label:'Geblokkeerd',data:blocked,borderColor:'#a3a3a3',backgroundColor:'transparent',fill:false,tension:.25,pointRadius:0,pointHoverRadius:4,borderWidth:1.5,borderDash:[4,3],order:2},
+        // Event-markers (alleen punten op event-jaren)
+        {label:'Event',data:eventDots,borderColor:'transparent',backgroundColor:'#e91e8c',pointRadius:4,pointHoverRadius:6,pointBorderColor:'#fff',pointBorderWidth:1.5,showLine:false,order:0}
       ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': €'+c.parsed.y.toLocaleString('nl-BE')}}},
-      scales:{
-        y:{beginAtZero:false,ticks:{font:{size:10},callback:v=>'€'+(v>=1000?(v/1000).toFixed(0)+'k':v)}},
-        x:{ticks:{font:{size:10},maxRotation:0,autoSkipPadding:20}}
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:false},
+        tooltip:{
+          mode:'index',intersect:false,
+          filter:item=>item.dataset.label!=='P90'&&item.dataset.label!=='P10',
+          callbacks:{
+            label:c=>{
+              if(c.dataset.label==='Event'){
+                const ev=series[c.dataIndex].events||[];
+                return ev.map(e=>'Event: '+e.name).join('\n')||'';
+              }
+              if(c.dataset.label==='Mediaan'){
+                const s=series[c.dataIndex];
+                return [
+                  `Mediaan: €${Math.round(s.p50).toLocaleString('nl-BE')}`,
+                  `Bereik 80%: €${Math.round(s.p10).toLocaleString('nl-BE')} – €${Math.round(s.p90).toLocaleString('nl-BE')}`
+                ];
+              }
+              return c.dataset.label+': €'+c.parsed.y.toLocaleString('nl-BE');
+            }
+          }
+        }
       },
-      interaction:{mode:'index',intersect:false}
+      scales:{
+        y:{
+          beginAtZero:false,
+          ticks:{font:{size:10},color:'#737373',maxTicksLimit:5,callback:v=>v>=1000?'€'+Math.round(v/1000)+'k':'€'+v},
+          grid:{color:'rgba(0,0,0,.04)'}
+        },
+        x:{
+          ticks:{
+            font:{size:10},color:'#737373',maxRotation:0,
+            callback:function(val,idx){return idx%stepX===0?labels[idx]:''}
+          },
+          grid:{display:false}
+        }
+      },
+      interaction:{mode:'index',intersect:false},
+      animation:{duration:400}
     }
   });
+}
+
+function togglePlanAssumptions(){
+  const detail=$('plan-assum-detail');
+  const btn=document.querySelector('.plan-assum-edit');
+  if(!detail)return;
+  const isOpen=detail.style.display!=='none';
+  detail.style.display=isOpen?'none':'block';
+  if(btn)btn.classList.toggle('active',!isOpen);
 }
 
 function openEventModal(eventId){
   if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
   const isEdit=!!eventId;
-  const e=isEdit?(S.plan.events||[]).find(x=>x.id===eventId):{id:genId(),name:'',startYear:new Date().getFullYear()+1,endYear:null,amount:0};
+  const e=isEdit?(S.plan.events||[]).find(x=>x.id===eventId):{id:genId(),name:'',startYear:new Date().getFullYear()+1,endYear:null,amount:0,enabled:true};
   if(isEdit&&!e)return;
   const isRange=e.endYear&&e.endYear!==e.startYear;
+  const isIncome=(e.amount||0)<0;
+  const absAmount=Math.abs(e.amount||0);
+  const enabled=e.enabled!==false;
   const modal=$('m-new');
   $('m-new-body').innerHTML=`
     <div style="text-align:center;padding:4px 0 16px"><div style="font-size:15px;font-weight:700;color:var(--n0)">${isEdit?'Gebeurtenis aanpassen':'Nieuwe gebeurtenis'}</div></div>
-    <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;flex-direction:column;gap:14px">
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
+        <label class="wp-input-label">Naam</label>
         <input type="text" class="field-input" id="ev-name" value="${esc(e.name||'')}" placeholder="bv. Studies Sara, dak vervangen, pensioen" autocomplete="off">
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Type</label>
-        <select class="field-input" id="ev-type" style="width:100%">
-          <option value="once" ${!isRange?'selected':''}>Eenmalig</option>
-          <option value="range" ${isRange?'selected':''}>Loopt meerdere jaren</option>
-        </select>
+        <label class="wp-input-label">Aard</label>
+        <div class="ev-segment">
+          <button type="button" class="ev-seg-btn ${!isIncome?'active':''}" data-kind="expense">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            Uitgave
+          </button>
+          <button type="button" class="ev-seg-btn ${isIncome?'active':''}" data-kind="income">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            Extra inkomst
+          </button>
+        </div>
       </div>
-      <div style="display:flex;gap:10px">
-        <div style="flex:1">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px"><span id="ev-start-lbl">${isRange?'Van jaar':'Jaar'}</span></label>
+      <div>
+        <label class="wp-input-label">Duur</label>
+        <div class="ev-segment">
+          <button type="button" class="ev-seg-btn ${!isRange?'active':''}" data-duration="once">Eenmalig</button>
+          <button type="button" class="ev-seg-btn ${isRange?'active':''}" data-duration="range">Meerdere jaren</button>
+        </div>
+      </div>
+      <div class="wp-form-row">
+        <div>
+          <label class="wp-input-label"><span id="ev-start-lbl">${isRange?'Van jaar':'Jaar'}</span></label>
           <input type="number" class="field-input" id="ev-start" value="${e.startYear||new Date().getFullYear()+1}" min="${new Date().getFullYear()}" max="${new Date().getFullYear()+50}" style="font-family:var(--mono)">
         </div>
-        <div style="flex:1;${isRange?'':'display:none'}" id="ev-end-wrap">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Tot jaar</label>
+        <div style="${isRange?'':'display:none'}" id="ev-end-wrap">
+          <label class="wp-input-label">Tot jaar</label>
           <input type="number" class="field-input" id="ev-end" value="${e.endYear||(e.startYear||new Date().getFullYear()+1)+1}" min="${new Date().getFullYear()}" max="${new Date().getFullYear()+50}" style="font-family:var(--mono)">
         </div>
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Bedrag per jaar</label>
-        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="ev-amount" value="${e.amount||''}" inputmode="decimal" autocomplete="off" placeholder="positief = kost, negatief = inkomst/besparing"></div>
-        <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Voorbeelden: <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">8000</code> (studies/jaar), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">25000</code> (eenmalig dak), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">-15000</code> (pensioen vanaf 67: inkomen valt terug, gebruik negatief voor de jaarlijkse spaarderving)</div>
+        <label class="wp-input-label" id="ev-amount-lbl">${isRange?'Bedrag per jaar':'Bedrag'}</label>
+        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="ev-amount" value="${absAmount||''}" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+        <div class="wp-hint">Bv. <code>8000</code> per jaar voor studies, <code>25000</code> eenmalig voor dak, <code>15000</code> per jaar als inkomstenwijziging bij pensioen.</div>
       </div>
+      ${isEdit?`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 0;border-top:1px solid var(--l0)">
+          <label class="wp-input-label" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;color:var(--n1);font-weight:500">Meegerekenen in projectie</label>
+          <label class="ev-switch"><input type="checkbox" id="ev-enabled" ${enabled?'checked':''}><span></span></label>
+        </div>
+      `:''}
     </div>
     <div style="display:flex;gap:8px;margin-top:18px">
       <button class="btn btn-ghost" style="flex:1" id="ev-cancel">Annuleer</button>
       <button class="btn btn-primary" style="flex:1" id="ev-save">${isEdit?'Opslaan':'Toevoegen'}</button>
     </div>
     ${isEdit?`<button id="ev-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Verwijderen</button>`:''}`;
-  $('ev-cancel').onclick=()=>modal.classList.remove('open');
-  $('ev-type').addEventListener('change',()=>{
-    const r=$('ev-type').value==='range';
-    $('ev-end-wrap').style.display=r?'block':'none';
-    $('ev-start-lbl').textContent=r?'Van jaar':'Jaar';
+  // Segment-knop logica
+  modal.querySelectorAll('.ev-seg-btn[data-kind]').forEach(b=>{
+    b.onclick=()=>{
+      modal.querySelectorAll('.ev-seg-btn[data-kind]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
   });
+  modal.querySelectorAll('.ev-seg-btn[data-duration]').forEach(b=>{
+    b.onclick=()=>{
+      modal.querySelectorAll('.ev-seg-btn[data-duration]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const r=b.dataset.duration==='range';
+      $('ev-end-wrap').style.display=r?'block':'none';
+      $('ev-start-lbl').textContent=r?'Van jaar':'Jaar';
+      $('ev-amount-lbl').textContent=r?'Bedrag per jaar':'Bedrag';
+    };
+  });
+  $('ev-cancel').onclick=()=>modal.classList.remove('open');
   $('ev-save').onclick=()=>{
     if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
     const name=($('ev-name').value||'').trim();
     if(!name){showToast('⚠ Naam is verplicht',2000);return;}
     const startYear=parseInt($('ev-start').value)||new Date().getFullYear()+1;
-    const isRangeNow=$('ev-type').value==='range';
+    const isRangeNow=modal.querySelector('.ev-seg-btn[data-duration="range"]').classList.contains('active');
     const endYear=isRangeNow?(parseInt($('ev-end').value)||startYear):null;
     if(isRangeNow&&endYear<startYear){showToast('⚠ Eindjaar moet na startjaar',2200);return;}
-    const amount=calc($('ev-amount').value)||parseFloat($('ev-amount').value)||0;
-    if(amount===0){showToast('⚠ Bedrag mag niet 0 zijn',2000);return;}
-    const data={id:e.id,name,startYear,endYear,amount};
+    const rawAmt=calc($('ev-amount').value)||parseFloat($('ev-amount').value)||0;
+    if(rawAmt===0){showToast('⚠ Bedrag mag niet 0 zijn',2000);return;}
+    const isIncomeNow=modal.querySelector('.ev-seg-btn[data-kind="income"]').classList.contains('active');
+    const amount=isIncomeNow?-Math.abs(rawAmt):Math.abs(rawAmt);
+    const enabledNow=isEdit?($('ev-enabled')?.checked!==false):true;
+    const data={id:e.id,name,startYear,endYear,amount,enabled:enabledNow};
     if(!S.plan.events)S.plan.events=[];
     if(isEdit){
       const idx=S.plan.events.findIndex(x=>x.id===e.id);
