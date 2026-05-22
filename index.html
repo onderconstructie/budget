@@ -1095,7 +1095,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.005</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.007</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -3133,14 +3133,15 @@ function projectWealth(){
   if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
   const p=S.plan;
   const tot=getTotalWealth();
-  const startLiquid=tot.vrij+tot.gereserveerd;
+  // Splits liquide vermogen netjes in cash (rendementsloos) en holdings (renderend)
+  // Cash = spaarrekeningen (vrij + gereserveerd, niet-geblokkeerd)
+  // Holdings = aandelen/ETFs (vrij + gereserveerd, niet-geblokkeerd)
+  const cashAccounts=(S.wealth?.accounts||[]).filter(a=>!isBlocked(a));
+  const liveHoldings=(S.wealth?.holdings||[]).filter(h=>!isBlocked(h));
+  const startCash=cashAccounts.reduce((s,a)=>s+(a.balance||0),0);
+  const startInvest=liveHoldings.reduce((s,h)=>s+getHoldingValueEur(h),0);
   const startBlocked=tot.geblokkeerd;
-  // Belegd-aandeel van het liquide vermogen (alleen niet-geblokkeerde holdings tellen)
-  const beleggingsdeel=(S.wealth?.holdings||[]).reduce((s,h)=>{
-    if(isBlocked(h))return s;
-    return s+getHoldingValueEur(h);
-  },0);
-  const beleggingsAandeel=startLiquid>0?Math.min(1,beleggingsdeel/startLiquid):0;
+  const startLiquid=startCash+startInvest;
 
   const income=getMonthlyIncome();
   const fixed=getFixedCosts();
@@ -3165,21 +3166,21 @@ function projectWealth(){
     }
   });
   // Geblokkeerde items met hun aandeel van initiële `blocked` en vrijgavejaar
-  // Bij vrijgave: pad-specifiek bedrag = currentBlocked × itemShare → verschuift naar liquid
   const blockedItems=[];
   (S.wealth?.holdings||[]).concat(S.wealth?.accounts||[]).forEach(it=>{
     if(it.availability!=='geblokkeerd'||!it.unblockDate)return;
     const y=new Date(it.unblockDate).getFullYear();
     const baseVal=it.lastPrice!==undefined?getHoldingValueEur(it):(it.balance||0);
-    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked});
+    const isHolding=it.lastPrice!==undefined;
+    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding,name:it.name||''});
   });
-  // Groepeer per vrijgavejaar (som van shares per jaar)
+  // Groepeer per vrijgavejaar
   const unblockShareByYear={};
   blockedItems.forEach(bi=>{
     unblockShareByYear[bi.unblockYear]=(unblockShareByYear[bi.unblockYear]||0)+bi.share;
   });
 
-  // Box-Muller voor normaal-verdeelde willekeurige getallen
+  // Box-Muller normaal verdeelde willekeurigheid
   const randn=()=>{
     let u=0,v=0;
     while(u===0)u=Math.random();
@@ -3187,36 +3188,49 @@ function projectWealth(){
     return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
   };
 
-  // Monte Carlo: N paden
+  // Monte Carlo: N paden, cash en invest apart bijgehouden
   const N=500;
   const allLiquid=[],allBlocked=[];
   for(let n=0;n<N;n++){
-    let liquid=startLiquid;
+    let cash=startCash;
+    let invest=startInvest;
     let blocked=startBlocked;
-    const liquidPath=[liquid];
+    const liquidPath=[cash+invest];
     const blockedPath=[blocked];
     for(let y=1;y<=horizon;y++){
       const year=startYear+y;
-      // Rendement EERST op bestaand vermogen (vóór nieuwe buffer)
-      const r=muReturn+sigmaReturn*randn();
-      liquid+=liquid*beleggingsAandeel*r;
+      // 1. Rendement: alleen op holdings (cash blijft cash). Geblokkeerd typisch belegd ~ zelfde model.
+      const rInvest=muReturn+sigmaReturn*randn();
+      invest*=(1+rInvest);
       const rBlocked=muReturn+sigmaReturn*randn();
       blocked*=(1+rBlocked);
-      // Daarna buffer toevoegen (eind van jaar conventie)
+      // 2. Buffer toevoegen aan cash (gebruiker kan later kiezen om manueel te beleggen)
       const realBuffer=yearlyBuffer*Math.pow(1-infl,y);
-      liquid+=realBuffer;
-      // Events groeien mee met inflatie (een uitgave in jaar N is N-jaar inflatie duurder)
-      const eventNominal=eventImpactByYear[year]||0;
-      const eventInflated=eventNominal*Math.pow(1+infl,y);
-      liquid-=eventInflated;
-      // Vrijgave: schuif pad-specifiek aandeel van blocked naar liquid
+      cash+=realBuffer;
+      // 3. Events groeien mee met inflatie. Eerst van cash, dan van invest indien cash onvoldoende.
+      const eventInflated=(eventImpactByYear[year]||0)*Math.pow(1+infl,y);
+      if(eventInflated>0){
+        // Uitgave
+        if(cash>=eventInflated){
+          cash-=eventInflated;
+        } else {
+          const remainder=eventInflated-cash;
+          cash=0;
+          invest-=remainder;
+        }
+      } else if(eventInflated<0){
+        // Extra inkomst → naar cash
+        cash-=eventInflated;
+      }
+      // 4. Vrijgave: pad-specifiek aandeel van blocked schuift over.
+      // Holdings → invest, spaarrekeningen → cash. Voor v1: alles naar cash (gebruiker beslist achteraf wat herbeleggen).
       if(unblockShareByYear[year]){
         const transfer=blocked*unblockShareByYear[year];
-        liquid+=transfer;
+        cash+=transfer;
         blocked-=transfer;
         if(blocked<0)blocked=0;
       }
-      liquidPath.push(liquid);
+      liquidPath.push(cash+invest);
       blockedPath.push(blocked);
     }
     allLiquid.push(liquidPath);
@@ -3240,7 +3254,9 @@ function projectWealth(){
     const p10=percentile(liquidYr,0.10);
     const p50=percentile(liquidYr,0.50);
     const p90=percentile(liquidYr,0.90);
+    const blocked10=percentile(blockedYr,0.10);
     const blocked50=percentile(blockedYr,0.50);
+    const blocked90=percentile(blockedYr,0.90);
     const events=(p.events||[]).filter(e=>{
       if(e.enabled===false)return false;
       const eStart=e.startYear||year;
@@ -3248,9 +3264,40 @@ function projectWealth(){
       return year>=eStart&&year<=eEnd&&y>0;
     });
     const eventTotal=(eventImpactByYear[year]||0)*Math.pow(1+infl,y);
-    series.push({year,p10,p50,p90,blocked:blocked50,total:p50+blocked50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1-infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,beleggingsAandeel,unblockedAmount:0});
+    series.push({year,p10,p50,p90,blocked:blocked50,blocked10,blocked90,total:p50+blocked50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1-infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
   }
+  series._meta={startCash,startInvest,startBlocked,blockedItems,unblockShareByYear,startYear};
   return series;
+}
+
+// Helper voor de "vrijkomend vermogen" sectie: per item de geschatte waarde bij vrijgave
+function getUnblockProjections(series){
+  if(!series||!series._meta)return [];
+  const meta=series._meta;
+  const items=(S.wealth?.holdings||[]).concat(S.wealth?.accounts||[])
+    .filter(it=>it.availability==='geblokkeerd'&&it.unblockDate);
+  return items.map(it=>{
+    const y=new Date(it.unblockDate).getFullYear();
+    const baseVal=it.lastPrice!==undefined?getHoldingValueEur(it):(it.balance||0);
+    const share=meta.startBlocked>0?baseVal/meta.startBlocked:0;
+    // Zoek het jaar in de series net VOOR vrijgave (dan is blocked nog op zijn hoogste pre-unblock waarde)
+    const rowBefore=series.find(s=>s.year===y-1)||series.find(s=>s.year===y);
+    const row=series.find(s=>s.year===y);
+    // Bedrag bij vrijgave = aandeel × blocked-waarde net voor vrijgave
+    const refBlocked=rowBefore?rowBefore.blocked:0;
+    const refBlocked10=rowBefore?rowBefore.blocked10:0;
+    const refBlocked90=rowBefore?rowBefore.blocked90:0;
+    return {
+      name:it.name||(it.lastPrice!==undefined?it.ticker:'spaarrekening'),
+      isHolding:it.lastPrice!==undefined,
+      year:y,
+      yearsAway:y-meta.startYear,
+      currentValue:baseVal,
+      projectedMedian:refBlocked*share,
+      projectedLow:refBlocked10*share,
+      projectedHigh:refBlocked90*share
+    };
+  });
 }
 
 function renderPlanTab(){
@@ -3259,6 +3306,7 @@ function renderPlanTab(){
   const target=$('plan-body');
   if(!target)return;
   const series=projectWealth();
+  const unblockItems=getUnblockProjections(series);
   const startVal=series[0].total;
   const endRow=series[series.length-1];
   const endMedian=endRow.p50+endRow.blocked;
@@ -3295,7 +3343,14 @@ function renderPlanTab(){
         <span style="font-size:12px;font-weight:700;color:${endMedian>=startVal?'var(--g)':'var(--r)'};font-family:var(--mono)">${endMedian>=startVal?'+':''}${fmt(Math.round(endMedian-startVal))}</span>
       </div>
       <div style="font-size:11px;color:var(--n2);line-height:1.6">
-        Vandaag ${fmtN(Math.round(startVal))}, in een goed scenario ${fmtN(Math.round(endHigh))}, in een slechter scenario ${fmtN(Math.round(endLow))}.
+        ${(()=>{
+          const spread=Math.round(endHigh-endLow);
+          const threshold=Math.max(100,Math.abs(endMedian)*0.005);
+          if(spread>threshold){
+            return `Vandaag ${fmtN(Math.round(startVal))}, in een goed scenario ${fmtN(Math.round(endHigh))}, in een slechter scenario ${fmtN(Math.round(endLow))}.`;
+          }
+          return `Vandaag ${fmtN(Math.round(startVal))}, een vrij voorspelbaar pad zonder grote schommelingen (je vermogen zit grotendeels in cash).`;
+        })()}
         ${monthlyBuffer>0?`<div style="margin-top:6px;color:var(--n3)">Maandbuffer ${fmtPos(Math.round(monthlyBuffer))} → ${fmtN(Math.round(yearlyBuffer))} per jaar opzij.${hasActiveEvents?' Geplande events meegenomen.':''}</div>`:'<div style="margin-top:6px;color:var(--n3)">Geen positieve maandbuffer — de projectie houdt enkel rekening met je huidige vermogen en geplande events.</div>'}
       </div>
     </div>
@@ -3377,6 +3432,33 @@ function renderPlanTab(){
           }).join('')}
       </div>
     </div>
+
+    ${unblockItems.length>0?`
+      <!-- VRIJKOMEND GEBLOKKEERD VERMOGEN -->
+      <div class="wp-section">
+        <div class="wp-label">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V8a5 5 0 0 1 9-3"/></svg>
+          Vrijkomend geblokkeerd vermogen
+        </div>
+        <div class="wp-card">
+          ${unblockItems.map(it=>{
+            const wait=it.yearsAway>0?`over ${it.yearsAway} jaar`:'dit jaar';
+            const hasSpread=Math.abs(it.projectedHigh-it.projectedLow)>50;
+            return `<div class="wp-row" style="cursor:default">
+              <div style="flex:1;min-width:0">
+                <div class="wp-row-title">${esc(it.name||'Geblokkeerd')}</div>
+                <div class="wp-row-meta">Vrij in ${it.year} &nbsp;·&nbsp; ${wait} &nbsp;·&nbsp; nu ${fmtN(Math.round(it.currentValue))}</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div class="wp-row-amount" style="color:var(--g)">${fmt(Math.round(it.projectedMedian))}</div>
+                ${hasSpread?`<div class="wp-row-amount-sub">${fmt(Math.round(it.projectedLow))} – ${fmt(Math.round(it.projectedHigh))}</div>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="wp-hint" style="margin-top:8px">Schatting van wat dit bedrag waard zal zijn op vrijgavedatum, op basis van het ingestelde rendement. Het verschijnt in dat jaar in je toegankelijk vermogen.</div>
+      </div>
+    `:''}
   `;
 
   // Wire input changes
@@ -3442,10 +3524,14 @@ function drawPlanChart(series){
               }
               if(c.dataset.label==='Mediaan'){
                 const s=series[c.dataIndex];
-                return [
-                  `Mediaan: €${Math.round(s.p50).toLocaleString('nl-BE')}`,
-                  `Bereik 80%: €${Math.round(s.p10).toLocaleString('nl-BE')} – €${Math.round(s.p90).toLocaleString('nl-BE')}`
-                ];
+                const spread=Math.round(s.p90-s.p10);
+                const lines=[`Mediaan: €${Math.round(s.p50).toLocaleString('nl-BE')}`];
+                // Toon bereik enkel als er werkelijk variantie is (>0.1% van de mediaan, min €50)
+                const threshold=Math.max(50,Math.abs(s.p50)*0.001);
+                if(spread>threshold){
+                  lines.push(`Bereik 80%: €${Math.round(s.p10).toLocaleString('nl-BE')} – €${Math.round(s.p90).toLocaleString('nl-BE')}`);
+                }
+                return lines;
               }
               return c.dataset.label+': €'+c.parsed.y.toLocaleString('nl-BE');
             }
