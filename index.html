@@ -1119,7 +1119,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.020</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.021</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -3414,12 +3414,17 @@ function projectWealth(){
     const year=startYear+y;
     const liquidYr=allLiquid.map(p=>p[y]);
     const blockedYr=allBlocked.map(p=>p[y]);
+    // Totaal vermogen per pad: liquid + blocked (correlatie correct meegenomen, niet som van medianen)
+    const totalYr=allLiquid.map((p,n)=>p[y]+allBlocked[n][y]);
     const p10=percentile(liquidYr,0.10);
     const p50=percentile(liquidYr,0.50);
     const p90=percentile(liquidYr,0.90);
     const blocked10=percentile(blockedYr,0.10);
     const blocked50=percentile(blockedYr,0.50);
     const blocked90=percentile(blockedYr,0.90);
+    const totalP10=percentile(totalYr,0.10);
+    const totalP50=percentile(totalYr,0.50);
+    const totalP90=percentile(totalYr,0.90);
     const events=(p.events||[]).filter(e=>{
       if(e.enabled===false)return false;
       const eStart=e.startYear||year;
@@ -3427,7 +3432,7 @@ function projectWealth(){
       return year>=eStart&&year<=eEnd&&y>0;
     });
     const eventTotal=((activeEventsByYear[year]||[]).reduce((s,e)=>s+(e.amount||0),0))*Math.pow(1+infl,y);
-    series.push({year,p10,p50,p90,blocked:blocked50,blocked10,blocked90,total:p50+blocked50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1+infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
+    series.push({year,p10,p50,p90,blocked:blocked50,blocked10,blocked90,totalP10,totalP50,totalP90,total:totalP50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1+infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
   }
   series._meta={startCash,startInvest,startBlocked,blockedItems,unblockShareByYear,startYear};
   return series;
@@ -3616,9 +3621,9 @@ function renderPlanTab(){
   const unblockItems=getUnblockProjections(series);
   const startVal=series[0].total;
   const endRow=series[series.length-1];
-  const endMedian=endRow.p50+endRow.blocked;
-  const endLow=endRow.p10+endRow.blocked;
-  const endHigh=endRow.p90+endRow.blocked;
+  const endMedian=endRow.totalP50;
+  const endLow=endRow.totalP10;
+  const endHigh=endRow.totalP90;
   const activeEvents=(p.events||[]).filter(e=>e.enabled!==false);
   const hasActiveEvents=activeEvents.length>0;
   const monthlyBuffer=series[0].monthlyBuffer||0;
@@ -3698,11 +3703,16 @@ function renderPlanTab(){
 
     <!-- GRAFIEK -->
     <div class="wp-card-pad wp-section">
+      <div class="ev-segment" style="margin-bottom:12px">
+        <button type="button" class="ev-seg-btn ${planChartMode==='total'?'active':''}" data-plan-mode="total" onclick="setPlanChartMode('total')">Totaal</button>
+        <button type="button" class="ev-seg-btn ${planChartMode==='free'?'active':''}" data-plan-mode="free" onclick="setPlanChartMode('free')">Toegankelijk</button>
+        <button type="button" class="ev-seg-btn ${planChartMode==='blocked'?'active':''}" data-plan-mode="blocked" onclick="setPlanChartMode('blocked')">Geblokkeerd</button>
+      </div>
       <div style="position:relative;height:220px;margin-bottom:10px"><canvas id="plan-chart"></canvas></div>
-      <div style="display:flex;justify-content:center;gap:16px;font-size:10px;color:var(--n3);flex-wrap:wrap">
-        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--g);margin-right:6px"></span>Mediaan</span>
-        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:8px;background:rgba(22,163,74,.18);margin-right:6px;border-radius:2px"></span>Bereik (80%)</span>
-        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--n3);margin-right:6px;border-top:1px dashed var(--n3)"></span>Geblokkeerd</span>
+      <div style="display:flex;justify-content:center;gap:14px;font-size:10px;color:var(--n3);flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--g);margin-right:6px"></span>Verwacht pad</span>
+        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:8px;background:rgba(22,163,74,.18);margin-right:6px;border-radius:2px"></span>Realistische marge</span>
+        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:8px;height:8px;background:var(--a);border-radius:50%;margin-right:6px"></span>Event</span>
       </div>
     </div>
 
@@ -3796,18 +3806,38 @@ function renderPlanTab(){
   setTimeout(()=>drawPlanChart(series),50);
 }
 
+let planChartMode='total'; // 'total' | 'free' | 'blocked'
 function drawPlanChart(series){
   const cv=$('plan-chart');
   if(!cv||!window.Chart)return;
   if(cv._chart)cv._chart.destroy();
   const labels=series.map(s=>s.year);
-  const p50=series.map(s=>Math.round(s.p50));
-  const p10=series.map(s=>Math.round(s.p10));
-  const p90=series.map(s=>Math.round(s.p90));
-  const blocked=series.map(s=>Math.round(s.blocked));
-  // Markeer event-jaren met dot op de mediaan-lijn
-  const eventDots=series.map(s=>s.events&&s.events.length>0?Math.round(s.p50):null);
-  // X-as ticks beperken voor leesbaarheid
+  // Selecteer de juiste datareeksen volgens mode
+  let mainData,lowData,highData,mainLabel,mainColor,bandColor;
+  if(planChartMode==='total'){
+    mainData=series.map(s=>Math.round(s.totalP50));
+    lowData=series.map(s=>Math.round(s.totalP10));
+    highData=series.map(s=>Math.round(s.totalP90));
+    mainLabel='Totaal vermogen';
+    mainColor='#16a34a';
+    bandColor='rgba(22,163,74,.13)';
+  } else if(planChartMode==='free'){
+    mainData=series.map(s=>Math.round(s.p50));
+    lowData=series.map(s=>Math.round(s.p10));
+    highData=series.map(s=>Math.round(s.p90));
+    mainLabel='Toegankelijk vermogen';
+    mainColor='#0ea5e9';
+    bandColor='rgba(14,165,233,.13)';
+  } else {
+    mainData=series.map(s=>Math.round(s.blocked));
+    lowData=series.map(s=>Math.round(s.blocked10));
+    highData=series.map(s=>Math.round(s.blocked90));
+    mainLabel='Geblokkeerd vermogen';
+    mainColor='#94a3b8';
+    bandColor='rgba(148,163,184,.18)';
+  }
+  // Event-marker dots op de mediaan
+  const eventDots=series.map((s,i)=>s.events&&s.events.length>0?mainData[i]:null);
   const stepX=labels.length>20?5:(labels.length>10?3:2);
   cv._chart=new Chart(cv.getContext('2d'),{
     type:'line',
@@ -3815,14 +3845,12 @@ function drawPlanChart(series){
       labels,
       datasets:[
         // P90 (bovenkant band, onzichtbare lijn, fill naar P10)
-        {label:'P90',data:p90,borderColor:'transparent',backgroundColor:'rgba(22,163,74,.13)',fill:'+1',pointRadius:0,pointHoverRadius:0,tension:.25,borderWidth:0,order:3},
+        {label:'P90',data:highData,borderColor:'transparent',backgroundColor:bandColor,fill:'+1',pointRadius:0,pointHoverRadius:0,tension:.25,borderWidth:0,order:3},
         // P10 (onderkant band)
-        {label:'P10',data:p10,borderColor:'transparent',backgroundColor:'transparent',fill:false,pointRadius:0,pointHoverRadius:0,tension:.25,borderWidth:0,order:4},
-        // Mediaan (hoofdlijn)
-        {label:'Mediaan',data:p50,borderColor:'#16a34a',backgroundColor:'transparent',fill:false,tension:.25,pointRadius:0,pointHoverRadius:5,borderWidth:2.5,order:1},
-        // Geblokkeerd (stippellijn)
-        {label:'Geblokkeerd',data:blocked,borderColor:'#a3a3a3',backgroundColor:'transparent',fill:false,tension:.25,pointRadius:0,pointHoverRadius:4,borderWidth:1.5,borderDash:[4,3],order:2},
-        // Event-markers (alleen punten op event-jaren)
+        {label:'P10',data:lowData,borderColor:'transparent',backgroundColor:'transparent',fill:false,pointRadius:0,pointHoverRadius:0,tension:.25,borderWidth:0,order:4},
+        // Hoofdlijn (mediaan)
+        {label:mainLabel,data:mainData,borderColor:mainColor,backgroundColor:'transparent',fill:false,tension:.25,pointRadius:0,pointHoverRadius:5,borderWidth:2.5,order:1},
+        // Event-markers
         {label:'Event',data:eventDots,borderColor:'transparent',backgroundColor:'#e91e8c',pointRadius:4,pointHoverRadius:6,pointBorderColor:'#fff',pointBorderWidth:1.5,showLine:false,order:0}
       ]
     },
@@ -3838,20 +3866,21 @@ function drawPlanChart(series){
             label:c=>{
               if(c.dataset.label==='Event'){
                 const ev=series[c.dataIndex].events||[];
-                return ev.map(e=>'Event: '+e.name).join('\n')||'';
+                return ev.map(e=>{
+                  const sign=(e.amount||0)<0?'+':'−';
+                  return `Event: ${e.name} (${sign}€${Math.abs(e.amount||0).toLocaleString('nl-BE')})`;
+                }).join('\n')||'';
               }
-              if(c.dataset.label==='Mediaan'){
-                const s=series[c.dataIndex];
-                const spread=Math.round(s.p90-s.p10);
-                const lines=[`Mediaan: €${Math.round(s.p50).toLocaleString('nl-BE')}`];
-                // Toon bereik enkel als er werkelijk variantie is (>0.1% van de mediaan, min €50)
-                const threshold=Math.max(50,Math.abs(s.p50)*0.001);
-                if(spread>threshold){
-                  lines.push(`Bereik 80%: €${Math.round(s.p10).toLocaleString('nl-BE')} – €${Math.round(s.p90).toLocaleString('nl-BE')}`);
-                }
-                return lines;
+              const s=series[c.dataIndex];
+              const lines=[`${c.dataset.label}: €${Math.round(c.parsed.y).toLocaleString('nl-BE')}`];
+              const spread=Math.round((c.dataset.label.includes('Totaal')?s.totalP90-s.totalP10:c.dataset.label.includes('Toegankelijk')?s.p90-s.p10:s.blocked90-s.blocked10));
+              const threshold=Math.max(50,Math.abs(c.parsed.y)*0.001);
+              if(spread>threshold){
+                const lo=c.dataset.label.includes('Totaal')?s.totalP10:c.dataset.label.includes('Toegankelijk')?s.p10:s.blocked10;
+                const hi=c.dataset.label.includes('Totaal')?s.totalP90:c.dataset.label.includes('Toegankelijk')?s.p90:s.blocked90;
+                lines.push(`Bereik 80%: €${Math.round(lo).toLocaleString('nl-BE')} – €${Math.round(hi).toLocaleString('nl-BE')}`);
               }
-              return c.dataset.label+': €'+c.parsed.y.toLocaleString('nl-BE');
+              return lines;
             }
           }
         }
@@ -3874,6 +3903,15 @@ function drawPlanChart(series){
       animation:{duration:400}
     }
   });
+}
+
+function setPlanChartMode(mode){
+  planChartMode=mode;
+  document.querySelectorAll('.ev-seg-btn[data-plan-mode]').forEach(b=>{
+    b.classList.toggle('active',b.dataset.planMode===mode);
+  });
+  const series=projectWealth();
+  drawPlanChart(series);
 }
 
 function togglePlanAssumptions(){
