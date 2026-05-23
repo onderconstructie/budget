@@ -720,7 +720,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ev-switch{position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0}
 .ev-switch input{opacity:0;width:0;height:0}
 .ev-switch span{position:absolute;cursor:pointer;inset:0;background:var(--l1);border-radius:22px;transition:.2s}
-.ev-switch span::before{content:'';position:absolute;height:16px;width:16px;left:3px;top:3px;background:var(--w);border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.ev-switch span::before{content:'';position:absolute;height:16px;width:16px;left:3px;top:3px;background:var(--n7);border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .ev-switch input:checked+span{background:var(--g)}
 .ev-switch input:checked+span::before{transform:translateX(16px)}
 /* Compact aannames-strip onder hero */
@@ -1119,7 +1119,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.018</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.020</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1416,37 +1416,37 @@ function getMonthBudget(){
 }
 function getCatSpent(catId,m){return S.monthlyData[m]?.[catId]||0}
 // === KALENDERJAAR HELPERS ===
-// Telt alle echte transacties — zowel monthly als yearly categorieën, want het is werkelijk uitgegeven geld.
+// Gebruikt S.monthlyData (zelfde bron als de rest van de app) voor consistente totalen.
+// Telt ALLE categorieën (monthly + yearly) want ze zijn allebei werkelijk uitgegeven geld.
+function _monthKey(year,m1based){return year+'-'+String(m1based).padStart(2,'0')}
 function getYearTotal(year){
   let t=0;
-  (S.transactions||[]).forEach(tx=>{
-    const y=parseInt((tx.month||'').split('-')[0]);
-    if(y===year)t+=tx.amount||0;
-  });
+  for(let m=1;m<=12;m++){
+    const mk=_monthKey(year,m);
+    const md=S.monthlyData[mk];if(!md)continue;
+    for(const cat of S.categories)t+=md[cat.id]||0;
+  }
   return t;
 }
 function getYTDTotal(year,untilMonth1Based){
   let t=0;
-  (S.transactions||[]).forEach(tx=>{
-    const [y,m]=(tx.month||'').split('-').map(Number);
-    if(y===year&&m&&m<=untilMonth1Based)t+=tx.amount||0;
-  });
+  for(let m=1;m<=untilMonth1Based;m++){
+    const mk=_monthKey(year,m);
+    const md=S.monthlyData[mk];if(!md)continue;
+    for(const cat of S.categories)t+=md[cat.id]||0;
+  }
   return t;
 }
 function getYearCatTotal(catId,year){
   let t=0;
-  (S.transactions||[]).forEach(tx=>{
-    if(tx.catId!==catId)return;
-    const y=parseInt((tx.month||'').split('-')[0]);
-    if(y===year)t+=tx.amount||0;
-  });
+  for(let m=1;m<=12;m++)t+=getCatSpent(catId,_monthKey(year,m));
   return t;
 }
 function getYearsWithData(){
   const years=new Set();
-  (S.transactions||[]).forEach(tx=>{
-    const y=parseInt((tx.month||'').split('-')[0]);
-    if(!isNaN(y))years.add(y);
+  Object.keys(S.monthlyData||{}).forEach(mk=>{
+    const y=parseInt(mk.split('-')[0]);
+    if(!isNaN(y)&&Object.values(S.monthlyData[mk]||{}).some(v=>v>0))years.add(y);
   });
   return [...years].sort();
 }
@@ -3541,19 +3541,18 @@ function renderYearOverviewBody(){
 
     <!-- Bar chart per kalenderjaar -->
     <div style="position:relative;height:200px;margin-bottom:6px"><canvas id="jaar-chart"></canvas></div>
-    <div style="font-size:10px;color:var(--n3);text-align:center;margin-bottom:14px">${curYear} is nog niet afgelopen (${monthNames[curMonth-1]})</div>
+    <div style="font-size:10px;color:var(--n3);text-align:center;margin-bottom:14px">Som van alle ingegeven uitgaven in dat kalenderjaar (variabele én jaarlijkse categorieën). Vaste kosten zitten hier niet bij. ${curYear} is nog niet afgelopen (${monthNames[curMonth-1]}).</div>
 
     ${cats.length>0?`
       <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Per categorie · ${curYear} t.o.v. ${curYear-1}</div>
-      <div style="background:var(--w);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden">
+      <div style="background:var(--n7);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden">
         ${cats.map(({cat,tNow,tPrev,delta})=>{
           const d=tNow-tPrev;
           const dColor=d<0?'var(--g)':d>0?'var(--r)':'var(--n3)';
           const dSign=d>=0?'+':'';
           const dPct=tPrev>0?(d/tPrev*100):(tNow>0?100:0);
-          const clr=col(cat.color);
           return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--l0)">
-            <div style="width:26px;height:26px;border-radius:var(--r4);background:${clr.bg};color:${clr.c};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="width:26px;height:26px;border-radius:var(--r4);background:var(--n6);color:var(--n2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px">${IC[cat.icon]||IC.folder}</svg>
             </div>
             <div style="flex:1;min-width:0">
