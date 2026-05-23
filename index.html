@@ -1119,7 +1119,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.023</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.026</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -3556,7 +3556,7 @@ function renderYearOverviewBody(){
   const hasFilter=yrActiveCats.size>0;
   const filterFn=hasFilter?(catId)=>yrActiveCats.has(catId):()=>true;
 
-  // YTD vergelijking — respecteert filter
+  // YTD vergelijking — respecteert filter (kleine totalencijfers)
   const ytdNow=hasFilter?computeYTDFiltered(curYear,curMonth,filterFn):getYTDTotal(curYear,curMonth);
   const ytdPrev=hasFilter?computeYTDFiltered(curYear-1,curMonth,filterFn):getYTDTotal(curYear-1,curMonth);
   const hasPrevYTD=ytdPrev>0;
@@ -3565,26 +3565,16 @@ function renderYearOverviewBody(){
   const cmpColor=delta<=0?'var(--g)':'var(--r)';
   const cmpSign=delta>=0?'+':'';
 
-  // Bar data — respecteert filter
+  // Stacked bar data: één dataset per categorie, jaarse totalen op de x-as
   const showYears=years.slice(-5);
-  const yearTotals=showYears.map(y=>({
-    year:y,
-    total:hasFilter?computeYearFiltered(y,filterFn):getYearTotal(y),
-    isCurrent:y===curYear
-  }));
+  const catsWithData=(S.categories||[]).filter(c=>
+    showYears.some(y=>getYearCatTotal(c.id,y)>0)
+  );
 
-  // Subtitel beschrijft de filter
+  // Subtitel beschrijft de selectie
   const filterDescription=hasFilter
-    ?'Gefilterd op '+S.categories.filter(c=>yrActiveCats.has(c.id)).map(c=>esc(c.name)).join(', ')
-    :'Alle categorieën samen';
-
-  // Categorie-vergelijking
-  const cats=(S.categories||[]).map(c=>{
-    const tNow=getYearCatTotal(c.id,curYear);
-    const tPrev=getYearCatTotal(c.id,curYear-1);
-    return {cat:c,tNow,tPrev,delta:tNow-tPrev};
-  }).filter(r=>r.tNow>0||r.tPrev>0)
-    .sort((a,b)=>(b.tNow+b.tPrev)-(a.tNow+a.tPrev));
+    ?'Geselecteerd: '+S.categories.filter(c=>yrActiveCats.has(c.id)).map(c=>esc(c.name)).join(', ')+' — gekleurd op de balk, rest in grijs'
+    :'Totaal per kalenderjaar — klik een categorie om uit te lichten';
 
   target.innerHTML=`
     <!-- YTD hero -->
@@ -3610,32 +3600,6 @@ function renderYearOverviewBody(){
 
     <!-- Categorie-chips: gedeeld met de Per-maand view, klikken filtert ook deze bar chart -->
     <div id="yr-year-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-bottom:14px"></div>
-
-    ${cats.length>0?`
-      <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Per categorie · ${curYear} t.o.v. ${curYear-1}</div>
-      <div style="background:var(--n7);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden">
-        ${cats.map(({cat,tNow,tPrev,delta})=>{
-          const d=tNow-tPrev;
-          const dColor=d<0?'var(--g)':d>0?'var(--r)':'var(--n3)';
-          const dSign=d>=0?'+':'';
-          const dPct=tPrev>0?(d/tPrev*100):(tNow>0?100:0);
-          return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--l0)">
-            <div style="width:26px;height:26px;border-radius:var(--r4);background:var(--n6);color:var(--n2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px">${IC[cat.icon]||IC.folder}</svg>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600;color:var(--n0)">${esc(cat.name)}</div>
-              <div style="font-size:10px;color:var(--n3);font-family:var(--mono)">${curYear}: ${fmt(Math.round(tNow))} &nbsp;·&nbsp; ${curYear-1}: ${fmt(Math.round(tPrev))}</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:12px;font-weight:700;color:${dColor};font-family:var(--mono)">${dSign}${fmt(Math.abs(Math.round(d)))}</div>
-              ${tPrev>0?`<div style="font-size:9.5px;font-weight:600;color:${dColor};font-family:var(--mono)">${dSign}${dPct.toFixed(1)}%</div>`:'<div style="font-size:9.5px;color:var(--n4)">nieuw</div>'}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div style="font-size:10px;color:var(--n3);margin-top:8px;line-height:1.4">Volledig jaar vergeleken. Voor lopende vergelijking zie het YTD-blok bovenaan.</div>
-    `:''}
   `;
 
   setTimeout(()=>{
@@ -3663,28 +3627,87 @@ function renderYearOverviewBody(){
     if(!cv)return;
     if(_jaarChart){_jaarChart.destroy();_jaarChart=null;}
     const ctx=cv.getContext('2d');
-    const labels=yearTotals.map(y=>String(y.year));
-    const data=yearTotals.map(y=>Math.round(y.total));
-    const colors=yearTotals.map(y=>y.isCurrent?'#e91e8c':'#94a3b8');
+    const labels=showYears.map(y=>String(y));
+    const yearTotalsForLabel=showYears.map(y=>Math.round(getYearTotal(y)));
+
+    // === DEZELFDE LOGICA ALS PER-MAAND ===
+    // Geen selectie: één bar per jaar, kleur = accent-roze voor huidig jaar, grijs voor verleden
+    // Met selectie: gestapelde overlay — geselecteerd deel in categoriekleur (of accent-roze bij multi),
+    //               rest van de bar in grijs (zoals per-maand de "rest" grijs maakt)
+    const selectedCats=hasFilter?S.categories.filter(c=>yrActiveCats.has(c.id)):[];
+    const clrActive=selectedCats.length===1?col(selectedCats[0].color):null;
+    const multiColor=selectedCats.length>1?{c:'#e91e8c'}:null;
+    const overlayColor=clrActive?clrActive.c:(multiColor?multiColor.c:null);
+
+    const datasets=[];
+    if(!hasFilter){
+      // Eén dataset, kleur per jaar
+      datasets.push({
+        label:'Totaal',
+        data:yearTotalsForLabel,
+        backgroundColor:showYears.map(y=>y===curYear?'rgba(233,30,140,.85)':'rgba(148,163,184,.75)'),
+        borderRadius:6,maxBarThickness:60
+      });
+    } else {
+      // Stacked overlay: cat-deel + rest
+      const catData=showYears.map(y=>{
+        let s=0;
+        selectedCats.forEach(c=>{s+=getYearCatTotal(c.id,y);});
+        return s;
+      });
+      const restData=showYears.map((y,i)=>Math.max(0,yearTotalsForLabel[i]-catData[i]));
+      // Hex naar rgba voor overlay-kleur
+      const hx=overlayColor.replace('#','');
+      const rr=parseInt(hx.slice(0,2),16),gg=parseInt(hx.slice(2,4),16),bb=parseInt(hx.slice(4,6),16);
+      datasets.push({
+        label:selectedCats.length===1?selectedCats[0].name:'Geselecteerd',
+        data:catData,
+        backgroundColor:`rgba(${rr},${gg},${bb},.82)`,
+        borderRadius:3,maxBarThickness:60,
+        stack:'main'
+      });
+      datasets.push({
+        label:'Rest',
+        data:restData,
+        backgroundColor:'rgba(0,0,0,.08)',
+        borderRadius:3,maxBarThickness:60,
+        stack:'main',
+        datalabels:{display:false}
+      });
+    }
+
     _jaarChart=new Chart(ctx,{
       type:'bar',
-      data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:6,maxBarThickness:60}]},
+      data:{labels,datasets},
       options:{
         responsive:true,maintainAspectRatio:false,
         plugins:{
           legend:{display:false},
           datalabels:{
-            display:true,anchor:'end',align:'top',offset:2,
+            display:function(ctx){
+              // Totaal-label alleen op de bovenste/laatste zichtbare dataset
+              if(!hasFilter)return true;
+              return ctx.datasetIndex===0;  // De "geselecteerd" dataset (eerste) toont het totaal
+            },
+            anchor:'end',align:'top',offset:2,
             font:{family:'var(--mono)',size:10,weight:'700'},
             color:'#475569',
-            formatter:v=>'€'+v.toLocaleString('nl-BE')
+            formatter:(v,ctx)=>'€'+yearTotalsForLabel[ctx.dataIndex].toLocaleString('nl-BE')
           },
-          tooltip:{callbacks:{label:c=>'€'+c.parsed.y.toLocaleString('nl-BE')}}
+          tooltip:{
+            callbacks:{
+              label:c=>{
+                if(c.dataset.label==='Rest')return 'Rest: €'+c.parsed.y.toLocaleString('nl-BE');
+                return c.dataset.label+': €'+c.parsed.y.toLocaleString('nl-BE');
+              },
+              footer:items=>hasFilter?'Totaal: €'+yearTotalsForLabel[items[0].dataIndex].toLocaleString('nl-BE'):''
+            }
+          }
         },
         scales:{
-          x:{grid:{display:false},ticks:{font:{family:'var(--mono)',size:11},color:'#64748b'}},
+          x:{stacked:hasFilter,grid:{display:false},ticks:{font:{family:'var(--mono)',size:11},color:'#64748b'}},
           y:{
-            beginAtZero:true,
+            stacked:hasFilter,beginAtZero:true,
             grid:{color:'rgba(0,0,0,.06)'},
             ticks:{font:{family:'var(--mono)',size:9},color:'#94a3b8',callback:v=>v>=1000?'€'+(v/1000).toFixed(0)+'k':'€'+v},
             grace:'15%'
