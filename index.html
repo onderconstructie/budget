@@ -1119,7 +1119,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.021</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.023</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1221,6 +1221,20 @@ function getHoldingValueEur(h){
   const rate=S.wealth?.usdEurRate||0.92;  // fallback indien nog niet opgehaald
   return val*rate;
 }
+// Netto-waarde na heffing — relevant voor geblokkeerd vermogen.
+// Vóór vrijgavedatum: earlyWithdrawalTax (= vroege opname kost meer).
+// Op/na vrijgavedatum: normalWithdrawalTax (= normale eindbelasting).
+function getHoldingValueEurNet(h){
+  const bruto=getHoldingValueEur(h);
+  if(h.availability!=='geblokkeerd')return bruto;
+  const tax=isUnblocked(h)?(h.normalWithdrawalTax||0):(h.earlyWithdrawalTax||0);
+  return bruto*(1-tax/100);
+}
+// Hulper: is unlock-datum in het verleden of vandaag?
+function isUnblocked(it){
+  if(!it.unblockDate)return false;
+  return new Date(it.unblockDate)<=new Date();
+}
 function getHoldingCostEur(h){
   const cost=getHoldingCost(h);
   if((h.currency||'USD')==='EUR')return cost;
@@ -1280,11 +1294,12 @@ function getTotalWealth(){
   });
   (w.holdings||[]).forEach(h=>{
     const bucket=isBlocked(h)?'geblokkeerd':(h.availability==='gereserveerd'?'gereserveerd':'vrij');
-    buckets[bucket]+=getHoldingValueEur(h);
+    // Geblokkeerd: netto (na heffing) zodat totaal de werkelijke waarde reflecteert
+    buckets[bucket]+=isBlocked(h)?getHoldingValueEurNet(h):getHoldingValueEur(h);
   });
   // Voor backward compat: oude accounts/holdings split per type
   const acc=(w.accounts||[]).reduce((s,a)=>s+(a.balance||0),0);
-  const hld=(w.holdings||[]).reduce((s,h)=>s+getHoldingValueEur(h),0);
+  const hld=(w.holdings||[]).reduce((s,h)=>s+(isBlocked(h)?getHoldingValueEurNet(h):getHoldingValueEur(h)),0);
   return{accounts:acc,holdings:hld,total:acc+hld,vrij:buckets.vrij,gereserveerd:buckets.gereserveerd,geblokkeerd:buckets.geblokkeerd};
 }
 
@@ -1449,6 +1464,24 @@ function getYearsWithData(){
     if(!isNaN(y)&&Object.values(S.monthlyData[mk]||{}).some(v=>v>0))years.add(y);
   });
   return [...years].sort();
+}
+function computeYearFiltered(year,filterFn){
+  let t=0;
+  for(let m=1;m<=12;m++){
+    const mk=_monthKey(year,m);
+    const md=S.monthlyData[mk];if(!md)continue;
+    for(const cat of S.categories)if(filterFn(cat.id))t+=md[cat.id]||0;
+  }
+  return t;
+}
+function computeYTDFiltered(year,untilMonth1Based,filterFn){
+  let t=0;
+  for(let m=1;m<=untilMonth1Based;m++){
+    const mk=_monthKey(year,m);
+    const md=S.monthlyData[mk];if(!md)continue;
+    for(const cat of S.categories)if(filterFn(cat.id))t+=md[cat.id]||0;
+  }
+  return t;
 }
 function getMonthSpent(m){
   const md=S.monthlyData[m];if(!md)return 0;
@@ -3067,7 +3100,7 @@ function renderWealth(){
           allItems.push({type:'account',item:a,value:a.balance||0,availability:a.availability||'vrij',blocked:isBlocked(a)});
         });
         (w.holdings||[]).forEach(h=>{
-          allItems.push({type:'holding',item:h,value:getHoldingValueEur(h),availability:h.availability||'vrij',blocked:isBlocked(h)});
+          allItems.push({type:'holding',item:h,value:getHoldingValueEurNet(h),availability:h.availability||'vrij',blocked:isBlocked(h)});
         });
         if(allItems.length===0){
           return `<div class="wp-card"><div class="wp-empty">Nog geen rekeningen, aandelen of ETFs toegevoegd.<br><span style="font-size:10px;color:var(--n4)">Begin met de + knoppen hierboven.</span></div></div>`;
@@ -3116,6 +3149,11 @@ function renderWealth(){
                   const blocked=isBlocked(h);
                   const t=blocked?timeUntilUnblock(h):null;
                   const isFund=h.kind==='fund';
+                  const isBlk=blocked;  // alias voor readability
+                  // Netto-bedrag voor geblokkeerde belegging met heffing
+                  const taxPct=isBlk?(isUnblocked(h)?(h.normalWithdrawalTax||0):(h.earlyWithdrawalTax||0)):0;
+                  const valueNet=value*(1-taxPct/100);
+                  const valueEurNet=valueEur*(1-taxPct/100);
                   const metaParts=[];
                   metaParts.push(isFund?'<span class="wp-row-type-pill wp-type-invest">Fonds</span>':'<span class="wp-row-type-pill wp-type-invest">Belegging</span>');
                   if(!isFund){
@@ -3123,7 +3161,7 @@ function renderWealth(){
                     metaParts.push(`<span style="font-family:var(--mono)">${h.quantity||0} × ${sym}${h.lastPrice?h.lastPrice.toFixed(2):'—'}</span>`);
                   }
                   if(h.availability==='gereserveerd'&&h.purpose)metaParts.push(esc(h.purpose));
-                  else if(blocked&&t)metaParts.push(`vrij in ${t.years>0?t.years+'j ':''}${t.months>0||t.years===0?t.months+'m':''}`);
+                  else if(isBlk&&t)metaParts.push(`vrij in ${t.years>0?t.years+'j ':''}${t.months>0||t.years===0?t.months+'m':''}`);
                   if(h.availability==='geblokkeerd'&&h.yearlyContribution>0)metaParts.push(`+${fmt(h.yearlyContribution)}/jaar${h.contributionUntilYear?' tot '+h.contributionUntilYear:''}`);
                   const displaySym=isFund?'€':sym;
                   return `<div class="wp-row" onclick="openHoldingModal('${h.id}')">
@@ -3132,9 +3170,10 @@ function renderWealth(){
                       <div class="wp-row-meta">${metaParts.join(' &nbsp;·&nbsp; ')}</div>
                     </div>
                     <div style="text-align:right;flex-shrink:0">
-                      <div class="wp-row-amount">${displaySym}${Math.round(value).toLocaleString('nl-BE')}</div>
-                      ${!isFund&&cur!=='EUR'&&valueEur>0?`<div class="wp-row-amount-sub">≈ ${fmt(Math.round(valueEur))}</div>`:''}
-                      ${!isFund&&cost>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnl>=0?'+':''}${sym}${Math.round(pnl).toLocaleString('nl-BE')} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
+                      <div class="wp-row-amount">${displaySym}${Math.round(taxPct>0?valueNet:value).toLocaleString('nl-BE')}</div>
+                      ${taxPct>0?`<div class="wp-row-amount-sub" style="color:var(--n3)">bruto ${displaySym}${Math.round(value).toLocaleString('nl-BE')} · ${taxPct}% heffing</div>`:''}
+                      ${!isFund&&cur!=='EUR'&&valueEur>0?`<div class="wp-row-amount-sub">≈ ${fmt(Math.round(taxPct>0?valueEurNet:valueEur))}</div>`:''}
+                      ${!isFund&&!isBlk&&cost>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnl>=0?'+':''}${sym}${Math.round(pnl).toLocaleString('nl-BE')} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
                     </div>
                   </div>`;
                 }
@@ -3281,17 +3320,19 @@ function projectWealth(){
     if(it.availability!=='geblokkeerd'||!it.unblockDate)return;
     const y=new Date(it.unblockDate).getFullYear();
     const baseVal=getHoldingValueEur(it);
-    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding:true,name:it.name||''});
+    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding:true,name:it.name||'',normalTax:it.normalWithdrawalTax||0});
   });
   (S.wealth?.accounts||[]).forEach(it=>{
     if(it.availability!=='geblokkeerd'||!it.unblockDate)return;
     const y=new Date(it.unblockDate).getFullYear();
     const baseVal=it.balance||0;
-    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding:false,name:it.name||''});
+    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding:false,name:it.name||'',normalTax:0});
   });
-  const unblockShareByYear={};
+  // Per jaar: lijst van items die vrijkomen (we passen heffing per item toe)
+  const unblockItemsByYear={};
   blockedItems.forEach(bi=>{
-    unblockShareByYear[bi.unblockYear]=(unblockShareByYear[bi.unblockYear]||0)+bi.share;
+    if(!unblockItemsByYear[bi.unblockYear])unblockItemsByYear[bi.unblockYear]=[];
+    unblockItemsByYear[bi.unblockYear].push(bi);
   });
 
   // Box-Muller
@@ -3386,11 +3427,16 @@ function projectWealth(){
           cashLinked[eid]=0;
         }
       }
-      // 5. Vrijgave geblokkeerd
-      if(unblockShareByYear[year]){
-        const transfer=blocked*unblockShareByYear[year];
-        cashFree+=transfer;
-        blocked-=transfer;
+      // 5. Vrijgave geblokkeerd — per item, met heffing
+      const unblockingThisYear=unblockItemsByYear[year];
+      if(unblockingThisYear){
+        unblockingThisYear.forEach(bi=>{
+          const transfer=blocked*bi.share;
+          // Netto na heffing gaat naar cash; bruto verlaat blocked (de heffing "verdwijnt" = wordt betaald)
+          const netto=transfer*(1-(bi.normalTax||0)/100);
+          cashFree+=netto;
+          blocked-=transfer;
+        });
         if(blocked<0)blocked=0;
       }
       liquidPath.push(totalCash()+invest);
@@ -3434,7 +3480,7 @@ function projectWealth(){
     const eventTotal=((activeEventsByYear[year]||[]).reduce((s,e)=>s+(e.amount||0),0))*Math.pow(1+infl,y);
     series.push({year,p10,p50,p90,blocked:blocked50,blocked10,blocked90,totalP10,totalP50,totalP90,total:totalP50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1+infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
   }
-  series._meta={startCash,startInvest,startBlocked,blockedItems,unblockShareByYear,startYear};
+  series._meta={startCash,startInvest,startBlocked,blockedItems,unblockItemsByYear,startYear};
   return series;
 }
 
@@ -3506,18 +3552,31 @@ function renderYearOverviewBody(){
   const curMonth=now.getMonth()+1;
   const monthNames=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 
-  // YTD vergelijking
-  const ytdNow=getYTDTotal(curYear,curMonth);
-  const ytdPrev=getYTDTotal(curYear-1,curMonth);
+  // Categorie-filter via chips (gedeelde state met per-maand view)
+  const hasFilter=yrActiveCats.size>0;
+  const filterFn=hasFilter?(catId)=>yrActiveCats.has(catId):()=>true;
+
+  // YTD vergelijking — respecteert filter
+  const ytdNow=hasFilter?computeYTDFiltered(curYear,curMonth,filterFn):getYTDTotal(curYear,curMonth);
+  const ytdPrev=hasFilter?computeYTDFiltered(curYear-1,curMonth,filterFn):getYTDTotal(curYear-1,curMonth);
   const hasPrevYTD=ytdPrev>0;
   const delta=ytdNow-ytdPrev;
   const deltaPct=ytdPrev>0?(delta/ytdPrev*100):0;
   const cmpColor=delta<=0?'var(--g)':'var(--r)';
   const cmpSign=delta>=0?'+':'';
 
-  // Bar data
+  // Bar data — respecteert filter
   const showYears=years.slice(-5);
-  const yearTotals=showYears.map(y=>({year:y,total:getYearTotal(y),isCurrent:y===curYear}));
+  const yearTotals=showYears.map(y=>({
+    year:y,
+    total:hasFilter?computeYearFiltered(y,filterFn):getYearTotal(y),
+    isCurrent:y===curYear
+  }));
+
+  // Subtitel beschrijft de filter
+  const filterDescription=hasFilter
+    ?'Gefilterd op '+S.categories.filter(c=>yrActiveCats.has(c.id)).map(c=>esc(c.name)).join(', ')
+    :'Alle categorieën samen';
 
   // Categorie-vergelijking
   const cats=(S.categories||[]).map(c=>{
@@ -3545,8 +3604,12 @@ function renderYearOverviewBody(){
     </div>
 
     <!-- Bar chart per kalenderjaar -->
+    <div style="font-size:10px;color:var(--n3);text-align:center;margin-bottom:4px">${filterDescription}</div>
     <div style="position:relative;height:200px;margin-bottom:6px"><canvas id="jaar-chart"></canvas></div>
-    <div style="font-size:10px;color:var(--n3);text-align:center;margin-bottom:14px">Som van alle ingegeven uitgaven in dat kalenderjaar (variabele én jaarlijkse categorieën). Vaste kosten zitten hier niet bij. ${curYear} is nog niet afgelopen (${monthNames[curMonth-1]}).</div>
+    <div style="font-size:10px;color:var(--n3);text-align:center;margin-bottom:10px">Som van alle ingegeven uitgaven (variabele én jaarlijkse categorieën). Vaste kosten zitten hier niet bij. ${curYear} is nog niet afgelopen (${monthNames[curMonth-1]}).</div>
+
+    <!-- Categorie-chips: gedeeld met de Per-maand view, klikken filtert ook deze bar chart -->
+    <div id="yr-year-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-bottom:14px"></div>
 
     ${cats.length>0?`
       <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Per categorie · ${curYear} t.o.v. ${curYear-1}</div>
@@ -3576,6 +3639,26 @@ function renderYearOverviewBody(){
   `;
 
   setTimeout(()=>{
+    // Render chips identiek aan Per-maand view (zelfde state, zelfde styling)
+    const chipsEl=$('yr-year-cats');
+    if(chipsEl){
+      const allCats=S.categories.filter(c=>c.type==='monthly');
+      if(allCats.length===0){chipsEl.innerHTML='';}
+      else chipsEl.innerHTML=allCats.map(cat=>{
+        const clr=col(cat.color);
+        const isActive=yrActiveCats.has(cat.id);
+        const isDimmed=!!(yrActiveCats.size>0&&!isActive);
+        const chipClass='evo-chip yr-chip'+(isActive?' active':'')+(isDimmed?' dimmed':'');
+        return `<button class="${chipClass}" data-yrcid="${cat.id}" onclick="setYrCat('${cat.id}')"
+          style="background:${isActive?clr.bg:'var(--s1)'};border-color:${isActive?clr.c:'var(--l1)'}">
+          <div class="evo-chip-icon" style="background:${isActive?clr.c:clr.bg};color:${isActive?'#fff':clr.c}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
+          </div>
+          <span class="evo-chip-name" style="color:${isActive?clr.c:'var(--n2)'}">${esc(cat.name)}</span>
+        </button>`;
+      }).join('');
+    }
+
     const cv=$('jaar-chart');
     if(!cv)return;
     if(_jaarChart){_jaarChart.destroy();_jaarChart=null;}
@@ -4255,6 +4338,17 @@ function openHoldingModal(holdingId){
           </div>
         </div>
         <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Het bedrag dat je jaarlijks bijstort (typisch al opgenomen in je <strong>vaste kosten</strong>). De projectie laat dit aankomen in geblokkeerd vermogen, en raakt je vrije cash niet (want al meegerekend).</div>
+        <div class="wp-form-row" style="margin-top:14px">
+          <div>
+            <label class="wp-input-label">Heffing bij vroege opname</label>
+            <div class="field-money" data-cur="%" style="margin:0"><input type="text" class="field-input" id="h-early-tax" value="${h.earlyWithdrawalTax||''}" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+          </div>
+          <div>
+            <label class="wp-input-label">Heffing bij vrijgave</label>
+            <div class="field-money" data-cur="%" style="margin:0"><input type="text" class="field-input" id="h-normal-tax" value="${h.normalWithdrawalTax||''}" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Voor BE-pensioensparen typisch <strong>30%</strong> bij vroege opname (vóór 60) en <strong>8%</strong> bij normale opname op vrijgavedatum. Het netto-bedrag verschijnt overal waar je vermogen wordt getoond.</div>
       </div>
     </div>
     <!-- Refresh + link knoppen: alleen bij Aandeel/ETF -->
@@ -4351,6 +4445,8 @@ function openHoldingModal(holdingId){
     const availability=$('h-availability').value||'vrij';
     const yearlyContribution=availability==='geblokkeerd'?(calc($('h-yearly-contrib')?.value)||parseFloat($('h-yearly-contrib')?.value)||0):0;
     const contribUntil=availability==='geblokkeerd'?(parseInt($('h-contrib-until')?.value)||0):0;
+    const earlyWithdrawalTax=availability==='geblokkeerd'?(parseFloat($('h-early-tax')?.value)||0):0;
+    const normalWithdrawalTax=availability==='geblokkeerd'?(parseFloat($('h-normal-tax')?.value)||0):0;
     const data={
       id:h.id,
       kind:currentKind,
@@ -4369,6 +4465,8 @@ function openHoldingModal(holdingId){
       unblockDate:availability==='geblokkeerd'?($('h-unblock').value||''):'',
       yearlyContribution,
       contributionUntilYear:contribUntil,
+      earlyWithdrawalTax,
+      normalWithdrawalTax,
       lastUpdate:h.lastUpdate||null
     };
     if(!S.wealth.holdings)S.wealth.holdings=[];
@@ -4417,7 +4515,7 @@ function openHoldingModal(holdingId){
       showToast('✓ Verwijderd',1500);
     };
   }
-  $('h-avg')&&enableCalc($('h-avg'));$('h-last')&&enableCalc($('h-last'));$('h-total')&&enableCalc($('h-total'));$('h-manual-value')&&enableCalc($('h-manual-value'));$('h-yearly-contrib')&&enableCalc($('h-yearly-contrib'));
+  $('h-avg')&&enableCalc($('h-avg'));$('h-last')&&enableCalc($('h-last'));$('h-total')&&enableCalc($('h-total'));$('h-manual-value')&&enableCalc($('h-manual-value'));$('h-yearly-contrib')&&enableCalc($('h-yearly-contrib'));$('h-early-tax')&&enableCalc($('h-early-tax'));$('h-normal-tax')&&enableCalc($('h-normal-tax'));
   modal.classList.add('open');
 }
 
@@ -5054,8 +5152,10 @@ function setYrCat(catId){
   else yrActiveCats.add(catId);
   const lbl=$('an-year-label');
   const y=lbl?parseInt(lbl.textContent)||new Date().getFullYear():new Date().getFullYear();
+  // Update beide views — chips en charts blijven in sync ongeacht mode
   updateYearChart(y);
   updateYearCats(y);
+  if(yrMode==='year')renderYearOverviewBody();
 }
 
 function updateYearChart(y){
