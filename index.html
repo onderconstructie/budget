@@ -1105,7 +1105,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.010</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.011</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1202,6 +1202,7 @@ async function fetchUsdEurRate(){
 // Converteer holding waarde naar EUR. Gebruikt gecachte USD/EUR rate.
 function getHoldingValueEur(h){
   const val=getHoldingValue(h);
+  if(h.kind==='fund')return val;  // Fonds-totaal is altijd in EUR opgeslagen
   if((h.currency||'USD')==='EUR')return val;
   const rate=S.wealth?.usdEurRate||0.92;  // fallback indien nog niet opgehaald
   return val*rate;
@@ -1240,8 +1241,14 @@ function detectCurrency(ticker){
   const eurLong=['BRU','PAR','AMS','LIS','MIL','MAD','DEX','FRK','VIE','HEL','STO','DUB','PRA','ETR','FRA','BIT','EPA','EBR','ELI','BME'];
   return eurShort.includes(sfx)||eurLong.includes(sfx)?'EUR':'USD';
 }
-function getHoldingValue(h){return(h.quantity||0)*(h.lastPrice||0);}
+function getHoldingValue(h){
+  // Fonds-type: één manueel totaalbedrag (in EUR), geen ticker × koers
+  if(h.kind==='fund')return h.manualValue||0;
+  return(h.quantity||0)*(h.lastPrice||0);
+}
 function getHoldingCost(h){
+  // Fonds-type heeft geen aankoopkoers-notie → kost = waarde (P&L = 0)
+  if(h.kind==='fund')return h.manualValue||0;
   // Werkelijke kostprijs: totaal betaald aan bank (incl. fees/TOB) heeft voorrang.
   // Fallback voor oude data: quantity × aankoopkoers (zonder fees).
   if(h.totalCost&&h.totalCost>0)return h.totalCost;
@@ -3059,21 +3066,26 @@ function renderWealth(){
                   const pnlColor2=pnl>0?'var(--g)':pnl<0?'var(--r)':'var(--n3)';
                   const blocked=isBlocked(h);
                   const t=blocked?timeUntilUnblock(h):null;
+                  const isFund=h.kind==='fund';
                   const metaParts=[];
-                  metaParts.push('<span class="wp-row-type-pill wp-type-invest">Belegging</span>');
-                  if(h.ticker)metaParts.push(`<span style="font-family:var(--mono)">${esc(h.ticker)}</span>`);
-                  metaParts.push(`<span style="font-family:var(--mono)">${h.quantity||0} × ${sym}${h.lastPrice?h.lastPrice.toFixed(2):'—'}</span>`);
+                  metaParts.push(isFund?'<span class="wp-row-type-pill wp-type-invest">Fonds</span>':'<span class="wp-row-type-pill wp-type-invest">Belegging</span>');
+                  if(!isFund){
+                    if(h.ticker)metaParts.push(`<span style="font-family:var(--mono)">${esc(h.ticker)}</span>`);
+                    metaParts.push(`<span style="font-family:var(--mono)">${h.quantity||0} × ${sym}${h.lastPrice?h.lastPrice.toFixed(2):'—'}</span>`);
+                  }
                   if(h.availability==='gereserveerd'&&h.purpose)metaParts.push(esc(h.purpose));
                   else if(blocked&&t)metaParts.push(`vrij in ${t.years>0?t.years+'j ':''}${t.months>0||t.years===0?t.months+'m':''}`);
+                  if(h.availability==='geblokkeerd'&&h.yearlyContribution>0)metaParts.push(`+${fmt(h.yearlyContribution)}/jaar${h.contributionUntilYear?' tot '+h.contributionUntilYear:''}`);
+                  const displaySym=isFund?'€':sym;
                   return `<div class="wp-row" onclick="openHoldingModal('${h.id}')">
                     <div style="flex:1;min-width:0">
                       <div class="wp-row-title">${esc(h.name||h.ticker||'?')}</div>
                       <div class="wp-row-meta">${metaParts.join(' &nbsp;·&nbsp; ')}</div>
                     </div>
                     <div style="text-align:right;flex-shrink:0">
-                      <div class="wp-row-amount">${sym}${Math.round(value).toLocaleString('nl-BE')}</div>
-                      ${cur!=='EUR'&&valueEur>0?`<div class="wp-row-amount-sub">≈ ${fmt(Math.round(valueEur))}</div>`:''}
-                      ${cost>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnl>=0?'+':''}${sym}${Math.round(pnl).toLocaleString('nl-BE')} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
+                      <div class="wp-row-amount">${displaySym}${Math.round(value).toLocaleString('nl-BE')}</div>
+                      ${!isFund&&cur!=='EUR'&&valueEur>0?`<div class="wp-row-amount-sub">≈ ${fmt(Math.round(valueEur))}</div>`:''}
+                      ${!isFund&&cost>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnl>=0?'+':''}${sym}${Math.round(pnl).toLocaleString('nl-BE')} (${pnl>=0?'+':''}${pnlPct2.toFixed(1)}%)</div>`:''}
                     </div>
                   </div>`;
                 }
@@ -3214,14 +3226,19 @@ function projectWealth(){
     eventLastYear[e.id]=ed;
   });
 
-  // Geblokkeerde items
+  // Geblokkeerde items met hun aandeel van initiële `blocked` en vrijgavejaar
   const blockedItems=[];
-  (S.wealth?.holdings||[]).concat(S.wealth?.accounts||[]).forEach(it=>{
+  (S.wealth?.holdings||[]).forEach(it=>{
     if(it.availability!=='geblokkeerd'||!it.unblockDate)return;
     const y=new Date(it.unblockDate).getFullYear();
-    const baseVal=it.lastPrice!==undefined?getHoldingValueEur(it):(it.balance||0);
-    const isHolding=it.lastPrice!==undefined;
-    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding,name:it.name||''});
+    const baseVal=getHoldingValueEur(it);
+    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding:true,name:it.name||''});
+  });
+  (S.wealth?.accounts||[]).forEach(it=>{
+    if(it.availability!=='geblokkeerd'||!it.unblockDate)return;
+    const y=new Date(it.unblockDate).getFullYear();
+    const baseVal=it.balance||0;
+    if(startBlocked>0&&baseVal>0)blockedItems.push({unblockYear:y,share:baseVal/startBlocked,isHolding:false,name:it.name||''});
   });
   const unblockShareByYear={};
   blockedItems.forEach(bi=>{
@@ -3235,6 +3252,20 @@ function projectWealth(){
     while(v===0)v=Math.random();
     return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
   };
+
+  // Jaarlijkse aanvullingen op geblokkeerde beleggingen — per holding bijgehouden zodat we
+  // de juiste bestemming kennen: vóór vrijgave → naar blocked, vanaf vrijgave → naar cashFree.
+  const contributions=[];
+  (S.wealth?.holdings||[]).forEach(h=>{
+    if(h.availability!=='geblokkeerd')return;
+    const c=h.yearlyContribution||0;
+    if(c<=0)return;
+    contributions.push({
+      amount:c,
+      contribUntil:h.contributionUntilYear||0,
+      unblockYear:h.unblockDate?new Date(h.unblockDate).getFullYear():0
+    });
+  });
 
   // Monte Carlo
   const N=500;
@@ -3255,6 +3286,14 @@ function projectWealth(){
       invest*=(1+rInvest);
       const rBlocked=muReturn+sigmaReturn*randn();
       blocked*=(1+rBlocked);
+      // Jaarlijkse aanvullingen op geblokkeerd: vóór vrijgave naar blocked, vanaf vrijgave naar cashFree.
+      // De buffer is al netto van vaste kosten → geen aftrek van cashFree nodig.
+      contributions.forEach(c=>{
+        if(c.contribUntil>0&&year>c.contribUntil)return;
+        const amt=c.amount*Math.pow(1+infl,y);
+        if(c.unblockYear>0&&year>=c.unblockYear)cashFree+=amt;
+        else blocked+=amt;
+      });
       // 2. Buffer-aangroei (loonindexatie meebewegend met inflatie) → naar cashFree
       cashFree+=yearlyBuffer*Math.pow(1+infl,y);
       // 3. Per event: spendeer in volgorde linked → free → other-reserved → invest
@@ -3349,22 +3388,21 @@ function projectWealth(){
 function getUnblockProjections(series){
   if(!series||!series._meta)return [];
   const meta=series._meta;
-  const items=(S.wealth?.holdings||[]).concat(S.wealth?.accounts||[])
-    .filter(it=>it.availability==='geblokkeerd'&&it.unblockDate);
-  return items.map(it=>{
+  const holdings=(S.wealth?.holdings||[]).filter(it=>it.availability==='geblokkeerd'&&it.unblockDate)
+    .map(it=>({item:it,isHolding:true,baseVal:getHoldingValueEur(it)}));
+  const accounts=(S.wealth?.accounts||[]).filter(it=>it.availability==='geblokkeerd'&&it.unblockDate)
+    .map(it=>({item:it,isHolding:false,baseVal:it.balance||0}));
+  const items=holdings.concat(accounts);
+  return items.map(({item:it,isHolding,baseVal})=>{
     const y=new Date(it.unblockDate).getFullYear();
-    const baseVal=it.lastPrice!==undefined?getHoldingValueEur(it):(it.balance||0);
     const share=meta.startBlocked>0?baseVal/meta.startBlocked:0;
-    // Zoek het jaar in de series net VOOR vrijgave (dan is blocked nog op zijn hoogste pre-unblock waarde)
     const rowBefore=series.find(s=>s.year===y-1)||series.find(s=>s.year===y);
-    const row=series.find(s=>s.year===y);
-    // Bedrag bij vrijgave = aandeel × blocked-waarde net voor vrijgave
     const refBlocked=rowBefore?rowBefore.blocked:0;
     const refBlocked10=rowBefore?rowBefore.blocked10:0;
     const refBlocked90=rowBefore?rowBefore.blocked90:0;
     return {
-      name:it.name||(it.lastPrice!==undefined?it.ticker:'spaarrekening'),
-      isHolding:it.lastPrice!==undefined,
+      name:it.name||(isHolding?(it.ticker||'belegging'):'spaarrekening'),
+      isHolding,
       year:y,
       yearsAway:y-meta.startYear,
       currentValue:baseVal,
@@ -3882,34 +3920,45 @@ function openAccountModal(accountId){
 
 function openHoldingModal(holdingId){
   const isEdit=!!holdingId;
-  const h=isEdit?(S.wealth.holdings||[]).find(x=>x.id===holdingId):{id:genId(),name:'',ticker:'',quantity:0,avgPrice:0,lastPrice:0,url:''};
+  const h=isEdit?(S.wealth.holdings||[]).find(x=>x.id===holdingId):{id:genId(),name:'',ticker:'',quantity:0,avgPrice:0,lastPrice:0,url:'',kind:'stock'};
   if(isEdit&&!h)return;
+  const kind=h.kind||'stock';
   const modal=$('m-new');
   $('m-new-body').innerHTML=`
-    <div style="text-align:center;padding:4px 0 16px"><div style="font-size:15px;font-weight:700;color:var(--n0)">${isEdit?'Belegging aanpassen':'Nieuw aandeel of ETF'}</div></div>
+    <div style="text-align:center;padding:4px 0 16px"><div style="font-size:15px;font-weight:700;color:var(--n0)">${isEdit?'Belegging aanpassen':'Nieuwe belegging'}</div></div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
-        <input type="text" class="field-input" id="h-name" value="${esc(h.name||'')}" placeholder="bv. iShares Core MSCI World" autocomplete="off">
+        <label class="wp-input-label">Type</label>
+        <div class="ev-segment">
+          <button type="button" class="ev-seg-btn ${kind==='stock'?'active':''}" data-kind-toggle="stock">Aandeel / ETF</button>
+          <button type="button" class="ev-seg-btn ${kind==='fund'?'active':''}" data-kind-toggle="fund">Fonds / Totaalbedrag</button>
+        </div>
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Ticker</label>
-        <input type="text" class="field-input" id="h-ticker" value="${esc(h.ticker||'')}" placeholder="bv. AAPL, ABI.BR, EPA:AIR" autocomplete="off" style="font-family:var(--mono);text-transform:uppercase">
-        <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Formaten: <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">AAPL</code> (US, USD), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ABI.BR</code> of <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">EBR:ABI</code> (Brussel, EUR), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ASML.AS</code> (Amsterdam, EUR). De munt wordt automatisch bepaald.</div>
+        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
+        <input type="text" class="field-input" id="h-name" value="${esc(h.name||'')}" placeholder="${kind==='fund'?'bv. KBC Pensioensparen, AG Fonds':'bv. iShares Core MSCI World'}" autocomplete="off">
       </div>
-      <div style="display:flex;gap:10px">
-        <div style="flex:1">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aantal</label>
-          <input type="text" class="field-input" id="h-qty" value="${h.quantity||''}" inputmode="decimal" placeholder="0" autocomplete="off">
+
+      <!-- AANDEEL / ETF velden -->
+      <div id="h-stock-fields" style="${kind==='fund'?'display:none':''};display:${kind==='fund'?'none':'flex'};flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Ticker</label>
+          <input type="text" class="field-input" id="h-ticker" value="${esc(h.ticker||'')}" placeholder="bv. AAPL, ABI.BR, EPA:AIR" autocomplete="off" style="font-family:var(--mono);text-transform:uppercase">
+          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Formaten: <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">AAPL</code> (US, USD), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ABI.BR</code> of <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">EBR:ABI</code> (Brussel, EUR), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ASML.AS</code> (Amsterdam, EUR). De munt wordt automatisch bepaald.</div>
         </div>
-        <div style="flex:1">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Munt</label>
-          <select class="field-input" id="h-currency" style="width:100%">
-            <option value="USD" ${(h.currency||'USD')==='USD'?'selected':''}>USD ($)</option>
-            <option value="EUR" ${h.currency==='EUR'?'selected':''}>EUR (€)</option>
-          </select>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1">
+            <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aantal</label>
+            <input type="text" class="field-input" id="h-qty" value="${h.quantity||''}" inputmode="decimal" placeholder="0" autocomplete="off">
+          </div>
+          <div style="flex:1">
+            <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Munt</label>
+            <select class="field-input" id="h-currency" style="width:100%">
+              <option value="USD" ${(h.currency||'USD')==='USD'?'selected':''}>USD ($)</option>
+              <option value="EUR" ${h.currency==='EUR'?'selected':''}>EUR (€)</option>
+            </select>
+          </div>
         </div>
-      </div>
       <div style="display:flex;gap:10px">
         <div style="flex:1">
           <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aankoopkoers/stuk</label>
@@ -3929,6 +3978,17 @@ function openHoldingModal(holdingId){
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">URL naar live koers (optioneel)</label>
         <input type="text" class="field-input" id="h-url" value="${esc(h.url||'')}" placeholder="https://..." autocomplete="off">
       </div>
+      </div><!-- /h-stock-fields -->
+
+      <!-- FONDS / TOTAALBEDRAG velden -->
+      <div id="h-fund-fields" style="display:${kind==='fund'?'flex':'none'};flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige waarde</label>
+          <div class="field-money" data-cur="EUR" style="margin:0"><input type="text" class="field-input" id="h-manual-value" value="${h.manualValue||''}" inputmode="decimal" placeholder="bv. 12500" autocomplete="off"></div>
+          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Vul het totaalbedrag in zoals jouw bank/fonds-rapport het toont. Geen ticker of aantal nodig.</div>
+        </div>
+      </div>
+
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Beschikbaarheid</label>
         <select class="field-input" id="h-availability" style="width:100%">
@@ -3952,10 +4012,21 @@ function openHoldingModal(holdingId){
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vrij vanaf</label>
         <input type="date" class="field-input" id="h-unblock" value="${esc(h.unblockDate||'')}" autocomplete="off">
         <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Voor pensioensparen typisch <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">2036-01-01</code> (60 jaar) — vroeger opnemen kost ±30% belasting.</div>
+        <div class="wp-form-row" style="margin-top:12px">
+          <div>
+            <label class="wp-input-label">Jaarlijkse aanvulling</label>
+            <div class="field-money" data-cur="EUR" style="margin:0"><input type="text" class="field-input" id="h-yearly-contrib" value="${h.yearlyContribution||''}" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+          </div>
+          <div>
+            <label class="wp-input-label">Tot jaar</label>
+            <input type="number" class="field-input" id="h-contrib-until" value="${h.contributionUntilYear||''}" placeholder="bv. 2040" min="${new Date().getFullYear()}" max="${new Date().getFullYear()+50}" style="font-family:var(--mono)">
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Het bedrag dat je jaarlijks bijstort (typisch al opgenomen in je <strong>vaste kosten</strong>). De projectie laat dit aankomen in geblokkeerd vermogen, en raakt je vrije cash niet (want al meegerekend).</div>
       </div>
     </div>
-    <!-- Refresh + link knoppen: altijd zichtbaar, ook bij toevoegen -->
-    <div style="display:flex;gap:8px;margin-top:14px">
+    <!-- Refresh + link knoppen: alleen bij Aandeel/ETF -->
+    <div id="h-stock-actions" style="display:${kind==='fund'?'none':'flex'};gap:8px;margin-top:14px">
       <button id="h-refresh" style="flex:1;padding:10px;border:1px solid var(--l1);background:transparent;color:var(--n1);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         <span id="h-refresh-label">Koers ophalen</span>
@@ -3981,15 +4052,27 @@ function openHoldingModal(holdingId){
       const el=$(id);if(el)el.setAttribute('data-cur',cur);
     });
   };
-  $('h-currency').addEventListener('change',syncCurrencySymbols);
+  $('h-currency')&&$('h-currency').addEventListener('change',syncCurrencySymbols);
+  // Kind-toggle: aandeel/etf ↔ fonds
+  let currentKind=kind;
+  modal.querySelectorAll('.ev-seg-btn[data-kind-toggle]').forEach(b=>{
+    b.onclick=()=>{
+      modal.querySelectorAll('.ev-seg-btn[data-kind-toggle]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      currentKind=b.dataset.kindToggle;
+      $('h-stock-fields').style.display=currentKind==='stock'?'flex':'none';
+      $('h-fund-fields').style.display=currentKind==='fund'?'flex':'none';
+      if($('h-stock-actions'))$('h-stock-actions').style.display=currentKind==='stock'?'flex':'none';
+    };
+  });
   // Toggle conditionele velden voor beschikbaarheid
   $('h-availability').addEventListener('change',()=>{
     const v=$('h-availability').value;
     $('h-purpose-wrap').style.display=v==='gereserveerd'?'block':'none';
     $('h-unblock-wrap').style.display=v==='geblokkeerd'?'block':'none';
   });
-  // Bij ticker-wijziging: auto-detecteer munt en sync symbolen
-  $('h-ticker').addEventListener('input',()=>{
+  // Bij ticker-wijziging: auto-detecteer munt en sync symbolen (alleen bij stock)
+  if($('h-ticker'))$('h-ticker').addEventListener('input',()=>{
     const t=($('h-ticker').value||'').trim();
     if(!t)return;
     const detected=detectCurrency(t);
@@ -4012,9 +4095,9 @@ function openHoldingModal(holdingId){
     const tot=calc($('h-total').value)||parseFloat($('h-total').value)||0;
     if(qty>0&&tot>0){_syncing=true;$('h-avg').value=(tot/qty).toFixed(4);_syncing=false;}
   };
-  $('h-avg').addEventListener('input',syncFromAvg);
-  $('h-total').addEventListener('input',syncFromTotal);
-  $('h-qty').addEventListener('input',()=>{
+  $('h-avg')&&$('h-avg').addEventListener('input',syncFromAvg);
+  $('h-total')&&$('h-total').addEventListener('input',syncFromTotal);
+  $('h-qty')&&$('h-qty').addEventListener('input',()=>{
     // Bij aantal-wijziging: hou totaal als waarheid, herbereken avgPrice
     const qty=parseFloat($('h-qty').value)||0;
     const tot=parseFloat($('h-total').value)||0;
@@ -4023,28 +4106,37 @@ function openHoldingModal(holdingId){
   $('h-save').onclick=()=>{
     if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
     const name=($('h-name').value||'').trim();
-    const ticker=($('h-ticker').value||'').trim();
-    if(!name&&!ticker){showToast('⚠ Naam of ticker is verplicht',2000);return;}
-    const qty=parseFloat($('h-qty').value)||0;
-    const avg=calc($('h-avg').value)||parseFloat($('h-avg').value)||0;
-    const tot=calc($('h-total').value)||parseFloat($('h-total').value)||0;
-    // Totaal heeft voorrang als beide ingevuld zijn (= werkelijkheid)
+    const isFund=currentKind==='fund';
+    const ticker=isFund?'':($('h-ticker')?$('h-ticker').value||'':'').trim();
+    if(!name){showToast('⚠ Naam is verplicht',2000);return;}
+    if(!isFund&&!ticker){showToast('⚠ Ticker is verplicht voor aandeel/ETF',2200);return;}
+    const qty=isFund?0:parseFloat($('h-qty')?.value)||0;
+    const avg=isFund?0:(calc($('h-avg')?.value)||parseFloat($('h-avg')?.value)||0);
+    const tot=isFund?0:(calc($('h-total')?.value)||parseFloat($('h-total')?.value)||0);
     const totalCost=tot>0?tot:(qty>0&&avg>0?qty*avg:0);
+    const manualValue=isFund?(calc($('h-manual-value').value)||parseFloat($('h-manual-value').value)||0):0;
+    if(isFund&&manualValue<=0){showToast('⚠ Vul een huidige waarde in',2000);return;}
     const availability=$('h-availability').value||'vrij';
+    const yearlyContribution=availability==='geblokkeerd'?(calc($('h-yearly-contrib')?.value)||parseFloat($('h-yearly-contrib')?.value)||0):0;
+    const contribUntil=availability==='geblokkeerd'?(parseInt($('h-contrib-until')?.value)||0):0;
     const data={
       id:h.id,
+      kind:currentKind,
       name,
       ticker:ticker.toUpperCase(),
       quantity:qty,
-      currency:$('h-currency').value||'USD',
+      currency:isFund?'EUR':($('h-currency')?.value||'USD'),
       avgPrice:avg,
       totalCost,
-      lastPrice:calc($('h-last').value)||parseFloat($('h-last').value)||0,
-      url:($('h-url').value||'').trim(),
+      lastPrice:isFund?0:(calc($('h-last')?.value)||parseFloat($('h-last')?.value)||0),
+      manualValue:isFund?manualValue:0,
+      url:isFund?'':($('h-url')?.value||'').trim(),
       availability,
       purpose:availability==='gereserveerd'?($('h-purpose').value||'').trim():'',
       linkedEventId:availability==='gereserveerd'&&$('h-linked-event')?($('h-linked-event').value||''):'',
       unblockDate:availability==='geblokkeerd'?($('h-unblock').value||''):'',
+      yearlyContribution,
+      contributionUntilYear:contribUntil,
       lastUpdate:h.lastUpdate||null
     };
     if(!S.wealth.holdings)S.wealth.holdings=[];
@@ -4093,7 +4185,7 @@ function openHoldingModal(holdingId){
       showToast('✓ Verwijderd',1500);
     };
   }
-  enableCalc($('h-avg'));enableCalc($('h-last'));enableCalc($('h-total'));
+  $('h-avg')&&enableCalc($('h-avg'));$('h-last')&&enableCalc($('h-last'));$('h-total')&&enableCalc($('h-total'));$('h-manual-value')&&enableCalc($('h-manual-value'));$('h-yearly-contrib')&&enableCalc($('h-yearly-contrib'));
   modal.classList.add('open');
 }
 
