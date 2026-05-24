@@ -1186,7 +1186,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.032</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.033</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -5405,12 +5405,13 @@ function updateYearChart(y){
     // Kleur: één categorie → eigen kleur, meerdere → accent roze
     let rr=233,gg=30,bb=140;
     if(clrActive){const hx=clrActive.c.replace('#','');rr=parseInt(hx.slice(0,2),16);gg=parseInt(hx.slice(2,4),16);bb=parseInt(hx.slice(4,6),16);}
+    // Huidige maand ook meenemen in de selectie-overlay — gebruiker verwacht zijn lopende
+    // uitgaven van deze maand te zien voor de geselecteerde categorieën
     const restData=data.map((v,i)=>{
-      if(i===curMonth)return null;
       const cat=catData[i]||0;
       return Math.max(0,(v||0)-cat)||null;
     });
-    const catDataClean=catData.map((v,i)=>i===curMonth?null:(v||null));
+    const catDataClean=catData.map(v=>v||null);
 
     datasets.push({label:'__cat__',data:catDataClean,
       backgroundColor:catDataClean.map(v=>v?`rgba(${rr},${gg},${bb},0.82)`:'transparent'),
@@ -5422,12 +5423,12 @@ function updateYearChart(y){
       borderColor:'transparent',borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
       datalabels:{display:false}
     });
-    datasets.push({label:'__lbl__',data:data.map((v,i)=>i===curMonth||!v?null:0.001),
+    datasets.push({label:'__lbl__',data:data.map(v=>v?0.001:null),
       backgroundColor:'transparent',borderColor:'transparent',
       borderWidth:0,borderSkipped:'bottom',order:2,stack:'main',
       datalabels:{
-        display:(ctx)=>{const tot=data[ctx.dataIndex];const cat=catDataClean[ctx.dataIndex]||0;return !!(tot>0&&cat>0&&ctx.dataIndex!==curMonth);},
-        formatter:(_,ctx)=>{const tot=data[ctx.dataIndex];const cat=catDataClean[ctx.dataIndex]||0;return tot>0?Math.round(cat/tot*100)+'%':'';},
+        display:(ctx)=>{const tot=data[ctx.dataIndex];const cat=catDataClean[ctx.dataIndex]||0;return !!(tot>0&&cat>0);},
+        formatter:(_,ctx)=>{const tot=data[ctx.dataIndex];const cat=catDataClean[ctx.dataIndex]||0;const pct=tot>0?Math.round(cat/tot*100):0;return ctx.dataIndex===curMonth?'~'+pct+'%':pct+'%';},
         color:`rgba(${rr},${gg},${bb},1)`,
         anchor:'end',align:'end',font:{size:7.5,weight:'700'},offset:1,clamp:true
       }
