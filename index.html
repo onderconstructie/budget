@@ -1186,7 +1186,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.031</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.032</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -6160,12 +6160,11 @@ function updateYearCats(y){
   const el=$('yr-cats');if(!el)return;
   const cats=S.categories.filter(c=>c.type==='monthly'); // zelfde volgorde als trends-tab
   if(!cats.length){el.innerHTML='';return;}
-  const now=new Date();
-  const curMonthIdx=y===now.getFullYear()?now.getMonth():-1;
-  const completedMths=curMonthIdx>=0?curMonthIdx:12;
   el.innerHTML=cats.map(cat=>{
     let ytd=0;
-    for(let i=0;i<12;i++){if(i===curMonthIdx)continue;ytd+=getCatSpent(cat.id,y+'-'+String(i+1).padStart(2,'0'));}
+    // Loop t/m alle 12 maanden — huidige maand ook meenemen zodat de chip-totalen
+    // overeenkomen met wat de gebruiker werkelijk dit jaar uitgaf
+    for(let i=0;i<12;i++)ytd+=getCatSpent(cat.id,y+'-'+String(i+1).padStart(2,'0'));
     const clr=col(cat.color);
     const isActive=yrActiveCats.has(cat.id);
     const isDimmed=!!(yrActiveCats.size>0&&!isActive);
