@@ -422,6 +422,42 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .set-row span{font-size:13px;font-weight:500}
 .set-row.danger{color:var(--r)}
 .set-row.danger svg{stroke:var(--r)}
+/* === VAULT UI === */
+.vlt-field{position:relative;margin-bottom:4px}
+.vlt-field-input{width:100%;padding:12px 40px 12px 14px;border:1.5px solid var(--l1);border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;background:white;transition:border-color .15s,box-shadow .15s}
+.vlt-field-input:focus{outline:none;border-color:#f472b6;box-shadow:0 0 0 3px rgba(244,114,182,.15)}
+.vlt-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;color:var(--n3);display:flex;align-items:center;justify-content:center}
+.vlt-eye:hover{color:var(--n1)}
+.vlt-eye svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none}
+.vlt-meter{display:flex;gap:4px;margin-top:6px;margin-bottom:4px}
+.vlt-meter-bar{flex:1;height:4px;border-radius:2px;background:var(--l0);transition:background .2s}
+.vlt-meter-bar.on-weak{background:#f87171}
+.vlt-meter-bar.on-med{background:#fbbf24}
+.vlt-meter-bar.on-good{background:#84cc16}
+.vlt-meter-bar.on-strong{background:#16a34a}
+.vlt-meter-label{font-size:10px;font-weight:600;color:var(--n3);margin-bottom:10px;min-height:14px}
+.vlt-match{font-size:11px;font-weight:600;margin-top:6px;margin-bottom:10px;min-height:16px;display:flex;align-items:center;gap:6px}
+.vlt-match.ok{color:#16a34a}
+.vlt-match.bad{color:#dc2626}
+.vlt-check{display:flex;align-items:flex-start;gap:10px;padding:12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;margin-bottom:14px;cursor:pointer;user-select:none}
+.vlt-check input{margin-top:2px;flex-shrink:0;accent-color:#be185d}
+.vlt-check-text{font-size:11px;color:#92400e;line-height:1.5}
+.vlt-info{background:linear-gradient(135deg,rgba(244,114,182,.08),rgba(190,24,93,.04));border:1px solid rgba(244,114,182,.25);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--n2);line-height:1.5}
+.vlt-info-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#fce7f3;color:#be185d;margin-right:8px;vertical-align:middle}
+.vlt-info-icon svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
+.vlt-primary{width:100%;padding:13px;background:linear-gradient(135deg,#f472b6,#be185d);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .1s}
+.vlt-primary:hover:not(:disabled){opacity:.95}
+.vlt-primary:active:not(:disabled){transform:scale(.98)}
+.vlt-primary:disabled{opacity:.4;cursor:not-allowed;background:var(--n3)}
+.vlt-secondary{width:100%;padding:13px;background:var(--n2);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.vlt-secondary:hover:not(:disabled){opacity:.92}
+.vlt-secondary:disabled{opacity:.5;cursor:not-allowed}
+.vlt-error{font-size:12px;color:#dc2626;min-height:16px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.vlt-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10b981,#059669);color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10000;display:flex;align-items:center;gap:8px;animation:vlt-toast-in .25s ease-out}
+.vlt-toast svg{width:18px;height:18px;stroke:white;stroke-width:2.5;fill:none}
+@keyframes vlt-toast-in{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes vlt-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.vlt-shake{animation:vlt-shake .35s ease-in-out}
 .file-wrap{position:relative}
 .file-wrap input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
 
@@ -845,10 +881,12 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
     </div>
     <div style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:6px">Buddy Budget</div>
     <div style="font-size:13px;color:#64748b;margin-bottom:24px">Voer je wachtwoord in om je data te ontgrendelen.</div>
-    <input id="vault-pass-input" type="password" placeholder="Wachtwoord" autocomplete="current-password"
-      style="width:100%;padding:12px 14px;border:1.5px solid #fbcfe8;border-radius:10px;font-size:15px;font-family:inherit;background:white;box-sizing:border-box;margin-bottom:10px">
-    <div id="vault-pass-err" style="font-size:12px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
-    <button id="vault-unlock-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#f472b6,#be185d);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Ontgrendelen</button>
+    <div class="vlt-field" style="text-align:left">
+      <input id="vault-pass-input" type="password" class="vlt-field-input" placeholder="Wachtwoord" autocomplete="current-password">
+      <button type="button" class="vlt-eye" id="vault-lock-eye" aria-label="Toon wachtwoord"></button>
+    </div>
+    <div id="vault-pass-err" style="font-size:12px;color:#dc2626;min-height:18px;margin:8px 0 10px;text-align:left;display:flex;align-items:center;gap:6px"></div>
+    <button id="vault-unlock-btn" class="vlt-primary">Ontgrendelen</button>
     <div style="margin-top:18px">
       <button id="vault-forgot-btn" style="background:none;border:none;color:#94a3b8;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Wachtwoord vergeten? Reset alle data</button>
     </div>
@@ -1148,7 +1186,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.030</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.031</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -7859,12 +7897,16 @@ async function unlockVault(){
   const err=$('vault-pass-err');
   const btn=$('vault-unlock-btn');
   const forgot=$('vault-forgot-btn');
+  const eye=$('vault-lock-eye');
+  // Eye toggle inhoud invullen (kan niet via inline omdat VLT_ICONS pas in JS bestaan)
+  eye.innerHTML=VLT_ICONS.eye;
+  vltWireEye('vault-pass-input','vault-lock-eye');
   lock.style.display='flex';
   input.value='';input.focus();
   return new Promise(resolve=>{
     async function attempt(){
       const pass=input.value;
-      if(!pass){err.textContent='Voer je wachtwoord in.';return}
+      if(!pass){err.innerHTML=VLT_ICONS.alert+' <span>Voer je wachtwoord in.</span>';return}
       err.textContent='';btn.disabled=true;btn.textContent='Even checken…';
       try{
         const b64=localStorage.getItem(VAULT_KEY);
@@ -7874,7 +7916,9 @@ async function unlockVault(){
         lock.style.display='none';
         resolve();
       }catch(e){
-        err.textContent='Verkeerd wachtwoord.';
+        err.innerHTML=VLT_ICONS.alert+' <span>Verkeerd wachtwoord.</span>';
+        input.classList.add('vlt-shake');
+        setTimeout(()=>input.classList.remove('vlt-shake'),400);
         btn.disabled=false;btn.textContent='Ontgrendelen';
         input.select();
       }
@@ -7942,45 +7986,134 @@ $('s-vault').onclick=()=>{
 $('vault-modal-x').onclick=()=>{$('vault-modal').style.display='none'};
 $('vault-modal').addEventListener('click',e=>{if(e.target.id==='vault-modal')$('vault-modal').style.display='none'});
 
+// === VAULT UI helpers ===
+// SVG icons inline (vermijd extra deps; werken met currentColor)
+const VLT_ICONS={
+  eye:`<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  eyeOff:`<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
+  check:`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`,
+  x:`<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  alert:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  lock:`<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+};
+
+// Password strength: returns {level: 0-4, label: string}
+function vltPwStrength(pw){
+  if(!pw)return{level:0,label:''};
+  let score=0;
+  if(pw.length>=8)score++;
+  if(pw.length>=12)score++;
+  if(/[a-z]/.test(pw)&&/[A-Z]/.test(pw))score++;
+  if(/[0-9]/.test(pw))score++;
+  if(/[^A-Za-z0-9]/.test(pw))score++;
+  // Clamp to 4 levels
+  const level=Math.min(4,score);
+  const labels=['Te kort','Zwak','Matig','Goed','Sterk'];
+  // Onder de 8 tekens forceer "te kort" ongeacht andere criteria
+  if(pw.length<8)return{level:1,label:'Te kort'};
+  return{level,label:labels[level]||'Sterk'};
+}
+
+// Wire een wachtwoord-veld met show/hide toggle
+function vltWireEye(inputId,eyeId){
+  const inp=$(inputId),eye=$(eyeId);
+  if(!inp||!eye)return;
+  let shown=false;
+  eye.onclick=()=>{
+    shown=!shown;
+    inp.type=shown?'text':'password';
+    eye.innerHTML=shown?VLT_ICONS.eyeOff:VLT_ICONS.eye;
+  };
+}
+
+// In-app toast i.p.v. native alert()
+function vltToast(msg){
+  const existing=document.querySelector('.vlt-toast');
+  if(existing)existing.remove();
+  const t=document.createElement('div');
+  t.className='vlt-toast';
+  t.innerHTML=VLT_ICONS.check+'<span>'+esc(msg)+'</span>';
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300)},2800);
+}
+
 function openVaultSetupModal(){
   $('vault-modal-title').textContent='Beveilig met wachtwoord';
   $('vault-modal-body').innerHTML=`
-    <div style="font-size:12px;color:var(--n2);line-height:1.5;margin-bottom:14px">
-      Je data wordt versleuteld met je wachtwoord (AES-GCM 256, PBKDF2 met 200.000 iteraties).
-      Niemand kan je gegevens lezen — ook Buddy Budget niet — zonder dit wachtwoord.
+    <div class="vlt-info">
+      <span class="vlt-info-icon">${VLT_ICONS.lock}</span>
+      Je data wordt versleuteld met je wachtwoord. Niemand kan ze lezen — ook Buddy Budget zelf niet — zonder dit wachtwoord.
     </div>
-    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#92400e;line-height:1.5">
-      <strong>Belangrijk:</strong> bewaar dit wachtwoord goed. Als je het vergeet, kunnen we je data niet herstellen. Je moet dan alles wissen en opnieuw beginnen.
-    </div>
+
     <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Nieuw wachtwoord</label>
-    <input id="vault-new-pass" type="password" placeholder="Min. 8 tekens" autocomplete="new-password" style="width:100%;padding:10px 12px;border:1.5px solid var(--l1);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:10px">
+    <div class="vlt-field">
+      <input id="vault-new-pass" type="password" class="vlt-field-input" placeholder="Kies een wachtwoord" autocomplete="new-password">
+      <button type="button" class="vlt-eye" id="vault-new-eye" aria-label="Toon wachtwoord">${VLT_ICONS.eye}</button>
+    </div>
+    <div class="vlt-meter"><div class="vlt-meter-bar" id="vlt-bar-1"></div><div class="vlt-meter-bar" id="vlt-bar-2"></div><div class="vlt-meter-bar" id="vlt-bar-3"></div><div class="vlt-meter-bar" id="vlt-bar-4"></div></div>
+    <div class="vlt-meter-label" id="vlt-strength-label"></div>
+
     <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Bevestig wachtwoord</label>
-    <input id="vault-new-pass2" type="password" placeholder="Nogmaals" autocomplete="new-password" style="width:100%;padding:10px 12px;border:1.5px solid var(--l1);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:8px">
-    <div id="vault-setup-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:8px"></div>
-    <button id="vault-setup-go" style="width:100%;padding:11px;background:linear-gradient(135deg,#f472b6,#be185d);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Activeer beveiliging</button>
+    <div class="vlt-field">
+      <input id="vault-new-pass2" type="password" class="vlt-field-input" placeholder="Typ je wachtwoord nogmaals" autocomplete="new-password">
+      <button type="button" class="vlt-eye" id="vault-new-eye2" aria-label="Toon wachtwoord">${VLT_ICONS.eye}</button>
+    </div>
+    <div class="vlt-match" id="vlt-match"></div>
+
+    <label class="vlt-check" for="vlt-ack">
+      <input type="checkbox" id="vlt-ack">
+      <span class="vlt-check-text"><strong>Ik begrijp dat ik mijn data verlies</strong> als ik dit wachtwoord vergeet. Er is geen recovery mogelijk.</span>
+    </label>
+
+    <div class="vlt-error" id="vault-setup-err"></div>
+    <button class="vlt-primary" id="vault-setup-go" disabled>Activeer beveiliging</button>
   `;
   $('vault-modal').style.display='flex';
-  $('vault-new-pass').focus();
-  $('vault-setup-go').onclick=async ()=>{
-    const p1=$('vault-new-pass').value;
-    const p2=$('vault-new-pass2').value;
+  setTimeout(()=>$('vault-new-pass').focus(),100);
+
+  vltWireEye('vault-new-pass','vault-new-eye');
+  vltWireEye('vault-new-pass2','vault-new-eye2');
+
+  const p1=$('vault-new-pass'),p2=$('vault-new-pass2'),ack=$('vlt-ack'),btn=$('vault-setup-go');
+  const strLabel=$('vlt-strength-label'),matchEl=$('vlt-match');
+  const bars=[1,2,3,4].map(i=>$('vlt-bar-'+i));
+
+  function refresh(){
+    // Strength meter
+    const s=vltPwStrength(p1.value);
+    const cls=['','on-weak','on-med','on-good','on-strong'];
+    bars.forEach((b,i)=>{
+      b.classList.remove('on-weak','on-med','on-good','on-strong');
+      if(i<s.level&&s.level>=2)b.classList.add(cls[s.level]);
+      else if(i<s.level)b.classList.add('on-weak');
+    });
+    strLabel.textContent=s.label;
+    strLabel.style.color=s.level<=1?'#dc2626':s.level===2?'#d97706':s.level===3?'#65a30d':'#16a34a';
+    // Match indicator
+    if(!p2.value){matchEl.textContent='';matchEl.className='vlt-match'}
+    else if(p1.value===p2.value){matchEl.innerHTML=VLT_ICONS.check+' <span>Wachtwoorden komen overeen</span>';matchEl.className='vlt-match ok'}
+    else{matchEl.innerHTML=VLT_ICONS.x+' <span>Wachtwoorden komen niet overeen</span>';matchEl.className='vlt-match bad'}
+    // Enable button: pw min length, match, ack checked
+    btn.disabled=!(p1.value.length>=8&&p1.value===p2.value&&ack.checked);
+  }
+  p1.oninput=refresh;p2.oninput=refresh;ack.onchange=refresh;
+  p2.onkeydown=e=>{if(e.key==='Enter'&&!btn.disabled)btn.click()};
+
+  btn.onclick=async ()=>{
     const err=$('vault-setup-err');
-    if(p1.length<8){err.textContent='Wachtwoord moet minstens 8 tekens hebben.';return}
-    if(p1!==p2){err.textContent='Wachtwoorden komen niet overeen.';return}
     err.textContent='';
-    const btn=$('vault-setup-go');btn.disabled=true;btn.textContent='Bezig met versleutelen…';
+    btn.disabled=true;btn.textContent='Bezig met versleutelen…';
     try{
-      // Encrypt huidige S → store in VAULT_KEY, verwijder plain STORAGE
-      const b64=await encryptVault(S,p1);
+      const b64=await encryptVault(S,p1.value);
       _vaultSalt=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).slice(0,16);
       localStorage.setItem(VAULT_KEY,b64);
       localStorage.setItem(VAULT_FLAG,'true');
       localStorage.removeItem(STORAGE);
       $('vault-modal').style.display='none';
       updateVaultStateLabel();
-      alert('Beveiliging actief. Je wachtwoord wordt gevraagd bij elke nieuwe sessie.');
+      vltToast('Beveiliging actief — wachtwoord vereist bij volgende sessie');
     }catch(e){
-      err.textContent='Er ging iets mis bij het versleutelen.';
+      err.innerHTML=VLT_ICONS.alert+' <span>Er ging iets mis bij het versleutelen.</span>';
       btn.disabled=false;btn.textContent='Activeer beveiliging';
     }
   };
@@ -7989,21 +8122,31 @@ function openVaultSetupModal(){
 function openVaultDisableModal(){
   $('vault-modal-title').textContent='Beveiliging uitschakelen';
   $('vault-modal-body').innerHTML=`
-    <div style="font-size:12px;color:var(--n2);line-height:1.5;margin-bottom:14px">
-      Je data wordt ontsleuteld opgeslagen in deze browser. Anderen met toegang tot dit apparaat kunnen je gegevens dan lezen.
+    <div class="vlt-info" style="background:#fef3c7;border-color:#fcd34d;color:#92400e">
+      <span class="vlt-info-icon" style="background:#fde68a;color:#92400e">${VLT_ICONS.alert}</span>
+      Na uitschakelen wordt je data <strong>onversleuteld</strong> opgeslagen. Iedereen met toegang tot deze browser kan ze dan lezen.
     </div>
+
     <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Voer je huidige wachtwoord in</label>
-    <input id="vault-old-pass" type="password" placeholder="Wachtwoord" autocomplete="current-password" style="width:100%;padding:10px 12px;border:1.5px solid var(--l1);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:8px">
-    <div id="vault-disable-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:8px"></div>
-    <button id="vault-disable-go" style="width:100%;padding:11px;background:var(--n2);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Beveiliging uitschakelen</button>
+    <div class="vlt-field">
+      <input id="vault-old-pass" type="password" class="vlt-field-input" placeholder="Wachtwoord" autocomplete="current-password">
+      <button type="button" class="vlt-eye" id="vault-old-eye" aria-label="Toon wachtwoord">${VLT_ICONS.eye}</button>
+    </div>
+
+    <div class="vlt-error" id="vault-disable-err" style="margin-top:14px"></div>
+    <button class="vlt-secondary" id="vault-disable-go">Beveiliging uitschakelen</button>
   `;
   $('vault-modal').style.display='flex';
-  $('vault-old-pass').focus();
-  $('vault-disable-go').onclick=async ()=>{
-    const pass=$('vault-old-pass').value;
-    const err=$('vault-disable-err');
-    if(!pass){err.textContent='Voer je wachtwoord in.';return}
-    const btn=$('vault-disable-go');btn.disabled=true;btn.textContent='Bezig…';
+  setTimeout(()=>$('vault-old-pass').focus(),100);
+  vltWireEye('vault-old-pass','vault-old-eye');
+
+  const inp=$('vault-old-pass'),btn=$('vault-disable-go'),err=$('vault-disable-err');
+  inp.onkeydown=e=>{if(e.key==='Enter')btn.click()};
+  btn.onclick=async ()=>{
+    const pass=inp.value;
+    err.textContent='';
+    if(!pass){err.innerHTML=VLT_ICONS.alert+' <span>Voer je wachtwoord in.</span>';return}
+    btn.disabled=true;btn.textContent='Bezig…';
     try{
       const b64=localStorage.getItem(VAULT_KEY);
       const data=await decryptVault(b64,pass);
@@ -8014,10 +8157,13 @@ function openVaultDisableModal(){
       _vaultKey=null;_vaultSalt=null;
       $('vault-modal').style.display='none';
       updateVaultStateLabel();
-      alert('Beveiliging uitgeschakeld. Je data is nu onversleuteld.');
+      vltToast('Beveiliging uitgeschakeld');
     }catch(e){
-      err.textContent='Verkeerd wachtwoord.';
+      err.innerHTML=VLT_ICONS.alert+' <span>Verkeerd wachtwoord.</span>';
+      inp.classList.add('vlt-shake');
+      setTimeout(()=>inp.classList.remove('vlt-shake'),400);
       btn.disabled=false;btn.textContent='Beveiliging uitschakelen';
+      inp.select();
     }
   };
 }
