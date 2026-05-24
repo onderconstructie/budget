@@ -4,11 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#ffffff">
+<!-- Content Security Policy: beperkt waar code en data vandaan mogen komen.
+     'unsafe-inline' nodig voor inline scripts/styles in deze single-file app.
+     CDN beperkt tot jsdelivr (Chart.js). Connect alleen naar Alpha Vantage voor koersen. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://www.alphavantage.co; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none';">
 <title>Buddy Budget</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23f472b6'/><stop offset='100%25' stop-color='%23be185d'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><ellipse cx='46' cy='56' rx='22' ry='18' fill='white'/><ellipse cx='70' cy='56' rx='8' ry='6' fill='white'/><ellipse cx='46' cy='36' rx='10' ry='7' fill='white'/><ellipse cx='46' cy='36' rx='5' ry='3.5' fill='%23f472b6'/><circle cx='53' cy='49' r='2.5' fill='%23be185d'/><ellipse cx='70' cy='55' rx='4' ry='3' fill='%23f9a8d4'/><line x1='37' y1='74' x2='35' y2='86' stroke='white' stroke-width='5' stroke-linecap='round'/><line x1='47' y1='74' x2='49' y2='86' stroke='white' stroke-width='5' stroke-linecap='round'/></svg>">
 <!-- Fonts: lokaal laden via system-ui om Google Fonts privacy-lek te vermijden -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" crossorigin="anonymous"></script>
 <!-- xlsx CDN verwijderd: exports gebruiken nu CSV (geen externe afhankelijkheid) -->
 <style>
 /* ─────────────────────────────────────────────────────────
@@ -832,6 +836,23 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 </style>
 </head>
 <body>
+<!-- LOCKSCREEN — verschijnt bij startup als vault aan staat. Blokkeert alles tot ontgrendeling. -->
+<div id="vault-lock" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#fdf2f8,#fce7f3);z-index:9999;align-items:center;justify-content:center;padding:24px">
+  <div style="max-width:340px;width:100%;text-align:center">
+    <div style="width:64px;height:64px;margin:0 auto 18px;border-radius:16px;background:linear-gradient(135deg,#f472b6,#be185d);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(190,24,93,.25)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:6px">Buddy Budget</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:24px">Voer je wachtwoord in om je data te ontgrendelen.</div>
+    <input id="vault-pass-input" type="password" placeholder="Wachtwoord" autocomplete="current-password"
+      style="width:100%;padding:12px 14px;border:1.5px solid #fbcfe8;border-radius:10px;font-size:15px;font-family:inherit;background:white;box-sizing:border-box;margin-bottom:10px">
+    <div id="vault-pass-err" style="font-size:12px;color:#dc2626;min-height:16px;margin-bottom:10px"></div>
+    <button id="vault-unlock-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#f472b6,#be185d);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Ontgrendelen</button>
+    <div style="margin-top:18px">
+      <button id="vault-forgot-btn" style="background:none;border:none;color:#94a3b8;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Wachtwoord vergeten? Reset alle data</button>
+    </div>
+  </div>
+</div>
 <div id="app">
 <!-- WIZARD -->
 <div id="wizard" class="screen wizard">
@@ -1116,10 +1137,13 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   </div>
 </div>
 </div>
+<div class="set-section"><div class="set-title">Beveiliging</div><div class="set-list">
+<div class="set-row" id="s-vault"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span id="s-vault-label">Beveilig met wachtwoord</span><span id="s-vault-state" style="margin-left:auto;font-size:11px;color:var(--n3);font-weight:600"></span></div>
+</div></div>
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.027</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.029</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1167,6 +1191,64 @@ const FIXED_GROUPS=[{id:'wonen',name:'Wonen',icon:'home',color:'emerald',items:[
 const DEFAULT_RESERVES=[];
 const DEFAULT_CATS=[];
 const STORAGE='buddy-budget-v5';
+// === ENCRYPTED VAULT (optioneel, beschermt financiële data met passphrase) ===
+// Architectuur: data zit ofwel in STORAGE (plain), ofwel in VAULT_KEY (encrypted).
+// VAULT_FLAG geeft aan welke. _vaultKey is in-memory derived key — nooit op disk.
+// Crypto: AES-GCM 256 met PBKDF2-SHA256 derivation (200k iteraties), random salt+IV per save.
+const VAULT_KEY='buddy-budget-vault-v1';
+const VAULT_FLAG='buddy-budget-vault-on';
+const VAULT_ITER=200000;
+let _vaultKey=null;       // CryptoKey in memory — null als vault uit of niet ontgrendeld
+let _savePending=Promise.resolve();  // queue voor async saves zodat ze niet racen
+
+function vaultEnabled(){return localStorage.getItem(VAULT_FLAG)==='true'}
+
+async function deriveVaultKey(passphrase,salt){
+  const enc=new TextEncoder();
+  const km=await crypto.subtle.importKey('raw',enc.encode(passphrase),{name:'PBKDF2'},false,['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2',salt,iterations:VAULT_ITER,hash:'SHA-256'},
+    km,
+    {name:'AES-GCM',length:256},
+    false,['encrypt','decrypt']
+  );
+}
+
+async function encryptVault(data,passphrase){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveVaultKey(passphrase,salt);
+  _vaultKey=key;  // hou key in memory voor verdere saves in deze sessie
+  const enc=new TextEncoder();
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(data)));
+  // Format: salt(16) + iv(12) + ciphertext → base64
+  const combined=new Uint8Array(salt.length+iv.length+ct.byteLength);
+  combined.set(salt,0);combined.set(iv,salt.length);combined.set(new Uint8Array(ct),salt.length+iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function encryptWithKey(data,key,salt){
+  // Hergebruikt bestaande key+salt — sneller voor periodieke saves
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const enc=new TextEncoder();
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(data)));
+  const combined=new Uint8Array(salt.length+iv.length+ct.byteLength);
+  combined.set(salt,0);combined.set(iv,salt.length);combined.set(new Uint8Array(ct),salt.length+iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decryptVault(b64,passphrase){
+  const combined=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const salt=combined.slice(0,16);
+  const iv=combined.slice(16,28);
+  const ct=combined.slice(28);
+  const key=await deriveVaultKey(passphrase,salt);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+  _vaultKey=key;
+  _vaultSalt=salt;  // bewaar salt voor verdere saves
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+let _vaultSalt=null;
 let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null},plan:{events:[],horizon:15,returnRate:5,inflation:2},alertState:{dismissed:{},lastActivity:0},init:false};
 let charts={},wStep=1,wData={},viewMonth=new Date();
 const $=id=>document.getElementById(id),$$=sel=>document.querySelectorAll(sel),genId=()=>Math.random().toString(36).substr(2,9);
@@ -1335,9 +1417,34 @@ function calc(expr){try{const c=String(expr).replace(/\s/g,'');if(!/^[\d+\-*/().
 let calcTarget=null;
 function enableCalc(inp){inp.style.fontFamily='var(--font-mono)';const ev=()=>{const r=calc(inp.value);if(r!==null&&/[+\-*/]/.test(inp.value)){inp.value=r;inp.dispatchEvent(new Event('input',{bubbles:true}))}};const updateBar=()=>{const hasOp=/[+\-*/]/.test(inp.value);$('calc-bar').classList.toggle('show',calcTarget===inp&&hasOp);};inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ev()}});inp.addEventListener('input',updateBar);inp.addEventListener('blur',()=>{ev();setTimeout(()=>{if(calcTarget===inp)hideCalcBar()},150)});inp.addEventListener('focus',()=>{calcTarget=inp;updateBar();})}
 function hideCalcBar(){calcTarget=null;$('calc-bar').classList.remove('show')}
-function save(){localStorage.setItem(STORAGE,JSON.stringify(S));_invalidateCaches();}
+function save(){
+  _invalidateCaches();
+  if(vaultEnabled()&&_vaultKey&&_vaultSalt){
+    // Encrypted save — async via queue zodat opeenvolgende saves niet racen
+    const snapshot=JSON.parse(JSON.stringify(S));
+    _savePending=_savePending.then(async ()=>{
+      try{
+        const b64=await encryptWithKey(snapshot,_vaultKey,_vaultSalt);
+        localStorage.setItem(VAULT_KEY,b64);
+      }catch(e){}
+    });
+  } else {
+    localStorage.setItem(STORAGE,JSON.stringify(S));
+  }
+}
+// Hydrate S vanuit een geladen object (gedeeld door load() en vault-decrypt)
+function hydrateState(p){
+  S={...S,...p};
+  if(!S.monthlyData)S.monthlyData={};
+  if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null};
+  else{if(S.wealth.apiKey===undefined)S.wealth.apiKey='';if(S.wealth.usdEurRate===undefined)S.wealth.usdEurRate=null;if(S.wealth.usdEurUpdated===undefined)S.wealth.usdEurUpdated=null;}
+  if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};
+  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
+  else{if(S.plan.events===undefined)S.plan.events=[];if(S.plan.horizon===undefined)S.plan.horizon=15;if(S.plan.returnRate===undefined)S.plan.returnRate=5;if(S.plan.inflation===undefined)S.plan.inflation=2;}
+  _invalidateCaches();
+}
 let _incomeCache=null,_fixedCache=null;
-function load(){_invalidateCaches();const d=localStorage.getItem(STORAGE);if(d){try{const p=JSON.parse(d);S={...S,...p};if(!S.monthlyData)S.monthlyData={};if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null};else{if(S.wealth.apiKey===undefined)S.wealth.apiKey='';if(S.wealth.usdEurRate===undefined)S.wealth.usdEurRate=null;if(S.wealth.usdEurUpdated===undefined)S.wealth.usdEurUpdated=null;}if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};else{if(S.plan.events===undefined)S.plan.events=[];if(S.plan.horizon===undefined)S.plan.horizon=15;if(S.plan.returnRate===undefined)S.plan.returnRate=5;if(S.plan.inflation===undefined)S.plan.inflation=2;}if(p.transactions&&!Object.keys(S.monthlyData).length){p.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});save()}return true}catch{}}return false}
+function load(){const d=localStorage.getItem(STORAGE);if(d){try{const p=JSON.parse(d);hydrateState(p);if(p.transactions&&!Object.keys(S.monthlyData).length){p.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});save()}return true}catch{}}return false}
 function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active');$$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===id));const nav=['dashboard','analytics','settings'].includes(id);document.querySelector('.nav').style.display=nav?'block':'none';const fab=$('fab');if(fab){fab.style.display=nav?'flex':'none';fab.classList.remove('fab-dim');}if(id==='dashboard')updateDash();if(id==='analytics')updateAnalytics();}
 function initDetailModal(){
   const bg=$('detail-modal-bg');
@@ -3691,14 +3798,14 @@ function renderYearOverviewBody(){
           legend:{display:false},
           datalabels:{
             display:function(ctx){
-              // Totaal-label alleen op de bovenste/laatste zichtbare dataset
-              if(!hasFilter)return true;
-              return ctx.datasetIndex===0;  // De "geselecteerd" dataset (eerste) toont het totaal
+              // Toon label op het eerste dataset (cat-deel bij selectie, totaal zonder)
+              return ctx.datasetIndex===0;
             },
             anchor:'end',align:'top',offset:2,
             font:{family:'var(--mono)',size:10,weight:'700'},
             color:'#475569',
-            formatter:(v,ctx)=>'€'+yearTotalsForLabel[ctx.dataIndex].toLocaleString('nl-BE')
+            // v = waarde van dataset[0]: bij filter = som geselecteerde categorieën, anders = jaartotaal
+            formatter:(v)=>'€'+Math.round(v).toLocaleString('nl-BE')
           },
           tooltip:{
             callbacks:{
@@ -4050,7 +4157,7 @@ function openEventModal(eventId){
     <div style="display:flex;flex-direction:column;gap:14px">
       <div>
         <label class="wp-input-label">Naam</label>
-        <input type="text" class="field-input" id="ev-name" value="${esc(e.name||'')}" placeholder="bv. Studies Sara, dak vervangen, pensioen" autocomplete="off">
+        <input type="text" class="field-input" id="ev-name" value="${esc(e.name||'')}" placeholder="bv. studies kinderen, dak vervangen, pensioen" autocomplete="off">
       </div>
       <div>
         <label class="wp-input-label">Aard</label>
@@ -4675,13 +4782,13 @@ function updateOvCategories(){
   const stats=calcStats(hist.map(h=>h.spent));
   if(overCats.length){
     const overshoot=overCats.reduce((s,c)=>s+getCatSpent(c.id,m)-c.budget,0);
-    insight=`<strong>${overCats.map(c=>c.name).join(', ')}</strong> over budget. Totaal: <strong>+${fmt(Math.round(overshoot))}</strong>.`;
+    insight=`<strong>${overCats.map(c=>esc(c.name)).join(', ')}</strong> over budget. Totaal: <strong>+${fmt(Math.round(overshoot))}</strong>.`;
     insightColor='var(--r)';
   } else if(fc&&totalBudget>0&&fc.point>totalBudget){
     insight=`Op huidig tempo eindig je op <strong>${fmt(fc.point)}</strong> — <strong>+${fmt(fc.point-totalBudget)}</strong> over budget.`;
     insightColor='var(--w)';
   } else if(fastCats.length){
-    insight=`<strong>${fastCats[0].name}</strong> gaat sneller dan verwacht voor dag ${pace.dayOfMonth}.`;
+    insight=`<strong>${esc(fastCats[0].name)}</strong> gaat sneller dan verwacht voor dag ${pace.dayOfMonth}.`;
     insightColor='var(--w)';
   } else if(stats.n>=3&&total>0){
     const expNow=stats.mean*pace.pctElapsed;
@@ -6835,7 +6942,7 @@ function buildInkomenDetail(m){
     ${upcomingLump.map(u=>`<div class="dm-row">
       <div class="dm-row-left">
         <div class="dm-row-icon" style="background:var(--g-dim);color:var(--g)">${ic(u.icon)}</div>
-        <div><div class="dm-row-name">${u.name}</div><div class="dm-row-sub">${MONTHS[u.month]}${u.away===0?' · deze maand':' · over '+u.away+' mnd'} · €${u.perMo}/mnd ingebouwd</div></div>
+        <div><div class="dm-row-name">${esc(u.name)}</div><div class="dm-row-sub">${MONTHS[u.month]}${u.away===0?' · deze maand':' · over '+u.away+' mnd'} · €${u.perMo}/mnd ingebouwd</div></div>
       </div>
       <div class="dm-row-val" style="color:var(--g)">+${fmt(u.amount)}</div>
     </div>`).join('')}
@@ -7012,7 +7119,7 @@ function buildUitgegevenDetail(m){
 
     verdelingHTML = `
     <div class="dm-section">
-      <div class="dm-section-title" style="margin-bottom:10px">Verdeling — ${catObj?.name||''}</div>
+      <div class="dm-section-title" style="margin-bottom:10px">Verdeling — ${esc(catObj?.name||'')}</div>
       <div style="display:flex;flex-direction:column;gap:0">
       ${shown.map((r,i)=>{
         const pctOfCat = catTotal>0?Math.round(r.total/catTotal*100):0;
@@ -7205,7 +7312,7 @@ function buildGespaardDetail(m){
     tip=streak>=3?`Al ${streak} maanden op rij boven je ${target}%-spaardoel.`:`Op jaarbasis spaar je naar schatting ${fmtPos(yearForecast)}.`;
   } else if(topVar&&topVar.s>0){
     const sv15=Math.round(topVar.s*0.15);
-    tip=`Grootste variabele post: <strong>${topVar.c.name}</strong> (${fmtN(topVar.s)}). 15% besparen = ${fmtPos(sv15)}/mnd extra gespaard.`;
+    tip=`Grootste variabele post: <strong>${esc(topVar.c.name)}</strong> (${fmtN(topVar.s)}). 15% besparen = ${fmtPos(sv15)}/mnd extra gespaard.`;
   } else {
     tip='Voeg uitgaven in om gepersonaliseerde bespaartips te zien.';
   }
@@ -7731,7 +7838,56 @@ async function importJSON(file){try{if(file.size>10*1024*1024){showToast('⚠ Be
 
 
 // === INIT ===
-function init(){const hasData=load();_snapshotFixedIfNeeded();if(!hasData||!S.init){wData={income:{monthly:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:JSON.parse(JSON.stringify(FIXED_GROUPS)),reserves:[],categories:JSON.parse(JSON.stringify(DEFAULT_CATS))};showScreen('wizard');renderWizard(1)}else showScreen('dashboard');
+async function bootstrap(){
+  if(vaultEnabled()){
+    // Toon lockscreen, blokkeer rest tot ontgrendeling
+    await unlockVault();
+  } else {
+    load();
+  }
+  init();
+}
+
+async function unlockVault(){
+  const lock=$('vault-lock');
+  const input=$('vault-pass-input');
+  const err=$('vault-pass-err');
+  const btn=$('vault-unlock-btn');
+  const forgot=$('vault-forgot-btn');
+  lock.style.display='flex';
+  input.value='';input.focus();
+  return new Promise(resolve=>{
+    async function attempt(){
+      const pass=input.value;
+      if(!pass){err.textContent='Voer je wachtwoord in.';return}
+      err.textContent='';btn.disabled=true;btn.textContent='Even checken…';
+      try{
+        const b64=localStorage.getItem(VAULT_KEY);
+        if(!b64)throw new Error('Geen vault data');
+        const data=await decryptVault(b64,pass);
+        hydrateState(data);
+        lock.style.display='none';
+        resolve();
+      }catch(e){
+        err.textContent='Verkeerd wachtwoord.';
+        btn.disabled=false;btn.textContent='Ontgrendelen';
+        input.select();
+      }
+    }
+    btn.onclick=attempt;
+    input.onkeydown=e=>{if(e.key==='Enter')attempt()};
+    forgot.onclick=()=>{
+      if(confirm('Weet je het zeker? Al je data wordt definitief gewist (kan niet teruggehaald worden zonder wachtwoord).')){
+        localStorage.removeItem(VAULT_KEY);
+        localStorage.removeItem(VAULT_FLAG);
+        localStorage.removeItem(STORAGE);
+        location.reload();
+      }
+    };
+  });
+}
+
+function init(){const hasData=Object.keys(S.monthlyData||{}).length>0||S.init;_snapshotFixedIfNeeded();if(!hasData||!S.init){wData={income:{monthly:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:JSON.parse(JSON.stringify(FIXED_GROUPS)),reserves:[],categories:JSON.parse(JSON.stringify(DEFAULT_CATS))};showScreen('wizard');renderWizard(1)}else showScreen('dashboard');
 $$('.nav-btn').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.s)));
 $('fab').onclick=()=>openQuickEntry();
 $('m-add-prev').onclick=()=>{qeMonth=new Date(qeMonth.getFullYear(),qeMonth.getMonth()-1,1);if(_sceMode){const id=$('m-add').dataset.sceCatId;if(id)openSingleCatEntry(id);else renderQuickEntry()}else renderQuickEntry()};
@@ -7764,7 +7920,102 @@ $('s-cats').onclick=()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.l
 $('s-wizard').onclick=()=>openConfirmModal('Wizard opnieuw starten','Instellingen bewaard, maar je kan ze stap voor stap aanpassen.','Opnieuw starten',()=>{wData={income:{...S.income},fixedGroups:S.fixedGroups.length?JSON.parse(JSON.stringify(S.fixedGroups)):JSON.parse(JSON.stringify(FIXED_GROUPS)),categories:S.categories.filter(c=>c.type==='monthly').map(c=>({...c}))};showScreen('wizard');renderWizard(1)},false);
 $('s-xlsx').onclick=exportXLSX;$('s-xlsx-detail').onclick=exportXLSXDetail;$('s-backup').onclick=exportBackup;
 $('s-import').onchange=e=>{if(e.target.files[0]){importJSON(e.target.files[0]);e.target.value=''}};
-$('s-reset').onclick=()=>openConfirmModal('Alle data wissen','Dit verwijdert al je budgetten, categorieën en maandgegevens permanent.','Alles wissen',()=>{localStorage.removeItem(STORAGE);location.reload()});
+$('s-reset').onclick=()=>openConfirmModal('Alle data wissen','Dit verwijdert al je budgetten, categorieën en maandgegevens permanent.','Alles wissen',()=>{localStorage.removeItem(STORAGE);localStorage.removeItem(VAULT_KEY);localStorage.removeItem(VAULT_FLAG);location.reload()});
+
+// === VAULT (encrypted storage) handlers ===
+function updateVaultStateLabel(){
+  const el=$('s-vault-state');if(!el)return;
+  el.textContent=vaultEnabled()?'Aan':'Uit';
+  el.style.color=vaultEnabled()?'var(--g)':'var(--n3)';
+}
+updateVaultStateLabel();
+
+$('s-vault').onclick=()=>{
+  if(vaultEnabled())openVaultDisableModal();
+  else openVaultSetupModal();
+};
+$('vault-modal-x').onclick=()=>{$('vault-modal').style.display='none'};
+$('vault-modal').addEventListener('click',e=>{if(e.target.id==='vault-modal')$('vault-modal').style.display='none'});
+
+function openVaultSetupModal(){
+  $('vault-modal-title').textContent='Beveilig met wachtwoord';
+  $('vault-modal-body').innerHTML=`
+    <div style="font-size:12px;color:var(--n2);line-height:1.5;margin-bottom:14px">
+      Je data wordt versleuteld met je wachtwoord (AES-GCM 256, PBKDF2 met 200.000 iteraties).
+      Niemand kan je gegevens lezen — ook Buddy Budget niet — zonder dit wachtwoord.
+    </div>
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#92400e;line-height:1.5">
+      <strong>Belangrijk:</strong> bewaar dit wachtwoord goed. Als je het vergeet, kunnen we je data niet herstellen. Je moet dan alles wissen en opnieuw beginnen.
+    </div>
+    <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Nieuw wachtwoord</label>
+    <input id="vault-new-pass" type="password" placeholder="Min. 8 tekens" autocomplete="new-password" style="width:100%;padding:10px 12px;border:1.5px solid var(--l1);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:10px">
+    <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Bevestig wachtwoord</label>
+    <input id="vault-new-pass2" type="password" placeholder="Nogmaals" autocomplete="new-password" style="width:100%;padding:10px 12px;border:1.5px solid var(--l1);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:8px">
+    <div id="vault-setup-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:8px"></div>
+    <button id="vault-setup-go" style="width:100%;padding:11px;background:linear-gradient(135deg,#f472b6,#be185d);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Activeer beveiliging</button>
+  `;
+  $('vault-modal').style.display='flex';
+  $('vault-new-pass').focus();
+  $('vault-setup-go').onclick=async ()=>{
+    const p1=$('vault-new-pass').value;
+    const p2=$('vault-new-pass2').value;
+    const err=$('vault-setup-err');
+    if(p1.length<8){err.textContent='Wachtwoord moet minstens 8 tekens hebben.';return}
+    if(p1!==p2){err.textContent='Wachtwoorden komen niet overeen.';return}
+    err.textContent='';
+    const btn=$('vault-setup-go');btn.disabled=true;btn.textContent='Bezig met versleutelen…';
+    try{
+      // Encrypt huidige S → store in VAULT_KEY, verwijder plain STORAGE
+      const b64=await encryptVault(S,p1);
+      _vaultSalt=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).slice(0,16);
+      localStorage.setItem(VAULT_KEY,b64);
+      localStorage.setItem(VAULT_FLAG,'true');
+      localStorage.removeItem(STORAGE);
+      $('vault-modal').style.display='none';
+      updateVaultStateLabel();
+      alert('Beveiliging actief. Je wachtwoord wordt gevraagd bij elke nieuwe sessie.');
+    }catch(e){
+      err.textContent='Er ging iets mis bij het versleutelen.';
+      btn.disabled=false;btn.textContent='Activeer beveiliging';
+    }
+  };
+}
+
+function openVaultDisableModal(){
+  $('vault-modal-title').textContent='Beveiliging uitschakelen';
+  $('vault-modal-body').innerHTML=`
+    <div style="font-size:12px;color:var(--n2);line-height:1.5;margin-bottom:14px">
+      Je data wordt ontsleuteld opgeslagen in deze browser. Anderen met toegang tot dit apparaat kunnen je gegevens dan lezen.
+    </div>
+    <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Voer je huidige wachtwoord in</label>
+    <input id="vault-old-pass" type="password" placeholder="Wachtwoord" autocomplete="current-password" style="width:100%;padding:10px 12px;border:1.5px solid var(--l1);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:8px">
+    <div id="vault-disable-err" style="font-size:11px;color:#dc2626;min-height:16px;margin-bottom:8px"></div>
+    <button id="vault-disable-go" style="width:100%;padding:11px;background:var(--n2);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Beveiliging uitschakelen</button>
+  `;
+  $('vault-modal').style.display='flex';
+  $('vault-old-pass').focus();
+  $('vault-disable-go').onclick=async ()=>{
+    const pass=$('vault-old-pass').value;
+    const err=$('vault-disable-err');
+    if(!pass){err.textContent='Voer je wachtwoord in.';return}
+    const btn=$('vault-disable-go');btn.disabled=true;btn.textContent='Bezig…';
+    try{
+      const b64=localStorage.getItem(VAULT_KEY);
+      const data=await decryptVault(b64,pass);
+      hydrateState(data);
+      localStorage.setItem(STORAGE,JSON.stringify(S));
+      localStorage.removeItem(VAULT_KEY);
+      localStorage.removeItem(VAULT_FLAG);
+      _vaultKey=null;_vaultSalt=null;
+      $('vault-modal').style.display='none';
+      updateVaultStateLabel();
+      alert('Beveiliging uitgeschakeld. Je data is nu onversleuteld.');
+    }catch(e){
+      err.textContent='Verkeerd wachtwoord.';
+      btn.disabled=false;btn.textContent='Beveiliging uitschakelen';
+    }
+  };
+}
 $$('#calc-bar .calc-btn').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();if(!calcTarget)return;const op=btn.dataset.op;if(op==='='){const r=calc(calcTarget.value);if(r!==null){calcTarget.value=r;calcTarget.dispatchEvent(new Event('input',{bubbles:true}))}hideCalcBar();}else{calcTarget.value+=op;calcTarget.dispatchEvent(new Event('input',{bubbles:true}));calcTarget.focus();$('calc-bar').classList.add('show');}}));
 // FAB altijd dimmen bij scrollen — op elk scherm
 (function(){
@@ -7860,8 +8111,18 @@ document.addEventListener('keydown',e=>{
 })();
 
 initAnalyticsTabs()}
-document.addEventListener('DOMContentLoaded',init);
+document.addEventListener('DOMContentLoaded',bootstrap);
 </script>
+</div>
+<!-- VAULT SETUP MODAL — passphrase aanmaken/wijzigen/uitschakelen -->
+<div id="vault-modal" class="dm" style="display:none">
+  <div class="dm-card" style="max-width:380px">
+    <div class="dm-head">
+      <div class="dm-title" id="vault-modal-title">Beveilig met wachtwoord</div>
+      <button class="dm-x" id="vault-modal-x">×</button>
+    </div>
+    <div class="dm-body" id="vault-modal-body"></div>
+  </div>
 </div>
 </body>
 </html>
