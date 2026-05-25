@@ -1255,7 +1255,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.046</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.047</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1975,11 +1975,11 @@ function updateWealthCard(){
     bufferYears=tot.total/(monthlyBuffer*12);
   }
 
-  // Holding evolutie sinds aankoop
+  // Holding evolutie sinds aankoop — alles in EUR want kost wordt in EUR opgeslagen.
   let totalPnL=0,totalCost=0;
   (w.holdings||[]).forEach(h=>{
-    totalPnL+=getHoldingPnL(h);
-    totalCost+=getHoldingCost(h);
+    totalPnL+=getHoldingPnLEur(h);
+    totalCost+=getHoldingCostEur(h);
   });
   const pnlPct=totalCost>0?(totalPnL/totalCost*100):0;
   const pnlColor=totalPnL>0?'var(--g)':totalPnL<0?'var(--r)':'var(--n3)';
@@ -3434,12 +3434,12 @@ function renderWealth(){
                   const h=x.item;
                   const cur=h.currency||'USD';
                   const sym=cur==='EUR'?'€':'$';
-                  const value=getHoldingValue(h);
-                  const valueEur=getHoldingValueEur(h);
-                  const cost=getHoldingCost(h);
-                  const pnl=value-cost;
-                  const pnlPct2=cost>0?(pnl/cost*100):0;
-                  const pnlColor2=pnl>0?'var(--g)':pnl<0?'var(--r)':'var(--n3)';
+                  const value=getHoldingValue(h);       // native (USD/EUR), voor hoofdbedrag display
+                  const valueEur=getHoldingValueEur(h); // EUR-equivalent
+                  const costEur=getHoldingCostEur(h);   // werkelijke EUR-kost (= wat de bank afhield)
+                  const pnlEur=valueEur-costEur;        // P&L in EUR — consistent met kost-eenheid
+                  const pnlPctEur=costEur>0?(pnlEur/costEur*100):0;
+                  const pnlColor2=pnlEur>0?'var(--g)':pnlEur<0?'var(--r)':'var(--n3)';
                   const blocked=isBlocked(h);
                   const t=blocked?timeUntilUnblock(h):null;
                   const isFund=h.kind==='fund';
@@ -3472,7 +3472,7 @@ function renderWealth(){
                       <div class="wp-row-amount">${displaySym}${Math.round(taxPct>0?valueNet:value).toLocaleString('nl-BE')}</div>
                       ${taxPct>0?`<div class="wp-row-amount-sub" style="color:var(--n3)">bruto ${displaySym}${Math.round(value).toLocaleString('nl-BE')} · ${taxPct}% heffing</div>`:''}
                       ${!isFund&&cur!=='EUR'&&valueEur>0?`<div class="wp-row-amount-sub">≈ ${fmt(Math.round(taxPct>0?valueEurNet:valueEur))}</div>`:''}
-                      ${!isFund&&!isBlk&&cost>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnl>=0?'+':''}${sym}${Math.round(pnl).toLocaleString('nl-BE')} (${pnl>=0?'+':''}${fmtPct(pnlPct2,1)})</div>`:''}
+                      ${!isFund&&!isBlk&&costEur>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnlEur>=0?'+':''}${fmt(Math.round(pnlEur))} (${pnlEur>=0?'+':''}${fmtPct(pnlPctEur,1)})</div>`:''}
                     </div>
                   </div>`;
                 }
