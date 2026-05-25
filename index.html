@@ -1044,6 +1044,17 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
     <!-- Legacy hidden elements for JS compat -->
     <span class="hidden" id="d-budget-bar"></span>
     <svg style="display:none"><circle id="health-ring" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"/></svg>
+    <!-- 4 STAT-KNOPPEN: deze maand in cijfers (verplaatst van Analyse) -->
+    <div class="an-stats" style="margin-top:24px;padding:0 4px">
+      <div class="an-stat" onclick="openMetricDetail('inkomen')"><span class="an-stat-v" id="an-s-income">€0</span><span class="an-stat-l">Inkomen</span></div>
+      <span class="an-stat-sep"></span>
+      <div class="an-stat" onclick="openMetricDetail('uitgegeven')"><span class="an-stat-v" id="an-s-spent">€0</span><span class="an-stat-l">Uitgegeven</span></div>
+      <span class="an-stat-sep"></span>
+      <div class="an-stat" onclick="openMetricDetail('vast')"><span class="an-stat-v" id="an-s-fixed">€0</span><span class="an-stat-l">Vast</span></div>
+      <span class="an-stat-sep"></span>
+      <div class="an-stat" onclick="openMetricDetail('gespaard')"><span class="an-stat-v" id="an-s-saved">€0</span><span class="an-stat-l" id="an-s-saved-lbl">Buffer</span></div>
+    </div>
+
     <!-- Disclaimer link: boven de FAB, genoeg ruimte -->
     <div style="padding:16px 0 calc(100px + var(--sb));text-align:center">
       <button onclick="showScreen('settings');setTimeout(()=>{const el=document.getElementById('disclaimer-section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},200)" style="background:none;border:none;font-size:10px;color:var(--n3);cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:2px;padding:10px 20px">Disclaimer</button>
@@ -1062,15 +1073,6 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
       <span class="dh-nav-label" id="an-month-label">—</span>
       <button class="dh-nav-btn" id="an-next"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>
-  </div>
-  <div class="an-stats">
-    <div class="an-stat" onclick="openMetricDetail('inkomen')"><span class="an-stat-v" id="an-s-income">€0</span><span class="an-stat-l">Inkomen</span></div>
-    <span class="an-stat-sep"></span>
-    <div class="an-stat" onclick="openMetricDetail('uitgegeven')"><span class="an-stat-v" id="an-s-spent">€0</span><span class="an-stat-l">Uitgegeven</span></div>
-    <span class="an-stat-sep"></span>
-    <div class="an-stat" onclick="openMetricDetail('vast')"><span class="an-stat-v" id="an-s-fixed">€0</span><span class="an-stat-l">Vast</span></div>
-    <span class="an-stat-sep"></span>
-    <div class="an-stat" onclick="openMetricDetail('gespaard')"><span class="an-stat-v" id="an-s-saved">€0</span><span class="an-stat-l" id="an-s-saved-lbl">Buffer</span></div>
   </div>
   <div class="an-tabs">
     <button class="an-tab active" data-tab="trends">Trends</button>
@@ -1239,7 +1241,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.035</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.037</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1751,6 +1753,18 @@ function getAllTransactions(month){
   if(month){return _txIndex[month]?._all?.slice()||[];}
   return (S.transactions||[]).slice().sort((a,b)=>b.ts-a.ts);
 }
+// Helper: vult de 4 stat-knoppen (Inkomen / Uitgegeven / Vast / Buffer-of-Gespaard).
+// Gebruikt door zowel updateDash() (Home) als updateAnalytics() (Analyse).
+function _updateMonthStats(m){
+  const income=getMonthlyIncome(),fixed=getFixedCosts();
+  const spent=getMonthSpent(m),saved=getSaved(m);
+  const ie=$('an-s-income');if(ie){ie.textContent=fmt(Math.round(income));ie.style.color='var(--g)';}
+  const fe=$('an-s-fixed');if(fe){fe.textContent=fmt(Math.round(fixed));fe.style.color='#38bdf8';}
+  const se=$('an-s-spent');if(se){se.textContent=fmt(spent);se.style.color='var(--r)';}
+  const sve=$('an-s-saved');if(sve){sve.textContent=fmt(saved);sve.style.color='var(--n2)';}
+  const sl=$('an-s-saved-lbl');if(sl)sl.textContent=isCurMonth(m)?'Buffer':'Gespaard';
+}
+
 // === DASHBOARD ===
 function updateDash(){
   const m=mkd();const now=new Date();
@@ -1878,6 +1892,7 @@ function updateDash(){
   updateDashAlerts(m);
   updateHealthScore(m,spent,budget);
   checkFreshStart(m);
+  _updateMonthStats(m);
 }
 function updateWealthCard(){
   const el=$('d-wealth-card');
@@ -3284,13 +3299,15 @@ function renderWealth(){
                 :`≈ ${Math.round(bufferYears)} jaar buffer`)
             :'vrij + gereserveerd'}</div>
         </div>
-        ${totalCost>0?`
+        ${totalCost>0?(()=>{
+          const investValue=totalCost+totalPnL; // actuele marktwaarde van beleggingen met aankoopprijs
+          return `
           <div class="wp-stat ${totalPnL>=0?'profit-pos':'profit-neg'}">
-            <div class="wp-stat-label">Rendement</div>
-            <div class="wp-stat-amt">${totalPnL>=0?'+':''}${fmt(Math.round(totalPnL))}</div>
-            <div class="wp-stat-sub">${totalPnL>=0?'+':''}${pnlPct.toFixed(1)}% op ${fmt(Math.round(totalCost))} inleg</div>
+            <div class="wp-stat-label">Beleggingen nu waard</div>
+            <div class="wp-stat-amt" style="color:var(--n0)">${fmt(Math.round(investValue))}</div>
+            <div class="wp-stat-sub"><span style="color:${totalPnL>=0?'#16a34a':'#dc2626'};font-weight:700">${totalPnL>=0?'+':''}${fmt(Math.round(totalPnL))} (${totalPnL>=0?'+':''}${pnlPct.toFixed(1)}%)</span> sinds aankoop</div>
           </div>
-        `:`
+          `;})():`
           <div class="wp-stat">
             <div class="wp-stat-label">Beleggingen</div>
             <div class="wp-stat-amt" style="font-size:14px;color:var(--n3)">Nog geen</div>
@@ -3923,7 +3940,14 @@ function renderYearOverviewBody(){
             font:{family:'var(--mono)',size:10,weight:'700'},
             color:'#475569',
             // v = waarde van dataset[0]: bij filter = som geselecteerde categorieën, anders = jaartotaal
-            formatter:(v)=>'€'+Math.round(v).toLocaleString('nl-BE')
+            formatter:(v,ctx)=>{
+              if(hasFilter){
+                const tot=yearTotalsForLabel[ctx.dataIndex];
+                if(!tot||tot<=0)return '';
+                return Math.round(v/tot*100)+'%';
+              }
+              return '€'+Math.round(v).toLocaleString('nl-BE');
+            }
           },
           tooltip:{
             callbacks:{
@@ -3985,28 +4009,54 @@ function renderPlanTab(){
 
   target.innerHTML=`
     <!-- HERO -->
-    <div class="wp-card-pad wp-section">
-      <div class="wp-label" style="margin-bottom:8px">Verwacht over ${p.horizon} jaar</div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-        <span style="font-size:28px;font-weight:800;color:var(--n0);font-family:var(--mono);line-height:1">${fmt(Math.round(endMedian))}</span>
-        <span style="font-size:12px;font-weight:700;color:${endMedian>=startVal?'var(--g)':'var(--r)'};font-family:var(--mono)">${endMedian>=startVal?'+':''}${fmt(Math.round(endMedian-startVal))}</span>
-      </div>
+    <!-- HERO: eindvermogen na horizon, in zelfde stijl als Vermogen-tab -->
+    <div class="wp-hero">
+      <div class="wp-hero-label">Verwacht na ${p.horizon} jaar</div>
+      <div class="wp-hero-amount ${Math.abs(endMedian)>=100000?'compact':''}">${fmt(Math.round(endMedian))}</div>
+      ${(()=>{
+        const change=endMedian-startVal;
+        const changePct=startVal!==0?(change/startVal*100):0;
+        const changeColor=change>=0?'#16a34a':'#dc2626';
+        return `<div style="font-size:12px;color:var(--n2);line-height:1.5">
+          <span style="color:${changeColor};font-weight:700;font-family:var(--mono)">${change>=0?'+':''}${fmt(Math.round(change))} (${change>=0?'+':''}${changePct.toFixed(1)}%)</span> vanaf ${fmtN(Math.round(startVal))} vandaag
+        </div>`;
+      })()}
+    </div>
+
+    <!-- STAT CARDS: koopkracht + range -->
+    <div class="wp-stats">
       ${(()=>{
         const realValue=endMedian/Math.pow(1+(p.inflation||0)/100,p.horizon);
-        const inflShown=p.inflation>0&&p.horizon>=5;
-        return inflShown?`<div style="font-size:10px;color:var(--n3);font-family:var(--mono);margin-bottom:10px">≈ ${fmt(Math.round(realValue))} in koopkracht van vandaag</div>`:'<div style="margin-bottom:6px"></div>';
+        const inflShown=p.inflation>0&&p.horizon>=3;
+        if(inflShown){
+          return `<div class="wp-stat">
+            <div class="wp-stat-label">In koopkracht van nu</div>
+            <div class="wp-stat-amt" style="color:var(--n0)">${fmt(Math.round(realValue))}</div>
+            <div class="wp-stat-sub">na ${(p.inflation).toFixed(1)}% inflatie/jaar verrekend</div>
+          </div>`;
+        }
+        return `<div class="wp-stat">
+          <div class="wp-stat-label">Per jaar gemiddeld</div>
+          <div class="wp-stat-amt" style="color:var(--n0)">${fmt(Math.round((endMedian-startVal)/Math.max(1,p.horizon)))}</div>
+          <div class="wp-stat-sub">verwachte aangroei/jaar</div>
+        </div>`;
       })()}
-      <div style="font-size:11px;color:var(--n2);line-height:1.6">
-        ${(()=>{
-          const spread=Math.round(endHigh-endLow);
-          const threshold=Math.max(100,Math.abs(endMedian)*0.005);
-          if(spread>threshold){
-            return `Vandaag ${fmtN(Math.round(startVal))}, in een goed scenario ${fmtN(Math.round(endHigh))}, in een slechter scenario ${fmtN(Math.round(endLow))}.`;
-          }
-          return `Vandaag ${fmtN(Math.round(startVal))}, een vrij voorspelbaar pad zonder grote schommelingen (je vermogen zit grotendeels in cash).`;
-        })()}
-        ${monthlyBuffer>0?`<div style="margin-top:6px;color:var(--n3)">Maandbuffer ${fmtPos(Math.round(monthlyBuffer))} → ${fmtN(Math.round(yearlyBuffer))} per jaar opzij.${hasActiveEvents?' Geplande events meegenomen.':''}</div>`:'<div style="margin-top:6px;color:var(--n3)">Geen positieve maandbuffer — de projectie houdt enkel rekening met je huidige vermogen en geplande events.</div>'}
-      </div>
+      ${(()=>{
+        const spread=Math.round(endHigh-endLow);
+        const threshold=Math.max(100,Math.abs(endMedian)*0.005);
+        if(spread>threshold){
+          return `<div class="wp-stat">
+            <div class="wp-stat-label">Realistische marge</div>
+            <div class="wp-stat-amt" style="font-size:14px;color:var(--n0)">${fmtN(Math.round(endLow))} – ${fmtN(Math.round(endHigh))}</div>
+            <div class="wp-stat-sub">80% kans dat je hierbinnen valt</div>
+          </div>`;
+        }
+        return `<div class="wp-stat">
+          <div class="wp-stat-label">Voorspelbaarheid</div>
+          <div class="wp-stat-amt" style="font-size:14px;color:#16a34a">Hoog</div>
+          <div class="wp-stat-sub">vermogen vooral in cash, weinig schommeling</div>
+        </div>`;
+      })()}
     </div>
 
     <!-- AANNAMES STRIP -->
@@ -4832,28 +4882,7 @@ function updateAnalytics(){
 
 function updateAnKpis(){/* vervangen door updateAnStats */}
 
-function updateAnStats(){
-  const m=mkd();
-  const budget=getMonthBudget(),spent=getMonthSpent(m);
-  const saved=getSaved(m);
-  // Streak
-  let streak=0;
-  for(let i=1;i<=12;i++){const d=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-i,1);const s=getMonthSpent(mkd(d));if(s>0&&s<=budget)streak++;else if(s>0)break;}
-  // Trend via linReg
-  const hist6=getMonthHistory(6);
-  const reg=linReg(hist6.map(h=>h.spent).reverse());
-  const slope=Math.round(reg.slope);
-  const trendStr=slope===0?'Stabiel':Math.abs(slope)<10?(slope>0?'▲ licht':'▼ licht'):(slope>0?'▲ stijgt':'▼ daalt');
-  const trendC=slope>5?'var(--r)':slope<-5?'var(--g)':'var(--n2)';
-  // Vul stats strip
-  const pct=budget>0?spent/budget:0;
-  const income=getMonthlyIncome(),fixed=getFixedCosts();
-  const ie=$('an-s-income');if(ie){ie.textContent=fmt(Math.round(income));ie.style.color='var(--g)';}
-  const fe=$('an-s-fixed');if(fe){fe.textContent=fmt(Math.round(fixed));fe.style.color='#38bdf8';}
-  const se=$('an-s-spent');if(se){se.textContent=fmt(spent);se.style.color='var(--r)';}
-  const sve=$('an-s-saved');if(sve){sve.textContent=fmt(saved);sve.style.color='var(--n2)';}
-  const sl=$('an-s-saved-lbl');if(sl)sl.textContent=isCurMonth(m)?'Buffer':'Gespaard';
-}
+function updateAnStats(){_updateMonthStats(mkd());}
 
 function updateDonutChart(){/* donut verwijderd */}
 
