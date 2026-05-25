@@ -1255,7 +1255,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.044</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.045</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1485,9 +1485,13 @@ function getTotalWealth(){
   // Vier beschikbaarheidsklassen: vrij (cash direct), gereserveerd (cash met doel),
   // belegd (markt-risico, T+2 verkooptijd, niet direct toegankelijk), geblokkeerd (vast tot datum).
   const buckets={vrij:0,gereserveerd:0,belegd:0,geblokkeerd:0};
-  // Cash items: default 'vrij'
+  // Cash items: default 'vrij' — gebruiker kan gereserveerd/belegd/geblokkeerd kiezen
   (w.accounts||[]).forEach(a=>{
-    const bucket=isBlocked(a)?'geblokkeerd':(a.availability==='gereserveerd'?'gereserveerd':'vrij');
+    let bucket;
+    if(isBlocked(a))bucket='geblokkeerd';
+    else if(a.availability==='gereserveerd')bucket='gereserveerd';
+    else if(a.availability==='belegd')bucket='belegd';
+    else bucket='vrij';
     buckets[bucket]+=(a.balance||0);
   });
   // Holdings (aandelen/ETFs/fondsen): default 'belegd' tenzij gebruiker expliciet anders kiest
@@ -3553,11 +3557,12 @@ function projectWealth(){
   //  - cashFree: vrij beschikbaar cash
   //  - cashLinked[eventId]: reserveringen specifiek gekoppeld aan een (enabled) plan-event
   //  - cashReservedOther: gereserveerd zonder koppeling (of gekoppeld aan disabled/onbestaand event)
-  //  - invest: alle live holdings (één pot, renderend)
+  //  - invest: alle live holdings + cash op spaarrekeningen-met-getrouwheidspremie ('belegd')
   const enabledEventIds=new Set((S.plan?.events||[]).filter(e=>e.enabled!==false).map(e=>e.id));
   let startCashFree=0;
   const startCashLinked={};  // {eventId: amount}
   let startCashReservedOther=0;
+  let startCashBelegd=0; // cash met availability='belegd' (bv. spaarrekening met grote getrouwheidspremie)
   (S.wealth?.accounts||[]).forEach(a=>{
     if(isBlocked(a))return;
     const bal=a.balance||0;
@@ -3567,11 +3572,14 @@ function projectWealth(){
       } else {
         startCashReservedOther+=bal;
       }
+    } else if(a.availability==='belegd'){
+      startCashBelegd+=bal;
     } else {
       startCashFree+=bal;
     }
   });
-  const startInvest=(S.wealth?.holdings||[]).filter(h=>!isBlocked(h)).reduce((s,h)=>s+getHoldingValueEur(h),0);
+  // Holdings (niet-geblokkeerd) gaan in invest, samen met cash-belegd. Krijgen marktrendement.
+  const startInvest=(S.wealth?.holdings||[]).filter(h=>!isBlocked(h)).reduce((s,h)=>s+getHoldingValueEur(h),0)+startCashBelegd;
   const startBlocked=tot.geblokkeerd;
   const startCash=startCashFree+startCashReservedOther+Object.values(startCashLinked).reduce((s,v)=>s+v,0);
   const startLiquid=startCash+startInvest;
@@ -3654,7 +3662,7 @@ function projectWealth(){
 
   // Monte Carlo
   const N=500;
-  const allLiquid=[],allBlocked=[];
+  const allLiquid=[],allInvest=[],allBlocked=[];
   for(let n=0;n<N;n++){
     let cashFree=startCashFree;
     const cashLinked={...startCashLinked};
@@ -3662,7 +3670,8 @@ function projectWealth(){
     let invest=startInvest;
     let blocked=startBlocked;
     const totalCash=()=>cashFree+cashReservedOther+Object.values(cashLinked).reduce((s,v)=>s+v,0);
-    const liquidPath=[totalCash()+invest];
+    const liquidPath=[totalCash()]; // cash only (zonder invest)
+    const investPath=[invest];
     const blockedPath=[blocked];
     for(let y=1;y<=horizon;y++){
       const year=startYear+y;
@@ -3734,10 +3743,12 @@ function projectWealth(){
         });
         if(blocked<0)blocked=0;
       }
-      liquidPath.push(totalCash()+invest);
+      liquidPath.push(totalCash());
+      investPath.push(invest);
       blockedPath.push(blocked);
     }
     allLiquid.push(liquidPath);
+    allInvest.push(investPath);
     allBlocked.push(blockedPath);
   }
 
@@ -3754,12 +3765,16 @@ function projectWealth(){
   for(let y=0;y<=horizon;y++){
     const year=startYear+y;
     const liquidYr=allLiquid.map(p=>p[y]);
+    const investYr=allInvest.map(p=>p[y]);
     const blockedYr=allBlocked.map(p=>p[y]);
-    // Totaal vermogen per pad: liquid + blocked (correlatie correct meegenomen, niet som van medianen)
-    const totalYr=allLiquid.map((p,n)=>p[y]+allBlocked[n][y]);
+    // Totaal vermogen per pad: liquid + invest + blocked (correlatie correct meegenomen, niet som van medianen)
+    const totalYr=allLiquid.map((p,n)=>p[y]+allInvest[n][y]+allBlocked[n][y]);
     const p10=percentile(liquidYr,0.10);
     const p50=percentile(liquidYr,0.50);
     const p90=percentile(liquidYr,0.90);
+    const invest10=percentile(investYr,0.10);
+    const invest50=percentile(investYr,0.50);
+    const invest90=percentile(investYr,0.90);
     const blocked10=percentile(blockedYr,0.10);
     const blocked50=percentile(blockedYr,0.50);
     const blocked90=percentile(blockedYr,0.90);
@@ -3773,7 +3788,7 @@ function projectWealth(){
       return year>=eStart&&year<=eEnd&&y>0;
     });
     const eventTotal=((activeEventsByYear[year]||[]).reduce((s,e)=>s+(e.amount||0),0))*Math.pow(1+infl,y);
-    series.push({year,p10,p50,p90,blocked:blocked50,blocked10,blocked90,totalP10,totalP50,totalP90,total:totalP50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1+infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
+    series.push({year,p10,p50,p90,invest:invest50,invest10,invest90,blocked:blocked50,blocked10,blocked90,totalP10,totalP50,totalP90,total:totalP50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1+infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
   }
   series._meta={startCash,startInvest,startBlocked,blockedItems,unblockItemsByYear,startYear};
   return series;
@@ -4140,6 +4155,7 @@ function renderPlanTab(){
       <div class="ev-segment" style="margin-bottom:12px">
         <button type="button" class="ev-seg-btn ${planChartMode==='total'?'active':''}" data-plan-mode="total" onclick="setPlanChartMode('total')">Totaal</button>
         <button type="button" class="ev-seg-btn ${planChartMode==='free'?'active':''}" data-plan-mode="free" onclick="setPlanChartMode('free')">Toegankelijk</button>
+        <button type="button" class="ev-seg-btn ${planChartMode==='invested'?'active':''}" data-plan-mode="invested" onclick="setPlanChartMode('invested')">Belegd</button>
         <button type="button" class="ev-seg-btn ${planChartMode==='blocked'?'active':''}" data-plan-mode="blocked" onclick="setPlanChartMode('blocked')">Geblokkeerd</button>
       </div>
       <div style="position:relative;height:220px;margin-bottom:10px"><canvas id="plan-chart"></canvas></div>
@@ -4240,7 +4256,7 @@ function renderPlanTab(){
   setTimeout(()=>drawPlanChart(series),50);
 }
 
-let planChartMode='total'; // 'total' | 'free' | 'blocked'
+let planChartMode='total'; // 'total' | 'free' | 'invested' | 'blocked'
 function drawPlanChart(series){
   const cv=$('plan-chart');
   if(!cv||!window.Chart)return;
@@ -4259,9 +4275,16 @@ function drawPlanChart(series){
     mainData=series.map(s=>Math.round(s.p50));
     lowData=series.map(s=>Math.round(s.p10));
     highData=series.map(s=>Math.round(s.p90));
-    mainLabel='Toegankelijk vermogen';
+    mainLabel='Toegankelijk (cash)';
     mainColor='#0ea5e9';
     bandColor='rgba(14,165,233,.13)';
+  } else if(planChartMode==='invested'){
+    mainData=series.map(s=>Math.round(s.invest));
+    lowData=series.map(s=>Math.round(s.invest10));
+    highData=series.map(s=>Math.round(s.invest90));
+    mainLabel='Belegd vermogen';
+    mainColor='#a855f7';
+    bandColor='rgba(168,85,247,.13)';
   } else {
     mainData=series.map(s=>Math.round(s.blocked));
     lowData=series.map(s=>Math.round(s.blocked10));
@@ -4509,6 +4532,7 @@ function openAccountModal(accountId){
         <select class="field-input" id="acc-availability" style="width:100%">
           <option value="vrij" ${av==='vrij'?'selected':''}>Vrij — vrij beschikbaar</option>
           <option value="gereserveerd" ${av==='gereserveerd'?'selected':''}>Gereserveerd — bestemd voor specifieke kosten</option>
+          <option value="belegd" ${av==='belegd'?'selected':''}>Belegd — bv. spaarrekening met grote getrouwheidspremie</option>
           <option value="geblokkeerd" ${av==='geblokkeerd'?'selected':''}>Geblokkeerd — vast tot een bepaalde datum</option>
         </select>
       </div>
