@@ -1255,7 +1255,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.042</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.044</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1482,22 +1482,27 @@ function getHoldingCost(h){
 function getHoldingPnL(h){return getHoldingValue(h)-getHoldingCost(h);}
 function getTotalWealth(){
   const w=S.wealth||{accounts:[],holdings:[]};
-  // Drie beschikbaarheidsklassen: vrij, gereserveerd, geblokkeerd
-  // Default = 'vrij' voor legacy data zonder availability-veld
-  const buckets={vrij:0,gereserveerd:0,geblokkeerd:0};
+  // Vier beschikbaarheidsklassen: vrij (cash direct), gereserveerd (cash met doel),
+  // belegd (markt-risico, T+2 verkooptijd, niet direct toegankelijk), geblokkeerd (vast tot datum).
+  const buckets={vrij:0,gereserveerd:0,belegd:0,geblokkeerd:0};
+  // Cash items: default 'vrij'
   (w.accounts||[]).forEach(a=>{
     const bucket=isBlocked(a)?'geblokkeerd':(a.availability==='gereserveerd'?'gereserveerd':'vrij');
     buckets[bucket]+=(a.balance||0);
   });
+  // Holdings (aandelen/ETFs/fondsen): default 'belegd' tenzij gebruiker expliciet anders kiest
   (w.holdings||[]).forEach(h=>{
-    const bucket=isBlocked(h)?'geblokkeerd':(h.availability==='gereserveerd'?'gereserveerd':'vrij');
-    // Geblokkeerd: netto (na heffing) zodat totaal de werkelijke waarde reflecteert
+    let bucket;
+    if(isBlocked(h))bucket='geblokkeerd';
+    else if(h.availability==='gereserveerd')bucket='gereserveerd';
+    else if(h.availability==='vrij')bucket='vrij';
+    else bucket='belegd'; // default
     buckets[bucket]+=isBlocked(h)?getHoldingValueEurNet(h):getHoldingValueEur(h);
   });
   // Voor backward compat: oude accounts/holdings split per type
   const acc=(w.accounts||[]).reduce((s,a)=>s+(a.balance||0),0);
   const hld=(w.holdings||[]).reduce((s,h)=>s+(isBlocked(h)?getHoldingValueEurNet(h):getHoldingValueEur(h)),0);
-  return{accounts:acc,holdings:hld,total:acc+hld,vrij:buckets.vrij,gereserveerd:buckets.gereserveerd,geblokkeerd:buckets.geblokkeerd};
+  return{accounts:acc,holdings:hld,total:acc+hld,vrij:buckets.vrij,gereserveerd:buckets.gereserveerd,belegd:buckets.belegd,geblokkeerd:buckets.geblokkeerd};
 }
 
 // Helper: is dit item nog geblokkeerd op vandaag?
@@ -1566,6 +1571,11 @@ function hydrateState(p){
   if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};
   if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
   else{if(S.plan.events===undefined)S.plan.events=[];if(S.plan.horizon===undefined)S.plan.horizon=15;if(S.plan.returnRate===undefined)S.plan.returnRate=5;if(S.plan.inflation===undefined)S.plan.inflation=2;}
+  // Migratie v2026.044: aandelen/ETFs/fondsen die ooit als 'vrij' (of zonder) waren ingesteld, naar 'belegd'.
+  // Niet aanraken: gereserveerd (gebruiker koos doel) en geblokkeerd (vast tot datum).
+  (S.wealth.holdings||[]).forEach(h=>{
+    if(!h.availability||h.availability==='vrij')h.availability='belegd';
+  });
   _invalidateCaches();
 }
 let _incomeCache=null,_fixedCache=null;
@@ -3284,6 +3294,7 @@ function renderWealth(){
   // Verdeling op basis van beschikbaarheid (primair) en asset-type (secundair)
   const vrijPct=tot.total>0?(tot.vrij/tot.total*100):0;
   const gereserveerdPct=tot.total>0?(tot.gereserveerd/tot.total*100):0;
+  const belegdPct=tot.total>0?(tot.belegd/tot.total*100):0;
   const geblokkeerdPct=tot.total>0?(tot.geblokkeerd/tot.total*100):0;
 
   target.innerHTML=`
@@ -3295,11 +3306,13 @@ function renderWealth(){
         <div class="wp-prop-bar">
           ${vrijPct>0?`<div class="wp-prop-seg" style="width:${vrijPct}%;background:var(--g)" title="Vrij ${fmtPct(vrijPct,1)}"></div>`:''}
           ${gereserveerdPct>0?`<div class="wp-prop-seg" style="width:${gereserveerdPct}%;background:#0ea5e9" title="Gereserveerd ${fmtPct(gereserveerdPct,1)}"></div>`:''}
+          ${belegdPct>0?`<div class="wp-prop-seg" style="width:${belegdPct}%;background:#a855f7" title="Belegd ${fmtPct(belegdPct,1)}"></div>`:''}
           ${geblokkeerdPct>0?`<div class="wp-prop-seg" style="width:${geblokkeerdPct}%;background:var(--n3)" title="Geblokkeerd ${fmtPct(geblokkeerdPct,1)}"></div>`:''}
         </div>
         <div class="wp-prop-list">
           ${tot.vrij>0?`<div class="wp-prop-row"><span class="wp-prop-name"><span class="wp-prop-dot" style="background:var(--g)"></span>Vrij</span><span class="wp-prop-amt">${fmt(Math.round(tot.vrij))}</span><span class="wp-prop-pct">${fmtPct(vrijPct,0)}</span></div>`:''}
           ${tot.gereserveerd>0?`<div class="wp-prop-row"><span class="wp-prop-name"><span class="wp-prop-dot" style="background:#0ea5e9"></span>Gereserveerd</span><span class="wp-prop-amt">${fmt(Math.round(tot.gereserveerd))}</span><span class="wp-prop-pct">${fmtPct(gereserveerdPct,0)}</span></div>`:''}
+          ${tot.belegd>0?`<div class="wp-prop-row"><span class="wp-prop-name"><span class="wp-prop-dot" style="background:#a855f7"></span>Belegd</span><span class="wp-prop-amt">${fmt(Math.round(tot.belegd))}</span><span class="wp-prop-pct">${fmtPct(belegdPct,0)}</span></div>`:''}
           ${tot.geblokkeerd>0?`<div class="wp-prop-row"><span class="wp-prop-name"><span class="wp-prop-dot" style="background:var(--n3)"></span>Geblokkeerd</span><span class="wp-prop-amt">${fmt(Math.round(tot.geblokkeerd))}</span><span class="wp-prop-pct">${fmtPct(geblokkeerdPct,0)}</span></div>`:''}
         </div>
       `:''}
@@ -3372,7 +3385,8 @@ function renderWealth(){
           allItems.push({type:'account',item:a,value:a.balance||0,availability:a.availability||'vrij',blocked:isBlocked(a)});
         });
         (w.holdings||[]).forEach(h=>{
-          allItems.push({type:'holding',item:h,value:getHoldingValueEurNet(h),availability:h.availability||'vrij',blocked:isBlocked(h)});
+          // Holdings default = belegd (markt-risico) tenzij gebruiker expliciet anders kiest
+          allItems.push({type:'holding',item:h,value:getHoldingValueEurNet(h),availability:h.availability||'belegd',blocked:isBlocked(h)});
         });
         if(allItems.length===0){
           return `<div class="wp-card"><div class="wp-empty">Nog geen rekeningen, aandelen of ETFs toegevoegd.<br><span style="font-size:10px;color:var(--n4)">Begin met de + knoppen hierboven.</span></div></div>`;
@@ -3380,6 +3394,7 @@ function renderWealth(){
         const groups=[
           {key:'vrij',title:'Vrij beschikbaar',color:'var(--g)',colorHex:'#16a34a',items:allItems.filter(x=>!x.blocked&&x.availability==='vrij')},
           {key:'gereserveerd',title:'Gereserveerd',color:'#0ea5e9',colorHex:'#0ea5e9',items:allItems.filter(x=>!x.blocked&&x.availability==='gereserveerd')},
+          {key:'belegd',title:'Belegd',color:'#a855f7',colorHex:'#a855f7',items:allItems.filter(x=>!x.blocked&&x.availability==='belegd')},
           {key:'geblokkeerd',title:'Geblokkeerd',color:'var(--n3)',colorHex:'#94a3b8',items:allItems.filter(x=>x.blocked)}
         ].filter(g=>g.items.length>0);
         // Sorteer items binnen elke groep op waarde, descending
@@ -3437,7 +3452,9 @@ function renderWealth(){
                     const qtyDisp=Number((h.quantity||0).toFixed(4)).toString().replace('.',',');
                     metaParts.push(`<span style="font-family:var(--mono)">${qtyDisp} × ${sym}${h.lastPrice?fmtNum(h.lastPrice,2):'—'}</span>`);
                   }
-                  if(h.purchaseDate)metaParts.push(`gekocht ${new Date(h.purchaseDate).toLocaleDateString('nl-BE',{month:'short',year:'numeric'})}`);
+                  // Toon aantal aankopen als meer dan één lot
+                  const lotCount=Array.isArray(h.lots)?h.lots.length:0;
+                  if(lotCount>1)metaParts.push(`${lotCount} aankopen`);
                   if(h.availability==='gereserveerd'&&h.purpose)metaParts.push(esc(h.purpose));
                   else if(isBlk&&t)metaParts.push(`vrij in ${t.years>0?t.years+'j ':''}${t.months>0||t.years===0?t.months+'m':''}`);
                   if(h.availability==='geblokkeerd'&&h.yearlyContribution>0)metaParts.push(`+${fmt(h.yearlyContribution)}/jaar${h.contributionUntilYear?' tot '+h.contributionUntilYear:''}`);
@@ -4569,7 +4586,7 @@ function openAccountModal(accountId){
 
 function openHoldingModal(holdingId){
   const isEdit=!!holdingId;
-  const h=isEdit?(S.wealth.holdings||[]).find(x=>x.id===holdingId):{id:genId(),name:'',ticker:'',quantity:0,avgPrice:0,lastPrice:0,url:'',kind:'stock'};
+  const h=isEdit?(S.wealth.holdings||[]).find(x=>x.id===holdingId):{id:genId(),name:'',ticker:'',quantity:0,avgPrice:0,lastPrice:0,url:'',kind:'stock',availability:'belegd'};
   if(isEdit&&!h)return;
   const kind=h.kind||'stock';
   const modal=$('m-new');
@@ -4595,42 +4612,28 @@ function openHoldingModal(holdingId){
           <input type="text" class="field-input" id="h-ticker" value="${esc(h.ticker||'')}" placeholder="bv. AAPL, ABI.BR, EPA:AIR" autocomplete="off" style="font-family:var(--mono);text-transform:uppercase">
           <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Formaten: <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">AAPL</code> (US, USD), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ABI.BR</code> of <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">EBR:ABI</code> (Brussel, EUR), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ASML.AS</code> (Amsterdam, EUR). De munt wordt automatisch bepaald.</div>
         </div>
-        <div style="display:flex;gap:10px">
-          <div style="flex:1">
-            <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aantal</label>
-            <input type="text" class="field-input" id="h-qty" value="${inputDec(h.quantity)}" inputmode="decimal" placeholder="bv. 2,5" autocomplete="off">
-          </div>
-          <div style="flex:1">
-            <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Munt</label>
-            <select class="field-input" id="h-currency" style="width:100%">
-              <option value="USD" ${(h.currency||'USD')==='USD'?'selected':''}>USD ($)</option>
-              <option value="EUR" ${h.currency==='EUR'?'selected':''}>EUR (€)</option>
-            </select>
-          </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Munt</label>
+          <select class="field-input" id="h-currency" style="width:100%">
+            <option value="USD" ${(h.currency||'USD')==='USD'?'selected':''}>USD ($)</option>
+            <option value="EUR" ${h.currency==='EUR'?'selected':''}>EUR (€)</option>
+          </select>
+          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">De munt van de beurs waar het aandeel noteert. Je betaalt zelf altijd in euro.</div>
         </div>
-      <div style="display:flex;gap:10px">
-        <div style="flex:1">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aankoopkoers/stuk</label>
-          <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0;position:relative" id="h-avg-wrap"><input type="text" class="field-input" id="h-avg" value="${inputDec(h.avgPrice)}" inputmode="decimal" autocomplete="off"></div>
-        </div>
-        <div style="flex:1">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Totaal in ${h.currency||'USD'}</label>
-          <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0" id="h-total-wrap"><input type="text" class="field-input" id="h-total" value="${inputDec(h.totalCost||((h.quantity||0)*(h.avgPrice||0)))}" inputmode="decimal" autocomplete="off" placeholder="theoretisch"></div>
-        </div>
-      </div>
-      <div style="font-size:10px;color:var(--n3);margin-top:-4px;line-height:1.4">Aankoopkoers en totaal in de munt van het aandeel — vul één in, het andere wordt berekend. Komma's mogen.</div>
 
-      <div style="display:flex;gap:10px">
-        <div style="flex:1">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Effectief betaald (€)</label>
-          <div class="field-money" data-cur="EUR" style="margin:0" id="h-cost-eur-wrap"><input type="text" class="field-input" id="h-cost-eur" value="${inputDec(h.totalCostEur)}" inputmode="decimal" autocomplete="off" placeholder="wat de bank afhield"></div>
+        <!-- AANKOPEN: meerdere lots mogelijk -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px">Aankopen</label>
+            <button type="button" id="h-add-lot" style="background:rgba(233,30,140,.1);border:1px solid rgba(233,30,140,.3);color:var(--a);font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:4px">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Aankoop bijtellen
+            </button>
+          </div>
+          <div id="h-lots-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+          <div id="h-lots-summary" style="padding:9px 12px;background:var(--s2);border:1px solid var(--l1);border-radius:8px;font-size:11px;color:var(--n1);line-height:1.6"></div>
+          <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Per aankoop: het aantal aandelen dat je kocht en het totale EUR-bedrag dat de bank van je rekening haalde (inclusief beurstaks, fees en wisselkost). Koop je later bij? Klik "Aankoop bijtellen". Komma's mogen.</div>
         </div>
-        <div style="flex:1">
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aankoopdatum</label>
-          <input type="date" class="field-input" id="h-purchase-date" value="${h.purchaseDate||''}" autocomplete="off">
-        </div>
-      </div>
-      <div style="font-size:10px;color:var(--n3);margin-top:-4px;line-height:1.4"><strong>Tip:</strong> bij de bank betaal je altijd in euro. Vul hier het EUR-bedrag in dat effectief van je rekening werd gehaald (inclusief beurstaks, fees en wisselkost). Dit is je werkelijke kost — de winst/verlies wordt hierop berekend.</div>
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers ${h.lastPrice?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)">— '+fmt(h.lastPrice,2).replace('€','')+(h.currency==='EUR'?' €':' $')+'</span>':''}</label>
         <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0" id="h-last-wrap"><input type="text" class="field-input" id="h-last" value="${inputDec(h.lastPrice)}" inputmode="decimal" placeholder="manueel of refresh" autocomplete="off"></div>
@@ -4653,7 +4656,8 @@ function openHoldingModal(holdingId){
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Beschikbaarheid</label>
         <select class="field-input" id="h-availability" style="width:100%">
-          <option value="vrij" ${(h.availability||'vrij')==='vrij'?'selected':''}>Vrij — vrij beschikbaar</option>
+          <option value="belegd" ${(h.availability||(currentKind==='fund'?'belegd':'belegd'))==='belegd'?'selected':''}>Belegd — aandelen, ETFs, fondsen (marktrisico, T+2 verkoop)</option>
+          <option value="vrij" ${h.availability==='vrij'?'selected':''}>Vrij — beschouw als direct beschikbaar</option>
           <option value="gereserveerd" ${h.availability==='gereserveerd'?'selected':''}>Gereserveerd — bestemd voor specifieke kosten</option>
           <option value="geblokkeerd" ${h.availability==='geblokkeerd'?'selected':''}>Geblokkeerd — vast tot een bepaalde datum</option>
         </select>
@@ -4753,27 +4757,87 @@ function openHoldingModal(holdingId){
       syncCurrencySymbols();
     }
   });
-  // Bidirectionele sync: aankoopkoers/stuk ↔ totaal betaald, op basis van aantal
-  let _syncing=false;
-  const syncFromAvg=()=>{
-    if(_syncing)return;
-    const qty=parseDec($('h-qty').value);
-    const avg=calc($('h-avg').value)||parseDec($('h-avg').value);
-    if(qty>0&&avg>0){_syncing=true;$('h-total').value=fmtNum(qty*avg,2);_syncing=false;}
+  // === LOTS BEHEER === Meerdere aankopen mogelijk per holding.
+  // Elke lot = {qty: aantal aandelen, costEur: totaal EUR betaald aan de bank}.
+  // Bepaal initiële lots: bestaande h.lots, of legacy migratie van h.quantity/h.totalCostEur, of een lege rij.
+  const initialLots=(()=>{
+    if(Array.isArray(h.lots)&&h.lots.length>0)return h.lots.map(l=>({qty:l.qty||0,costEur:l.costEur||0}));
+    if((h.quantity||0)>0){
+      const ce=h.totalCostEur>0?h.totalCostEur:(h.totalCost>0?h.totalCost:((h.quantity||0)*(h.avgPrice||0)));
+      return [{qty:h.quantity,costEur:ce}];
+    }
+    return [{qty:0,costEur:0}]; // lege starter
+  })();
+  const renderLotRow=(lot,idx)=>`
+    <div class="h-lot-row" data-idx="${idx}" style="display:grid;grid-template-columns:1fr 1fr 32px;gap:8px;align-items:center">
+      <div>
+        <input type="text" class="field-input h-lot-qty" value="${inputDec(lot.qty)}" inputmode="decimal" placeholder="aantal" autocomplete="off" style="padding:8px 10px;font-size:13px">
+      </div>
+      <div class="field-money" data-cur="EUR" style="margin:0">
+        <input type="text" class="field-input h-lot-cost" value="${inputDec(lot.costEur)}" inputmode="decimal" placeholder="bedrag €" autocomplete="off" style="padding:8px 10px;font-size:13px">
+      </div>
+      <button type="button" class="h-lot-rm" data-idx="${idx}" title="Aankoop verwijderen" style="background:transparent;border:1px solid var(--l1);color:var(--n3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
+      </button>
+    </div>`;
+  const readLotsFromDom=()=>{
+    const rows=document.querySelectorAll('#h-lots-list .h-lot-row');
+    return Array.from(rows).map(r=>({
+      qty:parseDec(r.querySelector('.h-lot-qty')?.value),
+      costEur:parseDec(r.querySelector('.h-lot-cost')?.value)
+    }));
   };
-  const syncFromTotal=()=>{
-    if(_syncing)return;
-    const qty=parseDec($('h-qty').value);
-    const tot=calc($('h-total').value)||parseDec($('h-total').value);
-    if(qty>0&&tot>0){_syncing=true;$('h-avg').value=fmtNum(tot/qty,4);_syncing=false;}
+  const updateLotsSummary=()=>{
+    const lots=readLotsFromDom();
+    const tQty=lots.reduce((s,l)=>s+l.qty,0);
+    const tCost=lots.reduce((s,l)=>s+l.costEur,0);
+    const avg=tQty>0?tCost/tQty:0;
+    const sum=$('h-lots-summary');
+    if(!sum)return;
+    if(tQty<=0&&tCost<=0){
+      sum.innerHTML=`<span style="color:var(--n3)">Nog geen aankopen ingevuld.</span>`;
+    } else {
+      const qtyDisp=Number(tQty.toFixed(4)).toString().replace('.',',');
+      sum.innerHTML=`<div style="display:flex;justify-content:space-between"><span><strong>${qtyDisp}</strong> aandelen voor <strong>${fmt(tCost,2)}</strong></span><span style="color:var(--n3)">gem. ${fmt(avg,2)}/stuk</span></div>`;
+    }
   };
-  $('h-avg')&&$('h-avg').addEventListener('input',syncFromAvg);
-  $('h-total')&&$('h-total').addEventListener('input',syncFromTotal);
-  $('h-qty')&&$('h-qty').addEventListener('input',()=>{
-    // Bij aantal-wijziging: hou totaal als waarheid, herbereken avgPrice
-    const qty=parseDec($('h-qty').value);
-    const tot=parseDec($('h-total').value);
-    if(qty>0&&tot>0){_syncing=true;$('h-avg').value=fmtNum(tot/qty,4);_syncing=false;}
+  let _lotsData=initialLots.slice();
+  const renderLotsList=()=>{
+    const list=$('h-lots-list');
+    if(!list)return;
+    list.innerHTML=_lotsData.map((l,i)=>renderLotRow(l,i)).join('');
+    // Wire input events
+    list.querySelectorAll('.h-lot-qty, .h-lot-cost').forEach(el=>{
+      el.addEventListener('input',updateLotsSummary);
+    });
+    // Wire remove buttons
+    list.querySelectorAll('.h-lot-rm').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const idx=parseInt(btn.dataset.idx);
+        if(_lotsData.length<=1){
+          // Laatste rij: maak leeg ipv verwijderen, zodat er altijd ten minste 1 inputrij is
+          _lotsData=[{qty:0,costEur:0}];
+        } else {
+          _lotsData.splice(idx,1);
+        }
+        renderLotsList();
+        updateLotsSummary();
+      });
+    });
+    updateLotsSummary();
+  };
+  renderLotsList();
+  $('h-add-lot')&&$('h-add-lot').addEventListener('click',()=>{
+    // Lees huidige waarden uit DOM zodat in-progress input behouden blijft
+    _lotsData=readLotsFromDom();
+    _lotsData.push({qty:0,costEur:0});
+    renderLotsList();
+    // Focus de nieuwe rij
+    setTimeout(()=>{
+      const rows=document.querySelectorAll('#h-lots-list .h-lot-row');
+      const last=rows[rows.length-1];
+      last?.querySelector('.h-lot-qty')?.focus();
+    },10);
   });
   $('h-save').onclick=()=>{
     if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
@@ -4782,15 +4846,17 @@ function openHoldingModal(holdingId){
     const ticker=isFund?'':($('h-ticker')?$('h-ticker').value||'':'').trim();
     if(!name){showToast('⚠ Naam is verplicht',2000);return;}
     if(!isFund&&!ticker){showToast('⚠ Ticker is verplicht voor aandeel/ETF',2200);return;}
-    const qty=isFund?0:parseDec($('h-qty')?.value);
-    const avg=isFund?0:(calc($('h-avg')?.value)||parseDec($('h-avg')?.value));
-    const tot=isFund?0:(calc($('h-total')?.value)||parseDec($('h-total')?.value));
-    const totalCost=tot>0?tot:(qty>0&&avg>0?qty*avg:0);
-    const totalCostEur=isFund?0:(calc($('h-cost-eur')?.value)||parseDec($('h-cost-eur')?.value));
-    const purchaseDate=isFund?'':($('h-purchase-date')?.value||'').trim();
+    // Lees lots uit DOM; filter lege rijen (qty=0 én cost=0)
+    const rawLots=isFund?[]:readLotsFromDom().filter(l=>l.qty>0||l.costEur>0);
+    if(!isFund&&rawLots.length===0){showToast('⚠ Voeg minstens één aankoop toe',2200);return;}
+    if(!isFund&&rawLots.some(l=>l.qty<=0||l.costEur<=0)){showToast('⚠ Vul voor elke aankoop een aantal én EUR-bedrag in',2400);return;}
+    const lots=rawLots;
+    const qty=isFund?0:lots.reduce((s,l)=>s+l.qty,0);
+    const totalCostEur=isFund?0:lots.reduce((s,l)=>s+l.costEur,0);
+    const avg=qty>0?totalCostEur/qty:0; // gemiddelde EUR-prijs per stuk (voor backward compat displays)
     const manualValue=isFund?(calc($('h-manual-value').value)||parseDec($('h-manual-value').value)):0;
     if(isFund&&manualValue<=0){showToast('⚠ Vul een huidige waarde in',2000);return;}
-    const availability=$('h-availability').value||'vrij';
+    const availability=$('h-availability').value||'belegd';
     const yearlyContribution=availability==='geblokkeerd'?(calc($('h-yearly-contrib')?.value)||parseDec($('h-yearly-contrib')?.value)):0;
     const contribUntil=availability==='geblokkeerd'?(parseInt($('h-contrib-until')?.value)||0):0;
     const earlyWithdrawalTax=availability==='geblokkeerd'?parseDec($('h-early-tax')?.value):0;
@@ -4803,9 +4869,8 @@ function openHoldingModal(holdingId){
       quantity:qty,
       currency:isFund?'EUR':($('h-currency')?.value||'USD'),
       avgPrice:avg,
-      totalCost,
       totalCostEur,
-      purchaseDate,
+      lots,
       lastPrice:isFund?0:(calc($('h-last')?.value)||parseDec($('h-last')?.value)),
       manualValue:isFund?manualValue:0,
       url:isFund?'':($('h-url')?.value||'').trim(),
