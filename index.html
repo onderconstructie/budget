@@ -1241,7 +1241,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.038</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.039</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1511,7 +1511,10 @@ const fmtN=(n)=>`<span style="display:inline-block;padding:1px 6px;background:rg
 const fmtAmt=(n,positive)=>positive!==false&&n>=0?fmtPos(n):fmtNeg(n);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const mkd=(d=viewMonth)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-function calc(expr){try{const c=String(expr).replace(/\s/g,'');if(!/^[\d+\-*/().]+$/.test(c)||/[+\-*/]{2,}/.test(c))return null;const r=Function('"use strict";return('+c+')')();return typeof r==='number'&&isFinite(r)?Math.round(r*100)/100:null}catch{return null}}
+// Belgische decimaal-conventie: komma wordt geaccepteerd als decimaalpunt.
+// parseDec('3,14') = 3.14 ; parseFloat zou '3' teruggeven.
+function parseDec(v){if(v==null)return 0;const s=String(v).trim().replace(',','.');const f=parseFloat(s);return isFinite(f)?f:0;}
+function calc(expr){try{const c=String(expr).replace(/\s/g,'').replace(/,/g,'.');if(!/^[\d+\-*/().]+$/.test(c)||/[+\-*/]{2,}/.test(c))return null;const r=Function('"use strict";return('+c+')')();return typeof r==='number'&&isFinite(r)?Math.round(r*10000)/10000:null}catch{return null}}
 let calcTarget=null;
 function enableCalc(inp){inp.style.fontFamily='var(--font-mono)';const ev=()=>{const r=calc(inp.value);if(r!==null&&/[+\-*/]/.test(inp.value)){inp.value=r;inp.dispatchEvent(new Event('input',{bubbles:true}))}};const updateBar=()=>{const hasOp=/[+\-*/]/.test(inp.value);$('calc-bar').classList.toggle('show',calcTarget===inp&&hasOp);};inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ev()}});inp.addEventListener('input',updateBar);inp.addEventListener('blur',()=>{ev();setTimeout(()=>{if(calcTarget===inp)hideCalcBar()},150)});inp.addEventListener('focus',()=>{calcTarget=inp;updateBar();})}
 function hideCalcBar(){calcTarget=null;$('calc-bar').classList.remove('show')}
@@ -3406,7 +3409,9 @@ function renderWealth(){
                   metaParts.push(isFund?'<span class="wp-row-type-pill wp-type-invest">Fonds</span>':'<span class="wp-row-type-pill wp-type-invest">Belegging</span>');
                   if(!isFund){
                     if(h.ticker)metaParts.push(`<span style="font-family:var(--mono)">${esc(h.ticker)}</span>`);
-                    metaParts.push(`<span style="font-family:var(--mono)">${h.quantity||0} × ${sym}${h.lastPrice?h.lastPrice.toFixed(2):'—'}</span>`);
+                    // Quantity met max 4 decimalen, geen onnodige nullen
+                    const qtyDisp=Number((h.quantity||0).toFixed(4)).toString().replace('.',',');
+                    metaParts.push(`<span style="font-family:var(--mono)">${qtyDisp} × ${sym}${h.lastPrice?h.lastPrice.toFixed(2):'—'}</span>`);
                   }
                   if(h.availability==='gereserveerd'&&h.purpose)metaParts.push(esc(h.purpose));
                   else if(isBlk&&t)metaParts.push(`vrij in ${t.years>0?t.years+'j ':''}${t.months>0||t.years===0?t.months+'m':''}`);
@@ -4568,7 +4573,7 @@ function openHoldingModal(holdingId){
         <div style="display:flex;gap:10px">
           <div style="flex:1">
             <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Aantal</label>
-            <input type="text" class="field-input" id="h-qty" value="${h.quantity||''}" inputmode="decimal" placeholder="0" autocomplete="off">
+            <input type="text" class="field-input" id="h-qty" value="${h.quantity||''}" inputmode="decimal" placeholder="bv. 2,5" autocomplete="off">
           </div>
           <div style="flex:1">
             <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Munt</label>
@@ -4588,7 +4593,7 @@ function openHoldingModal(holdingId){
           <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0" id="h-total-wrap"><input type="text" class="field-input" id="h-total" value="${h.totalCost||((h.quantity||0)*(h.avgPrice||0))||''}" inputmode="decimal" autocomplete="off" placeholder="incl. fees + TOB"></div>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--n3);margin-top:-4px;line-height:1.4">Vul één in, het andere wordt berekend op basis van het aantal. Totaal = wat de bank effectief afschreef incl. beurstaks en commissie.</div>
+      <div style="font-size:10px;color:var(--n3);margin-top:-4px;line-height:1.4"><strong>Tip:</strong> vul gewoon het bedrag in dat de bank effectief van je rekening haalde (inclusief beurstaks en commissie) in "Totaal betaald". De aankoopkoers per stuk wordt automatisch berekend. Komma's mogen.</div>
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers ${h.lastPrice?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)">— '+fmt(h.lastPrice)+'</span>':''}</label>
         <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0" id="h-last-wrap"><input type="text" class="field-input" id="h-last" value="${h.lastPrice||''}" inputmode="decimal" placeholder="manueel of refresh" autocomplete="off"></div>
@@ -4715,22 +4720,22 @@ function openHoldingModal(holdingId){
   let _syncing=false;
   const syncFromAvg=()=>{
     if(_syncing)return;
-    const qty=parseFloat($('h-qty').value)||0;
-    const avg=calc($('h-avg').value)||parseFloat($('h-avg').value)||0;
+    const qty=parseDec($('h-qty').value);
+    const avg=calc($('h-avg').value)||parseDec($('h-avg').value);
     if(qty>0&&avg>0){_syncing=true;$('h-total').value=(qty*avg).toFixed(2);_syncing=false;}
   };
   const syncFromTotal=()=>{
     if(_syncing)return;
-    const qty=parseFloat($('h-qty').value)||0;
-    const tot=calc($('h-total').value)||parseFloat($('h-total').value)||0;
+    const qty=parseDec($('h-qty').value);
+    const tot=calc($('h-total').value)||parseDec($('h-total').value);
     if(qty>0&&tot>0){_syncing=true;$('h-avg').value=(tot/qty).toFixed(4);_syncing=false;}
   };
   $('h-avg')&&$('h-avg').addEventListener('input',syncFromAvg);
   $('h-total')&&$('h-total').addEventListener('input',syncFromTotal);
   $('h-qty')&&$('h-qty').addEventListener('input',()=>{
     // Bij aantal-wijziging: hou totaal als waarheid, herbereken avgPrice
-    const qty=parseFloat($('h-qty').value)||0;
-    const tot=parseFloat($('h-total').value)||0;
+    const qty=parseDec($('h-qty').value);
+    const tot=parseDec($('h-total').value);
     if(qty>0&&tot>0){_syncing=true;$('h-avg').value=(tot/qty).toFixed(4);_syncing=false;}
   });
   $('h-save').onclick=()=>{
@@ -4740,17 +4745,17 @@ function openHoldingModal(holdingId){
     const ticker=isFund?'':($('h-ticker')?$('h-ticker').value||'':'').trim();
     if(!name){showToast('⚠ Naam is verplicht',2000);return;}
     if(!isFund&&!ticker){showToast('⚠ Ticker is verplicht voor aandeel/ETF',2200);return;}
-    const qty=isFund?0:parseFloat($('h-qty')?.value)||0;
-    const avg=isFund?0:(calc($('h-avg')?.value)||parseFloat($('h-avg')?.value)||0);
-    const tot=isFund?0:(calc($('h-total')?.value)||parseFloat($('h-total')?.value)||0);
+    const qty=isFund?0:parseDec($('h-qty')?.value);
+    const avg=isFund?0:(calc($('h-avg')?.value)||parseDec($('h-avg')?.value));
+    const tot=isFund?0:(calc($('h-total')?.value)||parseDec($('h-total')?.value));
     const totalCost=tot>0?tot:(qty>0&&avg>0?qty*avg:0);
-    const manualValue=isFund?(calc($('h-manual-value').value)||parseFloat($('h-manual-value').value)||0):0;
+    const manualValue=isFund?(calc($('h-manual-value').value)||parseDec($('h-manual-value').value)):0;
     if(isFund&&manualValue<=0){showToast('⚠ Vul een huidige waarde in',2000);return;}
     const availability=$('h-availability').value||'vrij';
-    const yearlyContribution=availability==='geblokkeerd'?(calc($('h-yearly-contrib')?.value)||parseFloat($('h-yearly-contrib')?.value)||0):0;
+    const yearlyContribution=availability==='geblokkeerd'?(calc($('h-yearly-contrib')?.value)||parseDec($('h-yearly-contrib')?.value)):0;
     const contribUntil=availability==='geblokkeerd'?(parseInt($('h-contrib-until')?.value)||0):0;
-    const earlyWithdrawalTax=availability==='geblokkeerd'?(parseFloat($('h-early-tax')?.value)||0):0;
-    const normalWithdrawalTax=availability==='geblokkeerd'?(parseFloat($('h-normal-tax')?.value)||0):0;
+    const earlyWithdrawalTax=availability==='geblokkeerd'?parseDec($('h-early-tax')?.value):0;
+    const normalWithdrawalTax=availability==='geblokkeerd'?parseDec($('h-normal-tax')?.value):0;
     const data={
       id:h.id,
       kind:currentKind,
@@ -4760,7 +4765,7 @@ function openHoldingModal(holdingId){
       currency:isFund?'EUR':($('h-currency')?.value||'USD'),
       avgPrice:avg,
       totalCost,
-      lastPrice:isFund?0:(calc($('h-last')?.value)||parseFloat($('h-last')?.value)||0),
+      lastPrice:isFund?0:(calc($('h-last')?.value)||parseDec($('h-last')?.value)),
       manualValue:isFund?manualValue:0,
       url:isFund?'':($('h-url')?.value||'').trim(),
       availability,
