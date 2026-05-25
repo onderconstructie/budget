@@ -423,39 +423,56 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .set-row.danger{color:var(--r)}
 .set-row.danger svg{stroke:var(--r)}
 /* === VAULT UI === */
+/* Modal — fullscreen overlay met content die NIET tegen rand kleeft */
+.vlt-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:9998;display:flex;align-items:flex-end;justify-content:center;padding:0;box-sizing:border-box}
+.vlt-modal-card{width:100%;max-width:420px;max-height:92vh;background:white;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden;animation:vlt-slide-up .25s ease-out}
+@media (min-width:480px){
+  .vlt-modal{align-items:center;padding:20px;background:rgba(15,23,42,.5)}
+  .vlt-modal-card{border-radius:16px;max-height:88vh}
+}
+@keyframes vlt-slide-up{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.vlt-modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--l0);flex-shrink:0}
+.vlt-modal-title{font-size:15px;font-weight:700;color:var(--n0)}
+.vlt-modal-x{background:none;border:none;font-size:22px;line-height:1;color:var(--n3);cursor:pointer;padding:4px 8px;border-radius:6px;font-family:inherit}
+.vlt-modal-x:hover{background:var(--s2);color:var(--n1)}
+.vlt-modal-body{padding:16px 18px 20px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
 .vlt-field{position:relative;margin-bottom:4px}
-.vlt-field-input{width:100%;padding:12px 40px 12px 14px;border:1.5px solid var(--l1);border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;background:white;transition:border-color .15s,box-shadow .15s}
+.vlt-field-input{width:100%;padding:11px 38px 11px 12px;border:1.5px solid var(--l1);border-radius:9px;font-size:14px;font-family:inherit;box-sizing:border-box;background:white;transition:border-color .15s,box-shadow .15s}
 .vlt-field-input:focus{outline:none;border-color:#f472b6;box-shadow:0 0 0 3px rgba(244,114,182,.15)}
-.vlt-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;color:var(--n3);display:flex;align-items:center;justify-content:center}
+.vlt-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--n3);display:flex;align-items:center;justify-content:center}
 .vlt-eye:hover{color:var(--n1)}
-.vlt-eye svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none}
-.vlt-meter{display:flex;gap:4px;margin-top:6px;margin-bottom:4px}
-.vlt-meter-bar{flex:1;height:4px;border-radius:2px;background:var(--l0);transition:background .2s}
+.vlt-eye svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none}
+.vlt-meter{display:flex;gap:3px;margin-top:5px;margin-bottom:3px}
+.vlt-meter-bar{flex:1;height:3px;border-radius:2px;background:var(--l0);transition:background .2s}
 .vlt-meter-bar.on-weak{background:#f87171}
 .vlt-meter-bar.on-med{background:#fbbf24}
 .vlt-meter-bar.on-good{background:#84cc16}
 .vlt-meter-bar.on-strong{background:#16a34a}
 .vlt-meter-label{font-size:10px;font-weight:600;color:var(--n3);margin-bottom:10px;min-height:14px}
-.vlt-match{font-size:11px;font-weight:600;margin-top:6px;margin-bottom:10px;min-height:16px;display:flex;align-items:center;gap:6px}
+.vlt-match{font-size:11px;font-weight:600;margin-top:5px;margin-bottom:10px;min-height:16px;display:flex;align-items:center;gap:5px}
+.vlt-match svg{width:14px;height:14px;flex-shrink:0}
 .vlt-match.ok{color:#16a34a}
 .vlt-match.bad{color:#dc2626}
-.vlt-check{display:flex;align-items:flex-start;gap:10px;padding:12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;margin-bottom:14px;cursor:pointer;user-select:none}
+.vlt-check{display:flex;align-items:flex-start;gap:9px;padding:10px 11px;background:#fef3c7;border:1px solid #fcd34d;border-radius:9px;margin-bottom:12px;cursor:pointer;user-select:none}
 .vlt-check input{margin-top:2px;flex-shrink:0;accent-color:#be185d}
 .vlt-check-text{font-size:11px;color:#92400e;line-height:1.5}
-.vlt-info{background:linear-gradient(135deg,rgba(244,114,182,.08),rgba(190,24,93,.04));border:1px solid rgba(244,114,182,.25);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--n2);line-height:1.5}
-.vlt-info-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#fce7f3;color:#be185d;margin-right:8px;vertical-align:middle}
-.vlt-info-icon svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
-.vlt-primary{width:100%;padding:13px;background:linear-gradient(135deg,#f472b6,#be185d);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .1s}
+.vlt-info{background:linear-gradient(135deg,rgba(244,114,182,.08),rgba(190,24,93,.04));border:1px solid rgba(244,114,182,.25);border-radius:9px;padding:11px 12px;margin-bottom:14px;font-size:12px;color:var(--n2);line-height:1.5;display:flex;align-items:flex-start;gap:8px}
+.vlt-info-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#fce7f3;color:#be185d;flex-shrink:0}
+.vlt-info-icon svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}
+.vlt-info-text{flex:1;min-width:0}
+.vlt-primary{width:100%;padding:12px;background:linear-gradient(135deg,#f472b6,#be185d);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .1s}
 .vlt-primary:hover:not(:disabled){opacity:.95}
 .vlt-primary:active:not(:disabled){transform:scale(.98)}
 .vlt-primary:disabled{opacity:.4;cursor:not-allowed;background:var(--n3)}
-.vlt-secondary{width:100%;padding:13px;background:var(--n2);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.vlt-secondary{width:100%;padding:12px;background:var(--n2);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
 .vlt-secondary:hover:not(:disabled){opacity:.92}
 .vlt-secondary:disabled{opacity:.5;cursor:not-allowed}
-.vlt-error{font-size:12px;color:#dc2626;min-height:16px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.vlt-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10b981,#059669);color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10000;display:flex;align-items:center;gap:8px;animation:vlt-toast-in .25s ease-out}
-.vlt-toast svg{width:18px;height:18px;stroke:white;stroke-width:2.5;fill:none}
-@keyframes vlt-toast-in{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+.vlt-label{display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:5px}
+.vlt-error{font-size:12px;color:#dc2626;min-height:16px;margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.vlt-error svg{width:14px;height:14px;flex-shrink:0}
+.vlt-toast{position:fixed;top:16px;left:16px;right:16px;max-width:380px;margin:0 auto;background:linear-gradient(135deg,#10b981,#059669);color:white;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10000;display:flex;align-items:center;gap:8px;animation:vlt-toast-in .25s ease-out}
+.vlt-toast svg{width:18px;height:18px;stroke:white;stroke-width:2.5;fill:none;flex-shrink:0}
+@keyframes vlt-toast-in{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes vlt-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .vlt-shake{animation:vlt-shake .35s ease-in-out}
 .file-wrap{position:relative}
@@ -715,6 +732,42 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 /* Sectie-conventies voor Vermogen + Plan tabs */
 .wp-section{margin-bottom:18px}
 .wp-section:last-child{margin-bottom:14px}
+/* === VERMOGEN HERO + verdeling === */
+.wp-hero{padding:18px 18px 16px;background:linear-gradient(135deg,#fdf2f8 0%,#ffffff 60%);border:1px solid var(--l0);border-radius:var(--r8);margin-bottom:14px}
+.wp-hero-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--n3);margin-bottom:8px}
+.wp-hero-amount{font-family:var(--mono);font-size:34px;font-weight:800;letter-spacing:-1px;color:var(--n0);line-height:1.05;margin-bottom:14px}
+.wp-hero-amount.compact{font-size:28px}
+.wp-prop-bar{height:14px;background:var(--l0);border-radius:7px;overflow:hidden;display:flex;margin-bottom:14px}
+.wp-prop-seg{height:100%;transition:width .3s;position:relative}
+.wp-prop-seg+.wp-prop-seg{border-left:2px solid white}
+.wp-prop-list{display:flex;flex-direction:column;gap:0}
+.wp-prop-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--l0)}
+.wp-prop-row:last-child{border-bottom:none}
+.wp-prop-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:9px;vertical-align:middle;flex-shrink:0}
+.wp-prop-name{font-size:13px;font-weight:600;color:var(--n0);display:flex;align-items:center}
+.wp-prop-amt{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--n0);text-align:right}
+.wp-prop-pct{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--n3);min-width:42px;text-align:right;padding-left:6px}
+/* Stat cards (toegankelijk + rendement) */
+.wp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.wp-stat{padding:14px;background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8)}
+.wp-stat-label{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--n3);margin-bottom:5px}
+.wp-stat-amt{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--n0);letter-spacing:-.3px;line-height:1.1;margin-bottom:3px}
+.wp-stat-sub{font-size:10.5px;color:var(--n2);line-height:1.35}
+.wp-stat.accent{background:linear-gradient(135deg,rgba(22,163,74,.06),rgba(22,163,74,.02));border-color:rgba(22,163,74,.18)}
+.wp-stat.accent .wp-stat-amt{color:#16a34a}
+.wp-stat.profit-pos{background:linear-gradient(135deg,rgba(22,163,74,.06),rgba(22,163,74,.02));border-color:rgba(22,163,74,.18)}
+.wp-stat.profit-pos .wp-stat-amt{color:#16a34a}
+.wp-stat.profit-neg{background:linear-gradient(135deg,rgba(220,38,38,.05),rgba(220,38,38,.02));border-color:rgba(220,38,38,.18)}
+.wp-stat.profit-neg .wp-stat-amt{color:#dc2626}
+.wp-stat-full{grid-column:1/-1}
+/* Group headers met % */
+.wp-group{margin-bottom:14px}
+.wp-group:last-child{margin-bottom:0}
+.wp-group-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:6px}
+.wp-group-title{font-size:11px;font-weight:700;color:var(--n1);display:flex;align-items:center;gap:2px}
+.wp-group-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+.wp-group-meta{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--n2);display:flex;align-items:center;gap:8px}
+.wp-group-pct{color:var(--n3);font-size:10px}
 .wp-label{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .wp-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .wp-label-row .wp-label{margin-bottom:0}
@@ -1186,7 +1239,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.033</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.035</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -3192,23 +3245,20 @@ function renderWealth(){
   const geblokkeerdPct=tot.total>0?(tot.geblokkeerd/tot.total*100):0;
 
   target.innerHTML=`
-    <!-- HERO: totaal + rendement + beschikbaarheid -->
-    <div class="wp-card-pad wp-section">
-      <div class="wp-label" style="margin-bottom:8px">Totaal vermogen</div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${tot.total>0?'14px':'0'}">
-        <span style="font-size:28px;font-weight:800;color:var(--n0);font-family:var(--mono);line-height:1">${fmt(Math.round(tot.total))}</span>
-        ${totalCost>0?`<span style="font-size:12px;font-weight:700;color:${pnlColor};font-family:var(--mono)">${totalPnL>=0?'+':''}${fmt(Math.round(totalPnL))} (${totalPnL>=0?'+':''}${pnlPct.toFixed(1)}%)</span>`:''}
-      </div>
+    <!-- HERO: groot totaal + verdeling met %'s -->
+    <div class="wp-hero">
+      <div class="wp-hero-label">Totaal vermogen</div>
+      <div class="wp-hero-amount ${tot.total>=100000?'compact':''}">${fmt(Math.round(tot.total))}</div>
       ${tot.total>0?`
-        <div style="height:6px;background:var(--l0);border-radius:3px;overflow:hidden;display:flex;margin-bottom:12px">
-          ${vrijPct>0?`<div style="width:${vrijPct}%;background:var(--g)"></div>`:''}
-          ${gereserveerdPct>0?`<div style="width:${gereserveerdPct}%;background:#0ea5e9"></div>`:''}
-          ${geblokkeerdPct>0?`<div style="width:${geblokkeerdPct}%;background:var(--n3)"></div>`:''}
+        <div class="wp-prop-bar">
+          ${vrijPct>0?`<div class="wp-prop-seg" style="width:${vrijPct}%;background:var(--g)" title="Vrij ${vrijPct.toFixed(1)}%"></div>`:''}
+          ${gereserveerdPct>0?`<div class="wp-prop-seg" style="width:${gereserveerdPct}%;background:#0ea5e9" title="Gereserveerd ${gereserveerdPct.toFixed(1)}%"></div>`:''}
+          ${geblokkeerdPct>0?`<div class="wp-prop-seg" style="width:${geblokkeerdPct}%;background:var(--n3)" title="Geblokkeerd ${geblokkeerdPct.toFixed(1)}%"></div>`:''}
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
-          ${tot.vrij>0?`<div style="display:flex;justify-content:space-between;align-items:center"><span style="color:var(--n1);display:inline-flex;align-items:center"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--g);margin-right:8px"></span>Vrij</span><span style="font-family:var(--mono);font-weight:700;color:var(--n0)">${fmt(Math.round(tot.vrij))}</span></div>`:''}
-          ${tot.gereserveerd>0?`<div style="display:flex;justify-content:space-between;align-items:center"><span style="color:var(--n1);display:inline-flex;align-items:center"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#0ea5e9;margin-right:8px"></span>Gereserveerd</span><span style="font-family:var(--mono);font-weight:700;color:var(--n0)">${fmt(Math.round(tot.gereserveerd))}</span></div>`:''}
-          ${tot.geblokkeerd>0?`<div style="display:flex;justify-content:space-between;align-items:center"><span style="color:var(--n1);display:inline-flex;align-items:center"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--n3);margin-right:8px"></span>Geblokkeerd</span><span style="font-family:var(--mono);font-weight:700;color:var(--n0)">${fmt(Math.round(tot.geblokkeerd))}</span></div>`:''}
+        <div class="wp-prop-list">
+          ${tot.vrij>0?`<div class="wp-prop-row"><span class="wp-prop-name"><span class="wp-prop-dot" style="background:var(--g)"></span>Vrij</span><span class="wp-prop-amt">${fmt(Math.round(tot.vrij))}</span><span class="wp-prop-pct">${vrijPct.toFixed(0)}%</span></div>`:''}
+          ${tot.gereserveerd>0?`<div class="wp-prop-row"><span class="wp-prop-name"><span class="wp-prop-dot" style="background:#0ea5e9"></span>Gereserveerd</span><span class="wp-prop-amt">${fmt(Math.round(tot.gereserveerd))}</span><span class="wp-prop-pct">${gereserveerdPct.toFixed(0)}%</span></div>`:''}
+          ${tot.geblokkeerd>0?`<div class="wp-prop-row"><span class="wp-prop-name"><span class="wp-prop-dot" style="background:var(--n3)"></span>Geblokkeerd</span><span class="wp-prop-amt">${fmt(Math.round(tot.geblokkeerd))}</span><span class="wp-prop-pct">${geblokkeerdPct.toFixed(0)}%</span></div>`:''}
         </div>
       `:''}
     </div>
@@ -3220,23 +3270,46 @@ function renderWealth(){
       </div>
     `:''}
 
-    ${monthlyBuffer>0?`
-      <div class="wp-card-pad wp-section">
-        <div class="wp-label">Samenspel met je buffer</div>
-        <div style="font-size:12px;color:var(--n1);line-height:1.6">
-          ${hasWealth&&bufferYears!==null
+    ${hasWealth?`
+      <!-- STAT CARDS: toegankelijk + rendement -->
+      <div class="wp-stats">
+        <div class="wp-stat accent">
+          <div class="wp-stat-label">Toegankelijk</div>
+          <div class="wp-stat-amt">${fmt(Math.round(accessibleWealth))}</div>
+          <div class="wp-stat-sub">${monthlyBuffer>0&&bufferYears!==null
             ?(bufferYears<0.5
-              ?`Je structurele maandbuffer is ${fmtPos(Math.round(monthlyBuffer))}. Met je toegankelijk vermogen (${fmtN(Math.round(accessibleWealth))}) overbrug je <strong>${(bufferYears*12).toFixed(1)} maand</strong>.`
+              ?`≈ ${(bufferYears*12).toFixed(1)} mnd buffer`
               :bufferYears<2
-                ?`Je structurele maandbuffer is ${fmtPos(Math.round(monthlyBuffer))} (${fmtN(Math.round(yearlyBuffer))} per jaar). Toegankelijk vermogen (${fmtN(Math.round(accessibleWealth))}) dekt <strong>${bufferYears.toFixed(1)} jaar</strong>.`
-                :`Toegankelijk vermogen (${fmtN(Math.round(accessibleWealth))}) dekt ruim <strong>${Math.round(bufferYears)} jaar</strong> aan maandbuffer (${fmtPos(Math.round(monthlyBuffer))}/mnd).`)
-            :`Je structurele maandbuffer is ${fmtPos(Math.round(monthlyBuffer))} — dat is ${fmtN(Math.round(yearlyBuffer))} per jaar.`}
-          ${tot.geblokkeerd>0?`<div style="color:var(--n3);font-size:11px;margin-top:6px">Geblokkeerd vermogen (${fmtN(Math.round(tot.geblokkeerd))}) is hier bewust niet meegerekend.</div>`:''}
+                ?`≈ ${bufferYears.toFixed(1)} jaar buffer`
+                :`≈ ${Math.round(bufferYears)} jaar buffer`)
+            :'vrij + gereserveerd'}</div>
+        </div>
+        ${totalCost>0?`
+          <div class="wp-stat ${totalPnL>=0?'profit-pos':'profit-neg'}">
+            <div class="wp-stat-label">Rendement</div>
+            <div class="wp-stat-amt">${totalPnL>=0?'+':''}${fmt(Math.round(totalPnL))}</div>
+            <div class="wp-stat-sub">${totalPnL>=0?'+':''}${pnlPct.toFixed(1)}% op ${fmt(Math.round(totalCost))} inleg</div>
+          </div>
+        `:`
+          <div class="wp-stat">
+            <div class="wp-stat-label">Beleggingen</div>
+            <div class="wp-stat-amt" style="font-size:14px;color:var(--n3)">Nog geen</div>
+            <div class="wp-stat-sub">Voeg aandelen of fondsen toe</div>
+          </div>
+        `}
+      </div>
+    `:''}
+
+    ${monthlyBuffer>0&&hasWealth&&bufferYears!==null&&bufferYears<0.5?`
+      <div class="alert warning wp-section" style="margin-bottom:14px">
+        <div class="alert-icon">${ic('alertTriangle')||ic('zap')}</div>
+        <div class="alert-content">
+          <div class="alert-title">Beperkte buffer</div>
+          <div class="alert-text">Je toegankelijk vermogen dekt minder dan een half jaar buffer. Een onverwachte uitgave kan dit snel uitputten.</div>
         </div>
       </div>
     `:''}
 
-    <!-- SPAARREKENINGEN -->
     <!-- VERMOGENS-ITEMS GEGROEPEERD OP BESCHIKBAARHEID -->
     <div class="wp-section">
       <div class="wp-label-row">
@@ -3250,7 +3323,6 @@ function renderWealth(){
         </div>
       </div>
       ${(()=>{
-        // Bouw items lijst met type-info
         const allItems=[];
         (w.accounts||[]).forEach(a=>{
           allItems.push({type:'account',item:a,value:a.balance||0,availability:a.availability||'vrij',blocked:isBlocked(a)});
@@ -3262,18 +3334,21 @@ function renderWealth(){
           return `<div class="wp-card"><div class="wp-empty">Nog geen rekeningen, aandelen of ETFs toegevoegd.<br><span style="font-size:10px;color:var(--n4)">Begin met de + knoppen hierboven.</span></div></div>`;
         }
         const groups=[
-          {key:'vrij',title:'Vrij beschikbaar',color:'var(--g)',items:allItems.filter(x=>!x.blocked&&x.availability==='vrij')},
-          {key:'gereserveerd',title:'Gereserveerd',color:'#0ea5e9',items:allItems.filter(x=>!x.blocked&&x.availability==='gereserveerd')},
-          {key:'geblokkeerd',title:'Geblokkeerd',color:'var(--n3)',items:allItems.filter(x=>x.blocked)}
+          {key:'vrij',title:'Vrij beschikbaar',color:'var(--g)',colorHex:'#16a34a',items:allItems.filter(x=>!x.blocked&&x.availability==='vrij')},
+          {key:'gereserveerd',title:'Gereserveerd',color:'#0ea5e9',colorHex:'#0ea5e9',items:allItems.filter(x=>!x.blocked&&x.availability==='gereserveerd')},
+          {key:'geblokkeerd',title:'Geblokkeerd',color:'var(--n3)',colorHex:'#94a3b8',items:allItems.filter(x=>x.blocked)}
         ].filter(g=>g.items.length>0);
+        // Sorteer items binnen elke groep op waarde, descending
+        groups.forEach(g=>g.items.sort((a,b)=>b.value-a.value));
         return groups.map(g=>{
           const subtotal=g.items.reduce((s,x)=>s+x.value,0);
+          const groupPct=tot.total>0?(subtotal/tot.total*100):0;
           return `<div class="wp-group">
             <div class="wp-group-header">
-              <span class="wp-group-title"><span class="wp-group-dot" style="background:${g.color}"></span>${g.title}</span>
-              <span class="wp-group-subtotal">${fmt(Math.round(subtotal))}</span>
+              <span class="wp-group-title"><span class="wp-group-dot" style="background:${g.colorHex}"></span>${g.title}</span>
+              <span class="wp-group-meta"><span class="wp-group-pct">${groupPct.toFixed(0)}%</span><span>${fmt(Math.round(subtotal))}</span></span>
             </div>
-            <div class="wp-card" style="margin-top:6px">
+            <div class="wp-card">
               ${g.items.map(x=>{
                 if(x.type==='account'){
                   const a=x.item;
@@ -8042,10 +8117,10 @@ function openVaultSetupModal(){
   $('vault-modal-body').innerHTML=`
     <div class="vlt-info">
       <span class="vlt-info-icon">${VLT_ICONS.lock}</span>
-      Je data wordt versleuteld met je wachtwoord. Niemand kan ze lezen — ook Buddy Budget zelf niet — zonder dit wachtwoord.
+      <span class="vlt-info-text">Je data wordt versleuteld met je wachtwoord. Niemand kan ze lezen — ook Buddy Budget zelf niet — zonder dit wachtwoord.</span>
     </div>
 
-    <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Nieuw wachtwoord</label>
+    <label class="vlt-label">Nieuw wachtwoord</label>
     <div class="vlt-field">
       <input id="vault-new-pass" type="password" class="vlt-field-input" placeholder="Kies een wachtwoord" autocomplete="new-password">
       <button type="button" class="vlt-eye" id="vault-new-eye" aria-label="Toon wachtwoord">${VLT_ICONS.eye}</button>
@@ -8053,7 +8128,7 @@ function openVaultSetupModal(){
     <div class="vlt-meter"><div class="vlt-meter-bar" id="vlt-bar-1"></div><div class="vlt-meter-bar" id="vlt-bar-2"></div><div class="vlt-meter-bar" id="vlt-bar-3"></div><div class="vlt-meter-bar" id="vlt-bar-4"></div></div>
     <div class="vlt-meter-label" id="vlt-strength-label"></div>
 
-    <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Bevestig wachtwoord</label>
+    <label class="vlt-label">Bevestig wachtwoord</label>
     <div class="vlt-field">
       <input id="vault-new-pass2" type="password" class="vlt-field-input" placeholder="Typ je wachtwoord nogmaals" autocomplete="new-password">
       <button type="button" class="vlt-eye" id="vault-new-eye2" aria-label="Toon wachtwoord">${VLT_ICONS.eye}</button>
@@ -8124,10 +8199,10 @@ function openVaultDisableModal(){
   $('vault-modal-body').innerHTML=`
     <div class="vlt-info" style="background:#fef3c7;border-color:#fcd34d;color:#92400e">
       <span class="vlt-info-icon" style="background:#fde68a;color:#92400e">${VLT_ICONS.alert}</span>
-      Na uitschakelen wordt je data <strong>onversleuteld</strong> opgeslagen. Iedereen met toegang tot deze browser kan ze dan lezen.
+      <span class="vlt-info-text">Na uitschakelen wordt je data <strong>onversleuteld</strong> opgeslagen. Iedereen met toegang tot deze browser kan ze dan lezen.</span>
     </div>
 
-    <label style="display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:6px">Voer je huidige wachtwoord in</label>
+    <label class="vlt-label">Voer je huidige wachtwoord in</label>
     <div class="vlt-field">
       <input id="vault-old-pass" type="password" class="vlt-field-input" placeholder="Wachtwoord" autocomplete="current-password">
       <button type="button" class="vlt-eye" id="vault-old-eye" aria-label="Toon wachtwoord">${VLT_ICONS.eye}</button>
@@ -8266,13 +8341,13 @@ document.addEventListener('DOMContentLoaded',bootstrap);
 </script>
 </div>
 <!-- VAULT SETUP MODAL — passphrase aanmaken/wijzigen/uitschakelen -->
-<div id="vault-modal" class="dm" style="display:none">
-  <div class="dm-card" style="max-width:380px">
-    <div class="dm-head">
-      <div class="dm-title" id="vault-modal-title">Beveilig met wachtwoord</div>
-      <button class="dm-x" id="vault-modal-x">×</button>
+<div id="vault-modal" class="vlt-modal" style="display:none">
+  <div class="vlt-modal-card">
+    <div class="vlt-modal-head">
+      <div class="vlt-modal-title" id="vault-modal-title">Beveilig met wachtwoord</div>
+      <button class="vlt-modal-x" id="vault-modal-x" aria-label="Sluiten">×</button>
     </div>
-    <div class="dm-body" id="vault-modal-body"></div>
+    <div class="vlt-modal-body" id="vault-modal-body"></div>
   </div>
 </div>
 </body>
