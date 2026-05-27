@@ -12,6 +12,7 @@
 <title>Buddy Budget</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23f472b6'/><stop offset='100%25' stop-color='%23be185d'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><ellipse cx='46' cy='56' rx='22' ry='18' fill='white'/><ellipse cx='70' cy='56' rx='8' ry='6' fill='white'/><ellipse cx='46' cy='36' rx='10' ry='7' fill='white'/><ellipse cx='46' cy='36' rx='5' ry='3.5' fill='%23f472b6'/><circle cx='53' cy='49' r='2.5' fill='%23be185d'/><ellipse cx='70' cy='55' rx='4' ry='3' fill='%23f9a8d4'/><line x1='37' y1='74' x2='35' y2='86' stroke='white' stroke-width='5' stroke-linecap='round'/><line x1='47' y1='74' x2='49' y2='86' stroke='white' stroke-width='5' stroke-linecap='round'/></svg>">
 <!-- Fonts: lokaal laden via system-ui om Google Fonts privacy-lek te vermijden -->
+<!-- SECURITY: voeg integrity="sha384-..." toe via https://www.srihash.org/ voor CDN-pinning -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" crossorigin="anonymous"></script>
 <!-- xlsx CDN verwijderd: exports gebruiken nu CSV (geen externe afhankelijkheid) -->
@@ -531,11 +532,18 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .add-row{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;padding:10px;background:transparent;border:1.5px dashed rgba(0,0,0,.13);border-radius:var(--r6);font-size:12px;font-weight:700;color:var(--n3);cursor:pointer;transition:all .15s;margin-top:7px}
 .add-row:hover{border-color:rgba(236,72,153,.32);color:var(--a);background:var(--a-dim)}
 .add-row svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.5}
-.cat-setup{display:flex;align-items:center;gap:9px;padding:9px;background:var(--s2);border-radius:var(--r6);margin-bottom:5px;border:1px solid var(--l0)}
+.cat-setup{display:flex;align-items:center;gap:7px;padding:9px;background:var(--s2);border-radius:var(--r6);margin-bottom:5px;border:1px solid var(--l0)}
 .cat-setup-icon{width:28px;height:28px;border-radius:var(--r4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .cat-setup-icon svg{width:13px;height:13px;stroke:currentColor;stroke-width:2}
 .cat-setup-name{flex:1;font-size:13px;font-weight:600;min-width:0}
-.cat-setup-input{width:74px;padding:6px 8px;background:var(--s0);border:1px solid var(--l1);border-radius:var(--r4);font-family:var(--mono);font-size:12px;font-weight:700;color:var(--n0);text-align:right;outline:none}
+.cat-setup-name-input{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--n0);background:transparent;border:1px solid transparent;border-radius:var(--r4);padding:5px 7px;outline:none;font-family:var(--sans);letter-spacing:-.1px;transition:background .15s,border-color .15s}
+.cat-setup-name-input:hover{background:var(--s0)}
+.cat-setup-name-input:focus{background:var(--s0);border-color:var(--a)}
+.cat-setup-swap{display:inline-flex;align-items:center;gap:3px;background:var(--s0);border:1px solid var(--l1);color:var(--n2);font-size:9.5px;font-weight:700;letter-spacing:.3px;padding:5px 7px;border-radius:var(--r4);cursor:pointer;flex-shrink:0;text-transform:uppercase;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.cat-setup-swap:hover{background:var(--a-dim);border-color:rgba(233,30,140,.25);color:var(--a)}
+.cat-setup-swap svg{opacity:.7}
+.cat-setup-swap:active{transform:scale(.95)}
+.cat-setup-input{width:64px;padding:6px 8px;background:var(--s0);border:1px solid var(--l1);border-radius:var(--r4);font-family:var(--mono);font-size:12px;font-weight:700;color:var(--n0);text-align:right;outline:none;flex-shrink:0}
 .cat-setup-input:focus{border-color:var(--a)}
 .cat-setup-del{width:30px;height:30px;background:var(--r-dim);border:1px solid rgba(248,113,113,.18);border-radius:var(--r4);color:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .cat-setup-del svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.5}
@@ -773,7 +781,9 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .wp-label{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .wp-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .wp-label-row .wp-label{margin-bottom:0}
-.wp-add-btn{background:none;border:none;color:var(--a);font-size:11px;font-weight:700;cursor:pointer;padding:4px 8px;letter-spacing:-.1px;-webkit-tap-highlight-color:transparent}
+.wp-add-btn{display:inline-flex;align-items:center;gap:4px;background:var(--a-dim);border:1px solid rgba(233,30,140,.25);color:var(--a);font-size:11px;font-weight:700;cursor:pointer;padding:6px 11px;border-radius:8px;letter-spacing:-.1px;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s;font-family:var(--sans)}
+.wp-add-btn:hover{background:rgba(233,30,140,.18)}
+.wp-add-btn:active{transform:scale(.96)}
 .wp-card{background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden}
 .wp-card-pad{background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);padding:14px 16px}
 .wp-empty{padding:18px 16px;text-align:center;color:var(--n3);font-size:12px;line-height:1.5}
@@ -1255,7 +1265,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.047</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.052</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1309,17 +1319,18 @@ const STORAGE='buddy-budget-v5';
 // Crypto: AES-GCM 256 met PBKDF2-SHA256 derivation (200k iteraties), random salt+IV per save.
 const VAULT_KEY='buddy-budget-vault-v1';
 const VAULT_FLAG='buddy-budget-vault-on';
-const VAULT_ITER=200000;
+const VAULT_ITER=600000; // OWASP 2023 aanbeveling voor PBKDF2-SHA256 (nieuwe encrypts)
+const VAULT_ITER_LEGACY=200000; // Oudere vaults vóór v2026.052; decrypt valt hierop terug.
 let _vaultKey=null;       // CryptoKey in memory — null als vault uit of niet ontgrendeld
 let _savePending=Promise.resolve();  // queue voor async saves zodat ze niet racen
 
 function vaultEnabled(){return localStorage.getItem(VAULT_FLAG)==='true'}
 
-async function deriveVaultKey(passphrase,salt){
+async function deriveVaultKey(passphrase,salt,iters){
   const enc=new TextEncoder();
   const km=await crypto.subtle.importKey('raw',enc.encode(passphrase),{name:'PBKDF2'},false,['deriveKey']);
   return crypto.subtle.deriveKey(
-    {name:'PBKDF2',salt,iterations:VAULT_ITER,hash:'SHA-256'},
+    {name:'PBKDF2',salt,iterations:iters||VAULT_ITER,hash:'SHA-256'},
     km,
     {name:'AES-GCM',length:256},
     false,['encrypt','decrypt']
@@ -1354,10 +1365,17 @@ async function decryptVault(b64,passphrase){
   const salt=combined.slice(0,16);
   const iv=combined.slice(16,28);
   const ct=combined.slice(28);
-  const key=await deriveVaultKey(passphrase,salt);
-  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+  // Probeer eerst nieuwe iter-count, dan legacy. Migreert oude vaults transparant.
+  let pt,key;
+  try{
+    key=await deriveVaultKey(passphrase,salt,VAULT_ITER);
+    pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+  }catch(e){
+    key=await deriveVaultKey(passphrase,salt,VAULT_ITER_LEGACY);
+    pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+  }
   _vaultKey=key;
-  _vaultSalt=salt;  // bewaar salt voor verdere saves
+  _vaultSalt=salt;
   return JSON.parse(new TextDecoder().decode(pt));
 }
 let _vaultSalt=null;
@@ -1431,8 +1449,9 @@ function isUnblocked(it){
 }
 function getHoldingCostEur(h){
   // Werkelijke kost in EUR die de gebruiker heeft ingegeven heeft voorrang (= wat de bank effectief afhield).
-  // Vermijdt onzuivere conversie via huidige USD/EUR koers voor aandelen die maanden geleden gekocht zijn.
   if(h.totalCostEur&&h.totalCostEur>0)return h.totalCostEur;
+  // Fonds: manualValue is per definitie in EUR (geen aankoopkoers, geen valuta-conversie).
+  if(h.kind==='fund')return h.manualValue||0;
   const cost=getHoldingCost(h);
   if((h.currency||'USD')==='EUR')return cost;
   const rate=S.wealth?.usdEurRate||0.92;
@@ -1472,12 +1491,19 @@ function getHoldingValue(h){
   return(h.quantity||0)*(h.lastPrice||0);
 }
 function getHoldingCost(h){
+  // Native-currency cost (USD voor USD aandelen, EUR voor EUR aandelen).
   // Fonds-type heeft geen aankoopkoers-notie → kost = waarde (P&L = 0)
   if(h.kind==='fund')return h.manualValue||0;
-  // Werkelijke kostprijs: totaal betaald aan bank (incl. fees/TOB) heeft voorrang.
-  // Fallback voor oude data: quantity × aankoopkoers (zonder fees).
+  // Legacy data: h.totalCost was de native USD-kost (vóór de lots-refactor in v043)
   if(h.totalCost&&h.totalCost>0)return h.totalCost;
-  return(h.quantity||0)*(h.avgPrice||0);
+  // Nieuwe lots-data: h.totalCostEur is in EUR → converteer terug naar native via huidige koers
+  if(h.totalCostEur>0){
+    if((h.currency||'USD')==='EUR')return h.totalCostEur;
+    const rate=S.wealth?.usdEurRate||0.92;
+    return rate>0?h.totalCostEur/rate:0;
+  }
+  // Edge case: nooit een aankoop ingevuld
+  return 0;
 }
 function getHoldingPnL(h){return getHoldingValue(h)-getHoldingCost(h);}
 function getTotalWealth(){
@@ -1540,6 +1566,18 @@ const fmtNeg=(n)=>`<span style="display:inline-block;padding:1px 6px;background:
 const fmtN=(n)=>`<span style="display:inline-block;padding:1px 6px;background:rgba(0,0,0,.06);color:var(--n1);border-radius:4px;font-weight:700;font-family:var(--mono);font-size:.92em;white-space:nowrap">${fmt(n)}</span>`;
 const fmtAmt=(n,positive)=>positive!==false&&n>=0?fmtPos(n):fmtNeg(n);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// SECURITY: valideer dat een URL veilig opgeslagen of geopend mag worden.
+// Blokkeert javascript:, data:, vbscript:, file: en andere XSS-vectoren.
+// Retourneert de URL als deze veilig is, anders ''.
+function safeExternalUrl(raw){
+  if(!raw)return '';
+  const s=String(raw).trim();
+  if(!s)return '';
+  // Alleen http(s) toestaan. Relatieve URLs zonder protocol → prefix met https.
+  if(/^https?:\/\//i.test(s))return s;
+  if(/^[a-z][a-z0-9+.-]*:/i.test(s))return ''; // andere protocollen geblokkeerd
+  return 'https://'+s;
+}
 const mkd=(d=viewMonth)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 // Belgische decimaal-conventie: komma wordt geaccepteerd als decimaalpunt.
 // parseDec('3,14') = 3.14 ; parseFloat zou '3' teruggeven.
@@ -1575,10 +1613,11 @@ function hydrateState(p){
   if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};
   if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
   else{if(S.plan.events===undefined)S.plan.events=[];if(S.plan.horizon===undefined)S.plan.horizon=15;if(S.plan.returnRate===undefined)S.plan.returnRate=5;if(S.plan.inflation===undefined)S.plan.inflation=2;}
-  // Migratie v2026.044: aandelen/ETFs/fondsen die ooit als 'vrij' (of zonder) waren ingesteld, naar 'belegd'.
-  // Niet aanraken: gereserveerd (gebruiker koos doel) en geblokkeerd (vast tot datum).
+  // Migratie v044/v051: holdings (stocks/ETFs/fondsen) zijn beleggingen — geen 'vrij' of 'gereserveerd'.
+  // Dat houdt Vermogen-categorieën consistent met Plan-projectie buckets.
+  // Niet aanraken: 'geblokkeerd' (vast tot datum, bv. pensioensparen).
   (S.wealth.holdings||[]).forEach(h=>{
-    if(!h.availability||h.availability==='vrij')h.availability='belegd';
+    if(h.availability!=='geblokkeerd')h.availability='belegd';
   });
   _invalidateCaches();
 }
@@ -2454,7 +2493,7 @@ function renderCatEdit(){
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.68 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Instellingen
     </summary>
-    <div style="padding-top:12px;display:flex;gap:8px;margin-bottom:12px">
+    <div style="padding-top:12px;display:flex;gap:8px;margin-bottom:10px">
       <div style="flex:1">
         <div style="font-size:9px;color:var(--n3);margin-bottom:5px">Naam</div>
         <input type="text" id="ce-name" value="${esc(cat.name)}" class="field-input" style="font-size:13px;padding:9px 12px">
@@ -2463,6 +2502,14 @@ function renderCatEdit(){
         <div style="font-size:9px;color:var(--n3);margin-bottom:5px">Budget/mnd</div>
         <div class="field-money"><input type="text" id="ce-budget" value="${cat.budget||''}" inputmode="decimal" placeholder="0" class="field-input" style="font-size:13px;padding:9px 10px 9px 22px"></div>
       </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:9px;color:var(--n3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Soort kost</div>
+      <div class="ev-segment" style="margin:0">
+        <button type="button" class="ev-seg-btn ${cat.costType==='semi'?'active':''}" data-ce-type="semi" onclick="document.querySelectorAll('[data-ce-type]').forEach(b=>b.classList.toggle('active',b.dataset.ceType==='semi'))">Semi-vast</button>
+        <button type="button" class="ev-seg-btn ${(!cat.costType||cat.costType==='variable')?'active':''}" data-ce-type="variable" onclick="document.querySelectorAll('[data-ce-type]').forEach(b=>b.classList.toggle('active',b.dataset.ceType==='variable'))">Variabel</button>
+      </div>
+      <div style="font-size:10px;color:var(--n3);margin-top:5px;line-height:1.4">Semi-vast = redelijk voorspelbaar (bv. boodschappen, abonnementen). Variabel = wisselt sterk per maand (bv. vrije tijd, restaurants).</div>
     </div>
     <button id="ce-del" class="btn btn-ghost" style="width:100%;padding:10px;font-size:12px;color:var(--r);border-color:rgba(220,38,38,.2)">${ic('trash')} Categorie verwijderen</button>
   </details>
@@ -2479,12 +2526,15 @@ function renderCatEdit(){
   setTimeout(()=>{const inp=$('ce-amount');if(inp){inp.focus();inp.select();}},200);
   // Save handler
   $('ce-save').onclick=()=>{
-    const amt=calc($('ce-amount').value)||parseFloat($('ce-amount').value)||0;
+    const amt=calc($('ce-amount').value)||parseDec($('ce-amount').value);
     setCatAmount(ceCatId,m,amt);
     const idx=S.categories.findIndex(c=>c.id===ceCatId);
     if(idx!==-1){
       S.categories[idx].name=$('ce-name')?.value?.trim()||cat.name;
-      S.categories[idx].budget=calc($('ce-budget')?.value)||parseFloat($('ce-budget')?.value)||cat.budget||0;
+      S.categories[idx].budget=calc($('ce-budget')?.value)||parseDec($('ce-budget')?.value)||cat.budget||0;
+      // Soort kost: lees uit de geselecteerde segmented control button
+      const activeTypeBtn=document.querySelector('[data-ce-type].active');
+      if(activeTypeBtn)S.categories[idx].costType=activeTypeBtn.dataset.ceType;
       save();
     }
     $('m-cat').classList.remove('open');
@@ -2507,7 +2557,7 @@ function renderCatEdit(){
   };
   // Live preview: kleur input mee met budget
   $('ce-amount').addEventListener('input',()=>{
-    const v=calc($('ce-amount').value)||parseFloat($('ce-amount').value)||0;
+    const v=calc($('ce-amount').value)||parseDec($('ce-amount').value);
     const inp=$('ce-amount');
     if(budget>0)inp.style.borderColor=v>budget?'var(--r)':v>budget*.85?'var(--w)':'var(--a)';
   });
@@ -2683,10 +2733,15 @@ function renderQuickEntry(focusCatId){
   $('m-add-footer').innerHTML=`<button class="btn btn-primary btn-block" id="qe-save">Toevoegen</button>`;
 
   // ── Bedrag-input handlers ──────────────────────────────────────────────
+  // Pending auto-focus naar omschrijving-input (gedebouncet zodat het typen niet wordt gestoord).
+  let _qePendingFocus=null;
   $$('.qe-amount-input').forEach(inp=>{
     enableCalc(inp);
     inp.addEventListener('input',()=>{
-      const v=calc(inp.value)||parseFloat(inp.value)||0;
+      // Cancel pending focus zodat het verspringen van de cursor tijdens typen niet gebeurt.
+      // Zonder deze regel zou bij tweede cijfer de focus naar de omschrijving springen en het cijfer verloren gaan.
+      if(_qePendingFocus){clearTimeout(_qePendingFocus);_qePendingFocus=null;}
+      const v=calc(inp.value)||parseDec(inp.value);
       const catId=inp.dataset.qid;
       const expand=document.getElementById('qe-'+catId);
       const detailInp=document.getElementById('qd-'+catId);
@@ -2695,9 +2750,9 @@ function renderQuickEntry(focusCatId){
         const wasOpen=expand.classList.contains('open');
         expand.classList.toggle('open',v!==0);
         inp.classList.toggle('has-value',v!==0);
-        // Auto-focus detail bij eerste opening
+        // Auto-focus naar omschrijving: pas wanneer gebruiker 500ms gestopt is met typen
         if(v!==0&&!wasOpen&&detailInp){
-          setTimeout(()=>{detailInp.focus();},260);
+          _qePendingFocus=setTimeout(()=>{detailInp.focus();_qePendingFocus=null;},500);
         }
       }
       _qeUpdateTotals(m);
@@ -2732,7 +2787,7 @@ function renderQuickEntry(focusCatId){
     let added=0,hasError=false;
     $$('.qe-amount-input').forEach(inp=>{
       const catId=inp.dataset.qid;
-      const add=calc(inp.value)||parseFloat(inp.value)||0;
+      const add=calc(inp.value)||parseDec(inp.value);
       if(add===0)return;
       const di=document.getElementById('qd-'+catId);
       const detail=(di?.value||'').trim();
@@ -2890,8 +2945,8 @@ function openIncomeModal(){
   enableCalc($('si-income'));
   enableCalc($('si-extra'));
   $('si-save').onclick=()=>{
-    const v=calc($('si-income').value)||parseFloat($('si-income').value)||0;
-    const e=calc($('si-extra').value)||parseFloat($('si-extra').value)||0;
+    const v=calc($('si-income').value)||parseDec($('si-income').value);
+    const e=calc($('si-extra').value)||parseDec($('si-extra').value);
     S.income.monthly=v;S.income.maaltijdcheques=e;
     save();modal.classList.remove('open');updateDash();showToast('✓ Inkomen opgeslagen');
   };
@@ -2978,7 +3033,7 @@ function openSingleCatEntry(catId){
 
   // Live preview
   inp.addEventListener('input',()=>{
-    const add=calc(inp.value)||parseFloat(inp.value)||0;
+    const add=calc(inp.value)||parseDec(inp.value);
     const newTotal=spent+add;
     const prev=$('sce-preview');
     if(prev){prev.textContent=fmt(newTotal);prev.style.color=budget>0&&newTotal>budget?'var(--r)':'var(--n0)';}
@@ -3009,7 +3064,7 @@ function openSingleCatEntry(catId){
 
   // Opslaan: detail verplicht
   $('sce-save').onclick=()=>{
-    const add=calc(inp.value)||parseFloat(inp.value)||0;
+    const add=calc(inp.value)||parseDec(inp.value);
     const detail=(detailInp?.value||'').trim();
     if(add===0){inp.focus();return;}
     if(!detail){
@@ -4470,7 +4525,7 @@ function openEventModal(eventId){
     const isRangeNow=modal.querySelector('.ev-seg-btn[data-duration="range"]').classList.contains('active');
     const endYear=isRangeNow?(parseInt($('ev-end').value)||startYear):null;
     if(isRangeNow&&endYear<startYear){showToast('⚠ Eindjaar moet na startjaar',2200);return;}
-    const rawAmt=calc($('ev-amount').value)||parseFloat($('ev-amount').value)||0;
+    const rawAmt=calc($('ev-amount').value)||parseDec($('ev-amount').value);
     if(rawAmt===0){showToast('⚠ Bedrag mag niet 0 zijn',2000);return;}
     const isIncomeNow=modal.querySelector('.ev-seg-btn[data-kind="income"]').classList.contains('active');
     const amount=isIncomeNow?-Math.abs(rawAmt):Math.abs(rawAmt);
@@ -4574,8 +4629,8 @@ function openAccountModal(accountId){
       id:a.id,
       name,
       institution:($('acc-inst').value||'').trim(),
-      balance:calc($('acc-bal').value)||parseFloat($('acc-bal').value)||0,
-      interest:parseFloat($('acc-int').value)||0,
+      balance:calc($('acc-bal').value)||parseDec($('acc-bal').value),
+      interest:parseDec($('acc-int').value),
       availability,
       purpose:availability==='gereserveerd'?($('acc-purpose').value||'').trim():'',
       linkedEventId:availability==='gereserveerd'&&$('acc-linked-event')?($('acc-linked-event').value||''):'',
@@ -4680,11 +4735,10 @@ function openHoldingModal(holdingId){
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Beschikbaarheid</label>
         <select class="field-input" id="h-availability" style="width:100%">
-          <option value="belegd" ${(h.availability||(currentKind==='fund'?'belegd':'belegd'))==='belegd'?'selected':''}>Belegd — aandelen, ETFs, fondsen (marktrisico, T+2 verkoop)</option>
-          <option value="vrij" ${h.availability==='vrij'?'selected':''}>Vrij — beschouw als direct beschikbaar</option>
-          <option value="gereserveerd" ${h.availability==='gereserveerd'?'selected':''}>Gereserveerd — bestemd voor specifieke kosten</option>
-          <option value="geblokkeerd" ${h.availability==='geblokkeerd'?'selected':''}>Geblokkeerd — vast tot een bepaalde datum</option>
+          <option value="belegd" ${(h.availability||'belegd')==='belegd'?'selected':''}>Belegd — aandeel/ETF/fonds (marktrisico, T+2 verkoop)</option>
+          <option value="geblokkeerd" ${h.availability==='geblokkeerd'?'selected':''}>Geblokkeerd — vast tot een bepaalde datum (bv. pensioensparen)</option>
         </select>
+        <div style="font-size:10px;color:var(--n3);margin-top:5px;line-height:1.4">Een belegging is geen vrij of gereserveerd cash. Hoort altijd onder "Belegd", behalve als ze geblokkeerd is tot een datum.</div>
       </div>
       <div id="h-purpose-wrap" style="display:${h.availability==='gereserveerd'?'block':'none'}">
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Waarvoor gereserveerd?</label>
@@ -4743,7 +4797,11 @@ function openHoldingModal(holdingId){
     ${isEdit?`<button id="h-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Verwijderen</button>`:''}`;
   $('h-cancel').onclick=()=>modal.classList.remove('open');
   if($('h-link')&&h.url){
-    $('h-link').onclick=()=>window.open(h.url,'_blank','noopener');
+    $('h-link').onclick=()=>{
+      const safeUrl=safeExternalUrl(h.url);
+      if(!safeUrl){showToast('⚠ Ongeldige URL geblokkeerd',2000);return;}
+      window.open(safeUrl,'_blank','noopener,noreferrer');
+    };
   }
   // Synchroniseer muntsymbool op alle bedrag-velden met de gekozen currency
   const syncCurrencySymbols=()=>{
@@ -4897,7 +4955,7 @@ function openHoldingModal(holdingId){
       lots,
       lastPrice:isFund?0:(calc($('h-last')?.value)||parseDec($('h-last')?.value)),
       manualValue:isFund?manualValue:0,
-      url:isFund?'':($('h-url')?.value||'').trim(),
+      url:isFund?'':safeExternalUrl(($('h-url')?.value||'').trim()),
       availability,
       purpose:availability==='gereserveerd'?($('h-purpose').value||'').trim():'',
       linkedEventId:availability==='gereserveerd'&&$('h-linked-event')?($('h-linked-event').value||''):'',
@@ -7068,7 +7126,7 @@ function saveTxEdit(txId){
   const tx=S.transactions.find(t=>t.id===txId);
   if(!tx)return;
   const oldCatId=tx.catId, oldAmount=tx.amount, oldMonth=tx.month;
-  const newAmount=calc($('tx-edit-amount').value)||parseFloat($('tx-edit-amount').value)||0;
+  const newAmount=calc($('tx-edit-amount').value)||parseDec($('tx-edit-amount').value);
   const newDetail=($('tx-edit-detail').value||'').trim();
   const newCatId=$('tx-edit-cat').value;
   if(newAmount===0){showToast('⚠ Bedrag mag niet 0 zijn',2500);return;}
@@ -7922,21 +7980,56 @@ $$('.hist-item').forEach(item=>item.addEventListener('click',()=>{viewMonth=new 
 function periodLabel(p){return p==='m'?'Per maand':p==='q'?'Per kwartaal':'Per jaar'}
 function renderGroup(g){const c=col(g.color);return`<div class="group open" data-gid="${g.id}"><div class="group-head"><div class="group-icon" style="background:${c.bg};color:${c.c}">${ic(g.icon)}</div><div class="group-name">${esc(g.name)}</div><div class="group-total" data-gt="${g.id}">€0/mnd</div><div class="group-arrow">${ic('chevDown')}</div></div><div class="group-body"><div class="group-items">${g.items.map(i=>`<div class="sub-item${i.enabled?'':' off'}"><div class="sub-check ${i.enabled?'on':''}" data-chk="${i.id}">${ic('check')}</div><div class="sub-info">${i.editable?`<input type="text" class="sub-name-input" data-nme="${i.id}" value="${esc(i.name)}" placeholder="Naam" ${i.enabled?'':'disabled'}>`:
 `<div class="sub-name">${esc(i.name)}</div>`}<div class="sub-period" data-plbl="${i.id}">${periodLabel(i.period)}</div></div><input type="text" class="sub-input" data-inp="${i.id}" value="${i.amount||''}" placeholder="0" inputmode="decimal" ${i.enabled?'':'disabled'}><div class="period-toggle"><button class="period-btn ${i.period==='m'?'on':''}" data-pid="${i.id}" data-p="m" ${i.enabled?'':'disabled'}>M</button><button class="period-btn ${i.period==='q'?'on':''}" data-pid="${i.id}" data-p="q" ${i.enabled?'':'disabled'}>K</button><button class="period-btn ${i.period==='y'?'on':''}" data-pid="${i.id}" data-p="y" ${i.enabled?'':'disabled'}>J</button></div></div>`).join('')}</div></div></div>`}
-function bindGroups(){$$('.group-head').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));$$('.sub-check').forEach(chk=>{chk.addEventListener('click',e=>{e.stopPropagation();const iid=chk.dataset.chk;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item){item.enabled=!item.enabled;chk.classList.toggle('on',item.enabled);const row=chk.closest('.sub-item');row.classList.toggle('off',!item.enabled);row.querySelector('.sub-input').disabled=!item.enabled;row.querySelectorAll('.period-btn').forEach(b=>b.disabled=!item.enabled);const nmeInp=row.querySelector('.sub-name-input');if(nmeInp)nmeInp.disabled=!item.enabled}});calcFixed()})});$$('.sub-name-input').forEach(inp=>{inp.addEventListener('input',()=>{const iid=inp.dataset.nme;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item)item.name=inp.value||'Andere'})});inp.addEventListener('click',e=>e.stopPropagation())});$$('.sub-input').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const iid=inp.dataset.inp;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item)item.amount=calc(inp.value)||parseFloat(inp.value)||0});calcFixed()})});$$('.period-btn').forEach(btn=>{btn.addEventListener('click',()=>{if(btn.disabled)return;const iid=btn.dataset.pid;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item){item.period=btn.dataset.p;btn.closest('.period-toggle').querySelectorAll('.period-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelector(`[data-plbl="${iid}"]`).textContent=periodLabel(btn.dataset.p)}});calcFixed()})})}
+function bindGroups(){$$('.group-head').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));$$('.sub-check').forEach(chk=>{chk.addEventListener('click',e=>{e.stopPropagation();const iid=chk.dataset.chk;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item){item.enabled=!item.enabled;chk.classList.toggle('on',item.enabled);const row=chk.closest('.sub-item');row.classList.toggle('off',!item.enabled);row.querySelector('.sub-input').disabled=!item.enabled;row.querySelectorAll('.period-btn').forEach(b=>b.disabled=!item.enabled);const nmeInp=row.querySelector('.sub-name-input');if(nmeInp)nmeInp.disabled=!item.enabled}});calcFixed()})});$$('.sub-name-input').forEach(inp=>{inp.addEventListener('input',()=>{const iid=inp.dataset.nme;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item)item.name=inp.value||'Andere'})});inp.addEventListener('click',e=>e.stopPropagation())});$$('.sub-input').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const iid=inp.dataset.inp;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item)item.amount=calc(inp.value)||parseDec(inp.value)});calcFixed()})});$$('.period-btn').forEach(btn=>{btn.addEventListener('click',()=>{if(btn.disabled)return;const iid=btn.dataset.pid;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item){item.period=btn.dataset.p;btn.closest('.period-toggle').querySelectorAll('.period-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelector(`[data-plbl="${iid}"]`).textContent=periodLabel(btn.dataset.p)}});calcFixed()})})}
 function calcFixed(){let total=0;wData.fixedGroups.forEach(g=>{let gt=0;g.items.forEach(i=>{if(!i.enabled)return;const a=i.amount||0;if(i.period==='m')gt+=a;else if(i.period==='q')gt+=a/3;else gt+=a/12});const el=document.querySelector(`[data-gt="${g.id}"]`);if(el)el.textContent=fmt(gt)+'/mnd';total+=gt});if($('wf-total'))$('wf-total').textContent=fmt(total);if($('wf-free')){const f=getWizIncome()-total;$('wf-free').textContent=fmt(f);$('wf-free').style.color=f>=0?'var(--emerald-400)':'var(--rose-400)'}}
 function getWizIncome(){return wData.income.monthly+(wData.income.maaltijdcheques||0)+((wData.income.endYear?.amount||0)/12)+((wData.income.vacation?.amount||0)/12)+((wData.income.refund?.amount||0)/12)+(wData.income.otherMonthly||0)+((wData.income.otherYearly?.amount||0)/12)}
 function getWizFixed(){let t=0;wData.fixedGroups.forEach(g=>g.items.forEach(i=>{if(!i.enabled)return;if(i.period==='m')t+=i.amount||0;else if(i.period==='q')t+=(i.amount||0)/3;else t+=(i.amount||0)/12}));return t}
-function openNewCatModal(type){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nc-name" placeholder="Bijv. Hobby's"></div><div class="field"><div class="field-label">Icoon</div><div class="icon-grid" id="nc-icons">${Object.keys(IC).slice(0,21).map(n=>`<button class="icon-opt" data-ic="${n}">${ic(n)}</button>`).join('')}</div></div><div class="field"><div class="field-label">Kleur</div><div class="color-dots">${COLORS.map(c=>`<button class="color-dot" data-col="${c.n}" style="background:${c.c}"></button>`).join('')}</div></div>${type==='monthly'?`<div class="field"><div class="field-label">Type</div><div class="cost-type-select"><button class="cost-type-opt semi on" data-ct="semi"><span class="cost-type-pill semi" style="pointer-events:none">Semi-vast</span></button><button class="cost-type-opt variable" data-ct="variable"><span class="cost-type-pill variable" style="pointer-events:none">Variabel</span></button></div></div>`:''}<div class="field"><div class="field-label">${type==='reserve'?'Jaarbedrag':'Maandbudget'}</div><div class="field-money"><input type="text" class="field-input" id="nc-budget" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nc-save">Toevoegen</button>`;enableCalc($('nc-budget'));let sIcon='folder',sColor='emerald',sCostType='semi';$$('#nc-icons .icon-opt').forEach(o=>o.addEventListener('click',()=>{$$('#nc-icons .icon-opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');sIcon=o.dataset.ic}));$$('.color-dot').forEach(d=>d.addEventListener('click',()=>{$$('.color-dot').forEach(x=>x.classList.remove('on'));d.classList.add('on');sColor=d.dataset.col}));$$('.cost-type-opt').forEach(b=>b.addEventListener('click',()=>{$$('.cost-type-opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');sCostType=b.dataset.ct}));$('nc-save').onclick=()=>{const name=$('nc-name').value.trim();const budget=calc($('nc-budget').value)||parseFloat($('nc-budget').value)||0;if(name){wData.categories.push({id:genId(),name,icon:sIcon,color:sColor,budget,costType:sCostType});renderWizard(3);modal.classList.remove('open')}};modal.classList.add('open')}
-function openAddFixedItemModal(){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nf-name" placeholder="Bijv. Internet"></div><div class="field"><div class="field-label">Categorie</div><select class="field-input" id="nf-cat">${wData.fixedGroups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></div><div class="field"><div class="field-label">Bedrag</div><div class="field-money"><input type="text" class="field-input" id="nf-amount" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nf-save">Toevoegen</button>`;enableCalc($('nf-amount'));$('nf-save').onclick=()=>{const name=$('nf-name').value.trim();if(name){const g=wData.fixedGroups.find(x=>x.id===$('nf-cat').value);if(g){g.items.push({id:genId(),name,amount:calc($('nf-amount').value)||parseFloat($('nf-amount').value)||0,period:'m',enabled:false});renderWizard(2);modal.classList.remove('open')}}};modal.classList.add('open')}
-function renderCatSetup(c){const clr=col(c.color);return`<div class="cat-setup"><div class="cat-setup-icon" style="background:${clr.bg};color:${clr.c}">${ic(c.icon)}</div><div class="cat-setup-name">${esc(c.name)}</div><input type="text" class="cat-setup-input" data-cinp="${c.id}" value="${c.budget||''}" placeholder="0" inputmode="decimal"><button class="cat-setup-del" data-cdel="${c.id}">${ic('x')}</button></div>`}
-function bindCats(){$$('[data-cinp]').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const c=wData.categories.find(x=>x.id===inp.dataset.cinp);if(c)c.budget=calc(inp.value)||parseFloat(inp.value)||0;calcCats()})});$$('[data-cdel]').forEach(btn=>btn.addEventListener('click',()=>{wData.categories=wData.categories.filter(c=>c.id!==btn.dataset.cdel);renderWizard(4)}))}
+function openNewCatModal(type){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nc-name" placeholder="Bijv. Hobby's"></div><div class="field"><div class="field-label">Icoon</div><div class="icon-grid" id="nc-icons">${Object.keys(IC).slice(0,21).map(n=>`<button class="icon-opt" data-ic="${n}">${ic(n)}</button>`).join('')}</div></div><div class="field"><div class="field-label">Kleur</div><div class="color-dots">${COLORS.map(c=>`<button class="color-dot" data-col="${c.n}" style="background:${c.c}"></button>`).join('')}</div></div>${type==='monthly'?`<div class="field"><div class="field-label">Type</div><div class="cost-type-select"><button class="cost-type-opt semi on" data-ct="semi"><span class="cost-type-pill semi" style="pointer-events:none">Semi-vast</span></button><button class="cost-type-opt variable" data-ct="variable"><span class="cost-type-pill variable" style="pointer-events:none">Variabel</span></button></div></div>`:''}<div class="field"><div class="field-label">${type==='reserve'?'Jaarbedrag':'Maandbudget'}</div><div class="field-money"><input type="text" class="field-input" id="nc-budget" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nc-save">Toevoegen</button>`;enableCalc($('nc-budget'));let sIcon='folder',sColor='emerald',sCostType='semi';$$('#nc-icons .icon-opt').forEach(o=>o.addEventListener('click',()=>{$$('#nc-icons .icon-opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');sIcon=o.dataset.ic}));$$('.color-dot').forEach(d=>d.addEventListener('click',()=>{$$('.color-dot').forEach(x=>x.classList.remove('on'));d.classList.add('on');sColor=d.dataset.col}));$$('.cost-type-opt').forEach(b=>b.addEventListener('click',()=>{$$('.cost-type-opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');sCostType=b.dataset.ct}));$('nc-save').onclick=()=>{const name=$('nc-name').value.trim();const budget=calc($('nc-budget').value)||parseDec($('nc-budget').value);if(name){wData.categories.push({id:genId(),name,icon:sIcon,color:sColor,budget,costType:sCostType});renderWizard(3);modal.classList.remove('open')}};modal.classList.add('open')}
+function openAddFixedItemModal(){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nf-name" placeholder="Bijv. Internet"></div><div class="field"><div class="field-label">Categorie</div><select class="field-input" id="nf-cat">${wData.fixedGroups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></div><div class="field"><div class="field-label">Bedrag</div><div class="field-money"><input type="text" class="field-input" id="nf-amount" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nf-save">Toevoegen</button>`;enableCalc($('nf-amount'));$('nf-save').onclick=()=>{const name=$('nf-name').value.trim();if(name){const g=wData.fixedGroups.find(x=>x.id===$('nf-cat').value);if(g){g.items.push({id:genId(),name,amount:calc($('nf-amount').value)||parseDec($('nf-amount').value),period:'m',enabled:false});renderWizard(2);modal.classList.remove('open')}}};modal.classList.add('open')}
+function renderCatSetup(c){
+  const clr=col(c.color);
+  const isSemi=c.costType==='semi';
+  // Swap-knop: wisselt tussen semi-vast en variabel (rij springt naar andere groep bij re-render)
+  return `<div class="cat-setup">
+    <div class="cat-setup-icon" style="background:${clr.bg};color:${clr.c}">${ic(c.icon)}</div>
+    <input type="text" class="cat-setup-name-input" data-cname="${c.id}" value="${esc(c.name)}" placeholder="Naam" autocomplete="off">
+    <button class="cat-setup-swap" data-cswap="${c.id}" title="Wissel tussen semi-vast en variabel" aria-label="Type wisselen">
+      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <span>${isSemi?'semi':'var'}</span>
+    </button>
+    <input type="text" class="cat-setup-input" data-cinp="${c.id}" value="${c.budget||''}" placeholder="0" inputmode="decimal">
+    <button class="cat-setup-del" data-cdel="${c.id}">${ic('x')}</button>
+  </div>`;
+}
+function bindCats(){
+  // Budget invoer
+  $$('[data-cinp]').forEach(inp=>{
+    enableCalc(inp);
+    inp.addEventListener('input',()=>{const c=wData.categories.find(x=>x.id===inp.dataset.cinp);if(c)c.budget=calc(inp.value)||parseDec(inp.value);calcCats()});
+  });
+  // Naam invoer
+  $$('[data-cname]').forEach(inp=>{
+    inp.addEventListener('input',()=>{const c=wData.categories.find(x=>x.id===inp.dataset.cname);if(c)c.name=inp.value;});
+  });
+  // Type-swap knop (semi ↔ variable). Re-render zodat rij in correcte groep komt.
+  $$('[data-cswap]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const c=wData.categories.find(x=>x.id===btn.dataset.cswap);
+      if(!c)return;
+      c.costType=c.costType==='semi'?'variable':'semi';
+      renderWizard(3);
+    });
+  });
+  // Verwijderen
+  $$('[data-cdel]').forEach(btn=>btn.addEventListener('click',()=>{wData.categories=wData.categories.filter(c=>c.id!==btn.dataset.cdel);renderWizard(3)}));
+}
 function calcCats(){const t=wData.categories.reduce((s,c)=>s+(c.budget||0),0);const buf=getWizIncome()-getWizFixed()-t;if($('wc-total'))$('wc-total').textContent=fmt(t);if($('wc-buffer')){$('wc-buffer').textContent=fmt(buf);$('wc-buffer').style.color=buf>=0?'var(--emerald-400)':'var(--rose-400)'}}
-function handleWizardNext(){switch(wStep){case 1:wData.income.monthly=calc($('wi-monthly').value)||parseFloat($('wi-monthly').value)||0;wData.income.maaltijdcheques=calc($('wi-cheques').value)||parseFloat($('wi-cheques').value)||0;wData.income.endYear={amount:calc($('wi-ey').value)||parseFloat($('wi-ey').value)||0,month:parseInt($('wi-ey-m').value)};wData.income.vacation={amount:calc($('wi-vac').value)||parseFloat($('wi-vac').value)||0,month:parseInt($('wi-vac-m').value)};wData.income.refund={amount:calc($('wi-ref').value)||parseFloat($('wi-ref').value)||0,month:parseInt($('wi-ref-m').value)};wData.income.otherMonthly=calc($('wi-other-m').value)||parseFloat($('wi-other-m').value)||0;wData.income.otherYearly={amount:calc($('wi-other-y').value)||parseFloat($('wi-other-y').value)||0,month:parseInt($('wi-other-y-m').value)};wData.income.oneTime={amount:calc($('wi-once').value)||parseFloat($('wi-once').value)||0,month:parseInt($('wi-once-m').value)};break;case 4:S.income=wData.income;S.fixedGroups=wData.fixedGroups;S.categories=[...wData.categories.map(c=>({...c,type:'monthly'}))];S.init=true;markActivity();save();showScreen('dashboard');return}renderWizard(wStep+1)}
+function handleWizardNext(){switch(wStep){case 1:wData.income.monthly=calc($('wi-monthly').value)||parseDec($('wi-monthly').value);wData.income.maaltijdcheques=calc($('wi-cheques').value)||parseDec($('wi-cheques').value);wData.income.endYear={amount:calc($('wi-ey').value)||parseDec($('wi-ey').value),month:parseInt($('wi-ey-m').value)};wData.income.vacation={amount:calc($('wi-vac').value)||parseDec($('wi-vac').value),month:parseInt($('wi-vac-m').value)};wData.income.refund={amount:calc($('wi-ref').value)||parseDec($('wi-ref').value),month:parseInt($('wi-ref-m').value)};wData.income.otherMonthly=calc($('wi-other-m').value)||parseDec($('wi-other-m').value);wData.income.otherYearly={amount:calc($('wi-other-y').value)||parseDec($('wi-other-y').value),month:parseInt($('wi-other-y-m').value)};wData.income.oneTime={amount:calc($('wi-once').value)||parseDec($('wi-once').value),month:parseInt($('wi-once-m').value)};break;case 4:S.income=wData.income;S.fixedGroups=wData.fixedGroups;S.categories=[...wData.categories.map(c=>({...c,type:'monthly'}))];S.init=true;markActivity();save();showScreen('dashboard');return}renderWizard(wStep+1)}
 function renderWizard(step){wStep=step;const total=4;$('w-dots').innerHTML=Array.from({length:total},(_,i)=>`<div class="wizard-dot ${i+1<step?'done':i+1===step?'now':''}"></div>`).join('');$('w-back').classList.toggle('hidden',step===1);$('w-next').textContent=step===total?'Afronden':'Volgende';const body=$('w-body');
 switch(step){
-case 1:body.innerHTML=`<div class="wizard-logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="7" ry="5.5"/><path d="M8.5 7.5 Q10 5 11.5 7.5"/><line x1="10.2" y1="7.5" x2="11.8" y2="7.5"/><ellipse cx="18.8" cy="13.5" rx="1.8" ry="1.5"/><circle cx="13.5" cy="11" r=".8" fill="white" stroke="none"/><line x1="8.5" y1="18.5" x2="8" y2="22"/><line x1="13.5" y1="18.5" x2="14" y2="22"/><path d="M4 13.5 Q1.5 11 2.5 9"/></svg></div><span class="wizard-logo-text">Buddy Budget</span></div><h1 class="wizard-title">Je inkomen</h1><p class="wizard-sub">Vul je netto inkomen in.</p><div class="section-title">Maandelijks</div><div class="field"><div class="field-label">Loon (netto)</div><div class="field-money"><input type="text" class="field-input" id="wi-monthly" value="${wData.income?.monthly||''}" placeholder="0" inputmode="decimal"></div><div class="field-hint"><span class="badge">TIP</span> Typ bijv. 2500+100</div></div><div class="field"><div class="field-label">Andere (bv. maaltijdcheques)</div><div class="field-money"><input type="text" class="field-input" id="wi-cheques" value="${wData.income?.maaltijdcheques||''}" placeholder="0" inputmode="decimal"></div></div><div class="field"><div class="field-label">Overige vaste inkomsten</div><div class="field-money"><input type="text" class="field-input" id="wi-other-m" value="${wData.income?.otherMonthly||''}" placeholder="0" inputmode="decimal"></div></div><div class="section-title">Jaarlijks</div><div class="income-row"><div class="income-header"><span class="income-label">Eindejaarstoelage</span><select class="income-month" id="wi-ey-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.endYear?.month??11)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-ey" value="${wData.income?.endYear?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Vakantiegeld</span><select class="income-month" id="wi-vac-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.vacation?.month??4)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-vac" value="${wData.income?.vacation?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Terugbetaling</span><select class="income-month" id="wi-ref-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.refund?.month??0)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-ref" value="${wData.income?.refund?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Andere</span><select class="income-month" id="wi-other-y-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.otherYearly?.month??0)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-other-y" value="${wData.income?.otherYearly?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="section-title" style="margin-top:20px">Eenmalig</div><div class="field-hint" style="margin:-4px 0 10px">Eenmalige inkomst dit jaar (bijv. erfenis, verkoop, subsidie).</div><div class="income-row"><div class="income-header"><span class="income-label">Bedrag</span><select class="income-month" id="wi-once-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.oneTime?.month??new Date().getMonth())===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-once" value="${wData.income?.oneTime?.amount||''}" placeholder="0" inputmode="decimal"></div></div>`;$$('#w-body .field-input').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const v=calc($('wi-monthly')?.value)||parseFloat($('wi-monthly')?.value)||0;const btn=$('w-next');if(btn)btn.disabled=v<=0})});
+case 1:body.innerHTML=`<div class="wizard-logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="7" ry="5.5"/><path d="M8.5 7.5 Q10 5 11.5 7.5"/><line x1="10.2" y1="7.5" x2="11.8" y2="7.5"/><ellipse cx="18.8" cy="13.5" rx="1.8" ry="1.5"/><circle cx="13.5" cy="11" r=".8" fill="white" stroke="none"/><line x1="8.5" y1="18.5" x2="8" y2="22"/><line x1="13.5" y1="18.5" x2="14" y2="22"/><path d="M4 13.5 Q1.5 11 2.5 9"/></svg></div><span class="wizard-logo-text">Buddy Budget</span></div><h1 class="wizard-title">Je inkomen</h1><p class="wizard-sub">Vul je netto inkomen in.</p><div class="section-title">Maandelijks</div><div class="field"><div class="field-label">Loon (netto)</div><div class="field-money"><input type="text" class="field-input" id="wi-monthly" value="${wData.income?.monthly||''}" placeholder="0" inputmode="decimal"></div><div class="field-hint"><span class="badge">TIP</span> Typ bijv. 2500+100</div></div><div class="field"><div class="field-label">Andere (bv. maaltijdcheques)</div><div class="field-money"><input type="text" class="field-input" id="wi-cheques" value="${wData.income?.maaltijdcheques||''}" placeholder="0" inputmode="decimal"></div></div><div class="field"><div class="field-label">Overige vaste inkomsten</div><div class="field-money"><input type="text" class="field-input" id="wi-other-m" value="${wData.income?.otherMonthly||''}" placeholder="0" inputmode="decimal"></div></div><div class="section-title">Jaarlijks</div><div class="income-row"><div class="income-header"><span class="income-label">Eindejaarstoelage</span><select class="income-month" id="wi-ey-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.endYear?.month??11)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-ey" value="${wData.income?.endYear?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Vakantiegeld</span><select class="income-month" id="wi-vac-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.vacation?.month??4)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-vac" value="${wData.income?.vacation?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Terugbetaling</span><select class="income-month" id="wi-ref-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.refund?.month??0)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-ref" value="${wData.income?.refund?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Andere</span><select class="income-month" id="wi-other-y-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.otherYearly?.month??0)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-other-y" value="${wData.income?.otherYearly?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="section-title" style="margin-top:20px">Eenmalig</div><div class="field-hint" style="margin:-4px 0 10px">Eenmalige inkomst dit jaar (bijv. erfenis, verkoop, subsidie).</div><div class="income-row"><div class="income-header"><span class="income-label">Bedrag</span><select class="income-month" id="wi-once-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.oneTime?.month??new Date().getMonth())===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-once" value="${wData.income?.oneTime?.amount||''}" placeholder="0" inputmode="decimal"></div></div>`;$$('#w-body .field-input').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const v=calc($('wi-monthly')?.value)||parseDec($('wi-monthly')?.value);const btn=$('w-next');if(btn)btn.disabled=v<=0})});
 // Zet initieel op disabled als leeg
-{const v=parseFloat($('wi-monthly')?.value)||0;const btn=$('w-next');if(btn)btn.disabled=v<=0;}
+{const v=parseDec($('wi-monthly')?.value);const btn=$('w-next');if(btn)btn.disabled=v<=0;}
 // Voeg privacy notice toe onderaan wizard
 if(!document.getElementById('wiz-privacy')){
   const pn=document.createElement('div');
