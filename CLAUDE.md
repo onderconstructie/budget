@@ -15,7 +15,8 @@ Dit is een privé-budgetapp. **Vóór elke commit, elk document, elke screenshot
 - Eén bestand: `index.html` (CSS, markup en JavaScript inline). Houd dat zo tenzij de gebruiker expliciet om een opsplitsing vraagt.
 - Alle data staat in `localStorage` (`buddy-budget-v5`, of versleuteld in `buddy-budget-vault-v1`). Geen server, geen externe API's, geen koersen ophalen. De enige externe resource is Chart.js via jsDelivr, met SRI-hash.
 - Bewaar de Content-Security-Policy strikt: geen `unsafe-eval`, geen extra `connect-src`.
-- Wijzigingen aan het datamodel moeten achterwaarts compatibel zijn met bestaande opgeslagen data; migreer in `hydrateState()`.
+- Wijzigingen aan het datamodel moeten achterwaarts compatibel zijn met bestaande opgeslagen data; migreer in `hydrateState()` en bewaak dat een migratie maar één keer loopt (schema-vlag).
+- De versleutelde opslag gebruikt blob-formaat v2 (header met iteratiegetal); oude blobs blijven leesbaar. Verander het formaat nooit zonder migratiepad en test.
 - `S.transactions` en `S.monthlyData` zijn twee representaties van dezelfde uitgaven en moeten samen gewijzigd worden.
 
 ## Conventies
@@ -28,5 +29,6 @@ Dit is een privé-budgetapp. **Vóór elke commit, elk document, elke screenshot
 ## Werkwijze
 
 - Lees eerst hoe de betreffende sectie werkt (de `// === ... ===`-koppen) voor je iets wijzigt.
-- Test wijzigingen in een headless browser met fictieve data (zie `docs/audit-2026-09.md`, §1) en controleer de console op fouten.
+- Draai `npm test` na elke wijziging (Playwright, headless Chromium, fictieve data uit `tests/fixtures/seed.js`). Voeg voor nieuwe rekenlogica een test toe in `tests/run.js`.
+- Controleer visueel met screenshots op telefoonformaat, altijd met de fictieve seed, nooit met echte data.
 - Commit met een duidelijke Nederlandse of Engelse boodschap; geen modelnaam in commits of code.

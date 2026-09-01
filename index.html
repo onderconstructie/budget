@@ -23,6 +23,7 @@
    RESET
 ───────────────────────────────────────────────────────── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--a);outline-offset:2px;border-radius:4px}
 
 /* ─────────────────────────────────────────────────────────
    DESIGN TOKENS
@@ -37,7 +38,7 @@
   --r:#dc2626;--r-dim:rgba(220,38,38,.08); /* negative / over budget */
   --w:#d97706;--w-dim:rgba(217,119,6,.08);  /* warning / approaching */
   /* Neutral scale (ink→paper, light mode) */
-  --n0:#111827;--n1:#374151;--n2:#6b7280;--n3:#9ca3af;--n4:#d1d5db;--n5:#eef0f4;--n6:#f6f7fa;--n7:#ffffff;
+  --n0:#111827;--n1:#374151;--n2:#5b6270;--n3:#6e7583;--n4:#d1d5db;--n5:#eef0f4;--n6:#f6f7fa;--n7:#ffffff;
   /* Surfaces */
   --s0:var(--n7);--s1:var(--n6);--s2:var(--n5);--s3:var(--n4);
   /* Lines */
@@ -734,6 +735,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .evo-chip-icon svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
 .evo-chip-name{font-size:9.5px;font-weight:600;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;transition:color .15s}
 .evo-chip.active{border-width:1.5px}
+/* Kleurstip = lijnkleur in de grafiek: chips zijn ook de legende */
+.evo-chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle;position:relative;top:-1px}
 .evo-chip.dimmed{opacity:.25;border-color:var(--l0)}
 /* Jaar-tab chips: zelfde vorm als trends */
 #an-trends .chart-wrap{min-height:130px;margin-top:4px}
@@ -848,6 +851,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .plan-assum-edit:hover{color:var(--a)}
 .plan-assum-edit.active{color:var(--a)}
 .plan-assum-detail{margin-bottom:18px;animation:planAssumOpen .2s ease}
+@media (max-width:480px){.plan-assum-strip{flex-wrap:wrap;row-gap:8px}.plan-assum-item{flex:1 1 40%}.plan-assum-sep{display:none}.plan-assum-edit{margin-left:auto}}
 @keyframes planAssumOpen{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .fc-section-hd{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .fc-section-title{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3)}
@@ -989,13 +993,13 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
       </div>
       <div style="display:flex;align-items:center;gap:6px">
         <!-- Vuilbak links van nav: visibility:hidden zodat de layout nooit verschuift -->
-        <button class="dh-del-month" id="d-del-month" title="Maanddata wissen" style="visibility:hidden">
+        <button class="dh-del-month" id="d-del-month" title="Maanddata wissen" aria-label="Uitgaven van deze maand wissen" style="visibility:hidden">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
         <div class="dh-nav">
-          <button class="dh-nav-btn" id="d-prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="dh-nav-btn" id="d-prev" aria-label="Vorige maand"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
           <span class="dh-nav-label" id="d-month">—</span>
-          <button class="dh-nav-btn" id="d-next"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button class="dh-nav-btn" id="d-next" aria-label="Volgende maand"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
       </div>
     </div>
@@ -1090,9 +1094,9 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   <div class="an-header-top">
     <div class="logo" onclick="showScreen('dashboard')" style="cursor:pointer"><div class="logo-icon"><svg viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="7" ry="5.5"/><path d="M8.5 7.5 Q10 5 11.5 7.5"/><line x1="10.2" y1="7.5" x2="11.8" y2="7.5"/><ellipse cx="18.8" cy="13.5" rx="1.8" ry="1.5"/><circle cx="13.5" cy="11" r=".8" fill="white" stroke="none"/><line x1="8.5" y1="18.5" x2="8" y2="22"/><line x1="13.5" y1="18.5" x2="14" y2="22"/><path d="M4 13.5 Q1.5 11 2.5 9"/></svg></div><span class="logo-text">Buddy Budget</span></div>
     <div class="an-month-nav">
-      <button class="dh-nav-btn" id="an-prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="dh-nav-btn" id="an-prev" aria-label="Vorige maand"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <span class="dh-nav-label" id="an-month-label">—</span>
-      <button class="dh-nav-btn" id="an-next"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button class="dh-nav-btn" id="an-next" aria-label="Volgende maand"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>
   </div>
   <div class="an-tabs">
@@ -1175,9 +1179,9 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
           <div class="chart-wrap" style="height:240px"><canvas id="chart-year"></canvas></div>
           <div style="position:absolute;top:0;right:0;z-index:5;padding:4px 0">
             <div class="dh-nav" style="transform:scale(.82);transform-origin:right top;background:rgba(255,255,255,.85);backdrop-filter:blur(4px)">
-              <button class="dh-nav-btn" id="an-yr-prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+              <button class="dh-nav-btn" id="an-yr-prev" aria-label="Vorig jaar"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
               <span class="dh-nav-label" id="an-year-label" style="min-width:44px;text-align:center">2025</span>
-              <button class="dh-nav-btn" id="an-yr-next"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+              <button class="dh-nav-btn" id="an-yr-next" aria-label="Volgend jaar"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
             </div>
           </div>
         </div>
@@ -1274,7 +1278,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.053</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.054</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1290,7 +1294,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 
 <button class="nav-btn" data-s="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.68 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Instellen</span></button>
 </div></nav>
-<button class="fab" id="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="fab-label">Toevoegen</span></button>
+<button class="fab" id="fab" aria-label="Uitgave toevoegen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="fab-label">Toevoegen</span></button>
 <!-- Modals -->
 
 <!-- METRIC DETAIL MODAL -->
@@ -1299,14 +1303,14 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   <div class="modal-handle-area" id="detail-drag-handle"><div class="modal-handle" style="margin:0 auto"></div></div>
   <div class="modal-head">
     <div class="modal-title" id="detail-modal-title">Details</div>
-    <button class="modal-close" onclick="closeDetailModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <button class="modal-close" aria-label="Sluiten" onclick="closeDetailModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div class="modal-body" id="detail-modal-body"></div>
 </div>
 </div>
-<div class="modal-bg" id="m-add"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><button class="month-nav-btn" id="m-add-prev" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><span class="modal-title" id="m-add-title">Maand</span><button class="month-nav-btn" id="m-add-next" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button><button class="modal-close" id="m-add-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-add-body"></div><div class="modal-footer" id="m-add-footer"></div></div></div>
-<div class="modal-bg" id="m-cat"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><button class="month-nav-btn" id="m-cat-prev" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><span class="modal-title" id="m-cat-title">Categorie</span><button class="month-nav-btn" id="m-cat-next" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button><button class="modal-close" id="m-cat-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-cat-body"></div><div class="modal-footer" id="m-cat-footer"></div></div></div>
-<div class="modal-bg" id="m-new"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><span class="modal-title" id="m-new-title">Nieuw item</span><button class="modal-close" id="m-new-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-new-body"></div></div></div>
+<div class="modal-bg" id="m-add"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><button class="month-nav-btn" id="m-add-prev" aria-label="Vorige maand" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><span class="modal-title" id="m-add-title">Maand</span><button class="month-nav-btn" id="m-add-next" aria-label="Volgende maand" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button><button class="modal-close" aria-label="Sluiten" id="m-add-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-add-body"></div><div class="modal-footer" id="m-add-footer"></div></div></div>
+<div class="modal-bg" id="m-cat"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><button class="month-nav-btn" id="m-cat-prev" aria-label="Vorige maand" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><span class="modal-title" id="m-cat-title">Categorie</span><button class="month-nav-btn" id="m-cat-next" aria-label="Volgende maand" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button><button class="modal-close" aria-label="Sluiten" id="m-cat-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-cat-body"></div><div class="modal-footer" id="m-cat-footer"></div></div></div>
+<div class="modal-bg" id="m-new"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><span class="modal-title" id="m-new-title">Nieuw item</span><button class="modal-close" aria-label="Sluiten" id="m-new-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-new-body"></div></div></div>
 </div>
 <div class="calc-bar" id="calc-bar"><button class="calc-btn" data-op="+">+</button><button class="calc-btn" data-op="-">−</button><button class="calc-btn" data-op="*">×</button><button class="calc-btn" data-op="/">/</button><button class="calc-btn eq" data-op="=">=</button></div>
 <!-- PLACEHOLDER FOR JS -->
@@ -1348,6 +1352,19 @@ const VAULT_FLAG='buddy-budget-vault-on';
 const VAULT_ITER=600000; // OWASP 2023 aanbeveling voor PBKDF2-SHA256 (nieuwe encrypts)
 const VAULT_ITER_LEGACY=200000; // Oudere vaults vóór v2026.052; decrypt valt hierop terug.
 let _vaultKey=null;       // CryptoKey in memory — null als vault uit of niet ontgrendeld
+let _vaultIter=VAULT_ITER; // iteratiegetal van de sleutel in _vaultKey (uit de blob-header, of legacy-detectie)
+// Blob-formaat v2: "BV" 0x02 | iteraties (4 bytes big-endian) | salt (16) | iv (12) | ciphertext.
+// Legacy (vóór v2026.054): salt (16) | iv (12) | ciphertext, iteraties niet opgeslagen.
+const VAULT_MAGIC=[0x42,0x56,0x02];
+function _packVault(salt,iv,ct,iters){
+  const out=new Uint8Array(7+salt.length+iv.length+ct.byteLength);
+  out.set(VAULT_MAGIC,0);
+  out[3]=(iters>>>24)&255;out[4]=(iters>>>16)&255;out[5]=(iters>>>8)&255;out[6]=iters&255;
+  out.set(salt,7);out.set(iv,7+salt.length);out.set(new Uint8Array(ct),7+salt.length+iv.length);
+  // Geen String.fromCharCode(...spread): dat loopt vast op grote states (call stack)
+  let bin='';for(let i=0;i<out.length;i++)bin+=String.fromCharCode(out[i]);
+  return btoa(bin);
+}
 let _savePending=Promise.resolve();  // queue voor async saves zodat ze niet racen
 
 function vaultEnabled(){return localStorage.getItem(VAULT_FLAG)==='true'}
@@ -1366,46 +1383,41 @@ async function deriveVaultKey(passphrase,salt,iters){
 async function encryptVault(data,passphrase){
   const salt=crypto.getRandomValues(new Uint8Array(16));
   const iv=crypto.getRandomValues(new Uint8Array(12));
-  const key=await deriveVaultKey(passphrase,salt);
-  _vaultKey=key;  // hou key in memory voor verdere saves in deze sessie
-  const enc=new TextEncoder();
-  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(data)));
-  // Format: salt(16) + iv(12) + ciphertext → base64
-  const combined=new Uint8Array(salt.length+iv.length+ct.byteLength);
-  combined.set(salt,0);combined.set(iv,salt.length);combined.set(new Uint8Array(ct),salt.length+iv.length);
-  return btoa(String.fromCharCode(...combined));
+  const key=await deriveVaultKey(passphrase,salt,VAULT_ITER);
+  _vaultKey=key;_vaultSalt=salt;_vaultIter=VAULT_ITER;  // in memory voor verdere saves in deze sessie
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(data)));
+  return _packVault(salt,iv,ct,VAULT_ITER);
 }
 
 async function encryptWithKey(data,key,salt){
-  // Hergebruikt bestaande key+salt — sneller voor periodieke saves
+  // Hergebruikt bestaande key+salt — sneller voor periodieke saves. Schrijft altijd het v2-formaat.
   const iv=crypto.getRandomValues(new Uint8Array(12));
-  const enc=new TextEncoder();
-  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(data)));
-  const combined=new Uint8Array(salt.length+iv.length+ct.byteLength);
-  combined.set(salt,0);combined.set(iv,salt.length);combined.set(new Uint8Array(ct),salt.length+iv.length);
-  return btoa(String.fromCharCode(...combined));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(data)));
+  return _packVault(salt,iv,ct,_vaultIter);
 }
 
 async function decryptVault(b64,passphrase){
   const combined=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
-  const salt=combined.slice(0,16);
-  const iv=combined.slice(16,28);
-  const ct=combined.slice(28);
-  // Probeer eerst nieuwe iter-count, dan legacy. Migreert oude vaults transparant.
-  let pt,key;
-  try{
-    key=await deriveVaultKey(passphrase,salt,VAULT_ITER);
-    pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
-  }catch(e){
-    key=await deriveVaultKey(passphrase,salt,VAULT_ITER_LEGACY);
-    pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+  const dec=async(salt,iv,ct,iters)=>{
+    const key=await deriveVaultKey(passphrase,salt,iters);
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+    _vaultKey=key;_vaultSalt=salt;_vaultIter=iters;
+    return JSON.parse(new TextDecoder().decode(pt));
+  };
+  // v2: header met iteratiegetal → één afleiding, ook bij een verkeerd wachtwoord
+  if(combined.length>35&&combined[0]===VAULT_MAGIC[0]&&combined[1]===VAULT_MAGIC[1]&&combined[2]===VAULT_MAGIC[2]){
+    const iters=((combined[3]<<24)|(combined[4]<<16)|(combined[5]<<8)|combined[6])>>>0;
+    if(iters>=10000&&iters<=5000000){
+      return dec(combined.slice(7,23),combined.slice(23,35),combined.slice(35),iters);
+    }
   }
-  _vaultKey=key;
-  _vaultSalt=salt;
-  return JSON.parse(new TextDecoder().decode(pt));
+  // Legacy: probeer eerst het huidige iteratiegetal, dan het oude
+  const salt=combined.slice(0,16),iv=combined.slice(16,28),ct=combined.slice(28);
+  try{return await dec(salt,iv,ct,VAULT_ITER);}
+  catch(e){return dec(salt,iv,ct,VAULT_ITER_LEGACY);}
 }
 let _vaultSalt=null;
-let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[]},plan:{events:[],horizon:15,returnRate:5,inflation:2},alertState:{dismissed:{},lastActivity:0},init:false};
+let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[]},plan:{events:[],horizon:15,returnRate:5,inflation:2,volatility:15},alertState:{dismissed:{},lastActivity:0},init:false};
 let charts={},wStep=1,wData={},viewMonth=new Date();
 const $=id=>document.getElementById(id),$$=sel=>document.querySelectorAll(sel),genId=()=>Math.random().toString(36).substr(2,9);
 
@@ -1592,8 +1604,8 @@ function hydrateState(p){
     S.wealth.schema=2;
   }
   if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};
-  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
-  else{if(S.plan.events===undefined)S.plan.events=[];if(S.plan.horizon===undefined)S.plan.horizon=15;if(S.plan.returnRate===undefined)S.plan.returnRate=5;if(S.plan.inflation===undefined)S.plan.inflation=2;}
+  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2,volatility:15};
+  else{if(S.plan.events===undefined)S.plan.events=[];if(S.plan.horizon===undefined)S.plan.horizon=15;if(S.plan.returnRate===undefined)S.plan.returnRate=5;if(S.plan.inflation===undefined)S.plan.inflation=2;if(S.plan.volatility===undefined)S.plan.volatility=15;}
   // Migratie v044/v051: holdings (stocks/ETFs/fondsen) zijn beleggingen — geen 'vrij' of 'gereserveerd'.
   // Dat houdt Vermogen-categorieën consistent met Plan-projectie buckets.
   // Niet aanraken: 'geblokkeerd' (vast tot datum, bv. pensioensparen).
@@ -1913,14 +1925,15 @@ function updateDash(){
     const daily=dLeft>0?Math.round(available/dLeft):0;
     const paceWord=paceRatio>1.15?'⚡ te snel':paceRatio<0.85?'✓ rustig tempo':'≈ op schema';
     const dailyColor=daily<0?'var(--r)':paceRatio>1.15?'var(--w)':'inherit';
-    lbl.innerHTML=`<strong style="font-size:12px;color:${dailyColor}">€${Math.max(0,daily)}/dag</strong> beschikbaar&nbsp;·&nbsp;${pct}% benut&nbsp;·&nbsp;${paceWord}`;
+    if(isCurMonth(m))lbl.innerHTML=`<strong style="font-size:12px;color:${dailyColor}">€${Math.max(0,daily)}/dag</strong> beschikbaar&nbsp;·&nbsp;${pct}% benut&nbsp;·&nbsp;${paceWord}`;
+    else lbl.innerHTML=`${pct}% van het budget benut&nbsp;·&nbsp;<strong style="font-size:12px;color:${available<0?'var(--r)':'inherit'}">${fmt(Math.abs(available))}</strong> ${available<0?'over budget':'over'}`;
   } else if(lbl){
     lbl.textContent='Stel een budget in via instellingen';
   }
   // Eyebrow: paceRatio nu correct beschikbaar
   const eyebrow=$('d-hero-eyebrow');
   if(eyebrow){
-    if(!isCurMonth(m)){eyebrow.textContent='Overschot '+MONTHS[viewMonth.getMonth()];}
+    if(!isCurMonth(m)){eyebrow.textContent=(available<0?'Tekort ':'Overschot ')+MONTHS[viewMonth.getMonth()].toLowerCase();}
     else if(available<0){eyebrow.textContent=`⚠ ${fmt(-available)} over budget`;}
     else if(budget>0&&paceRatio>1.15){eyebrow.textContent='Pas op — je spendeert te snel';}
     else{eyebrow.textContent='Nog beschikbaar deze maand';}
@@ -2359,23 +2372,65 @@ function updateDashAlerts(m){
     </div>`;
   }).join('');
 }
-function updateHealthScore(m,spent,budget){
+// === MAANDSCORE ===
+// Score 0–100 uit drie delen die elk op data steunen; er is geen "startpunt 100" dat alleen kan dalen.
+//  tempo (45)      besteed t.o.v. het budget dat op dit punt van de maand verwacht mag zijn
+//  discipline (30) aandeel categorieën dat binnen zijn pro-rata budget blijft
+//  sparen (25)     (geplande) spaarquote t.o.v. je spaardoel
+// ready=false zolang <10% van de maand om is of er nog niets is uitgegeven: dan is er geen score.
+function calcHealthScore(m){
   const cats=S.categories.filter(c=>c.type==='monthly');
-  let score=100;
-  cats.forEach(cat=>{const pct=cat.budget>0?getCatSpent(cat.id,m)/cat.budget:0;if(pct>1)score-=10;else if(pct>0.9)score-=4;else if(pct<0.5&&getCatSpent(cat.id,m)>0)score+=2});
-  if(budget>0){if(spent>budget)score-=15;else if(spent<budget*0.7)score+=10;}
-  score=Math.max(0,Math.min(100,score));
+  const budget=getMonthBudget();
+  const spent=getMonthSpent(m);
+  const isCur=isCurMonth(m);
+  const pace=isCur?calcPace():null;
+  const frac=isCur?Math.max(0.10,pace.pctElapsed):1;
+  const ready=spent>0&&(!isCur||pace.pctElapsed>=0.10);
+  const income=getMonthlyIncome(m);
+  const saved=getSaved(m);
+  const target=S.savingsTarget||20;
+  const savePct=income>0?saved/income*100:0;
+  const components=[];
+  // 1. Tempo
+  let tempo=0,ratio=null;
+  if(budget>0){
+    ratio=spent/(budget*frac);
+    tempo=Math.round(ratio<=0.85?45:ratio<=1?45-(ratio-0.85)/0.15*15:ratio<=1.4?30-(ratio-1)/0.4*30:0);
+  }
+  const punt=isCur?' op dit punt van de maand':'';
+  components.push({key:'tempo',lbl:isCur?'Tempo t.o.v. budget':'Budget',val:tempo,max:45,
+    sub:budget>0?(ratio<=1?`${Math.round(ratio*100)}% van wat je${punt} mag uitgeven`:`${Math.round((ratio-1)*100)}% boven wat je${punt} mag uitgeven`):'Geen maandbudget ingesteld',
+    color:tempo>=38?'var(--g)':tempo>=25?'var(--w)':'var(--r)'});
+  // 2. Discipline
+  const withBudget=cats.filter(c=>c.budget>0);
+  let over=0,near=0;
+  withBudget.forEach(c=>{const pr=getCatSpent(c.id,m)/(c.budget*frac);if(pr>1)over++;else if(pr>0.9)near++;});
+  const disc=withBudget.length?Math.round(30*(1-(over+0.5*near)/withBudget.length)):0;
+  components.push({key:'discipline',lbl:'Categorieën binnen budget',val:disc,max:30,
+    sub:withBudget.length?`${withBudget.length-over-near} van ${withBudget.length} binnen budget${over?`, ${over} erover`:''}${near?`, ${near} bijna vol`:''}`:'Geen categoriebudgetten',
+    color:disc>=24?'var(--g)':disc>=15?'var(--w)':'var(--r)'});
+  // 3. Sparen
+  const sav=Math.round(25*Math.min(1,savePct/target));
+  components.push({key:'sparen',lbl:isCur?'Geplande spaarquote':'Spaarquote',val:sav,max:25,
+    sub:`${Math.round(savePct)}% van je inkomen (doel ${target}%)`,color:sav>=20?'var(--g)':sav>=12?'var(--w)':'var(--r)'});
+  const score=Math.max(0,Math.min(100,components.reduce((t,c)=>t+c.val,0)));
+  return{ready,score,components,over,near,spent,budget,savePct};
+}
+function updateHealthScore(m,spent,budget){
+  const hs=calcHealthScore(m);
+  const score=hs.score;
   const el=$('health-num');const bar=$('health-bar');const tip=$('health-tip');
   if(el)el.textContent=score;
   const sc=score>=80?'var(--g)':score>=60?'var(--w)':'var(--r)';
   const interp=score>=80?'Uitstekend':score>=60?'Goed bezig':score>=40?'Let op':'Actie nodig';
   const subtleC=score>=80?'rgba(22,163,74,.55)':score>=60?'rgba(217,119,6,.55)':'rgba(220,38,38,.55)';
-  // Hero ring — zonder één uitgave in de lopende maand is een score van 100 betekenisloos: toon dan een lege ring
-  const noSpendYet=isCurMonth(m)&&spent<=0;
+  // Hero ring — zonder data (nog niets uitgegeven, of <10% van de maand om) is er geen score: lege ring
+  const noSpendYet=!hs.ready;
+  const earlyLbl=spent<=0?'Nog geen uitgaven':'Nog te vroeg';
   const sv=$('d-score-v');if(sv){sv.textContent=noSpendYet?'—':score;sv.style.color=noSpendYet?'rgba(0,0,0,.25)':subtleC;}
   const ring2=document.getElementById('d-score-ring');
   if(ring2){ring2.style.strokeDashoffset=noSpendYet?107:107-(107*score/100);ring2.style.stroke=noSpendYet?'rgba(0,0,0,.12)':subtleC;}
-  const sl=$('d-score-lbl');if(sl){sl.textContent=noSpendYet?'Nog geen uitgaven':interp;sl.style.color=noSpendYet?'rgba(0,0,0,.25)':subtleC;}
+  const sl=$('d-score-lbl');if(sl){sl.textContent=noSpendYet?earlyLbl:interp;sl.style.color=noSpendYet?'rgba(0,0,0,.25)':subtleC;}
   if(bar){bar.style.width=score+'%';bar.style.background=sc;}
   if(el)el.style.color=sc;
   if(tip)tip.textContent=score>=80?'Uitstekend budgetbeheer':score>=60?'Goed bezig, let op enkele posten':score>=40?'Overweeg aanpassingen':'Actie nodig';
@@ -3544,7 +3599,7 @@ function renderWealth(){
 // Projectie: per jaar bereken vermogenswijziging = jaarbuffer + rendement op belegd vermogen + som events.
 
 function projectWealth(){
-  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
+  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2,volatility:15};
   const p=S.plan;
   const tot=getTotalWealth();
   // Splits liquide vermogen in:
@@ -3586,7 +3641,7 @@ function projectWealth(){
 
   const startYear=new Date().getFullYear();
   const muReturn=(p.returnRate||0)/100;
-  const sigmaReturn=0.15;
+  const sigmaReturn=Math.max(0,Math.min(0.6,(p.volatility??15)/100));
   const infl=(p.inflation||0)/100;
   const horizon=Math.max(1,Math.min(30,p.horizon||15));
 
@@ -3632,11 +3687,17 @@ function projectWealth(){
     unblockItemsByYear[bi.unblockYear].push(bi);
   });
 
+  // Vaste seed uit de invoer: dezelfde aannames geven dezelfde band, zodat de cijfers niet
+  // bij elke render verspringen. Andere aannames → andere seed → andere, maar stabiele, band.
+  let seed=2166136261;
+  const mix=x=>{seed^=(Math.round(x*100)>>>0);seed=Math.imul(seed,16777619)>>>0;};
+  [startCash,startInvest,startBlocked,yearlyBuffer,muReturn*1e4,sigmaReturn*1e4,infl*1e4,horizon,(p.events||[]).length].forEach(mix);
+  const rand=()=>{seed=(seed+0x6D2B79F5)>>>0;let t=seed;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
   // Box-Muller
   const randn=()=>{
     let u=0,v=0;
-    while(u===0)u=Math.random();
-    while(v===0)v=Math.random();
+    while(u===0)u=rand();
+    while(v===0)v=rand();
     return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
   };
 
@@ -4030,7 +4091,7 @@ function renderYearOverviewBody(){
 }
 
 function renderPlanTab(){
-  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
+  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2,volatility:15};
   const p=S.plan;
   const target=$('plan-body');
   if(!target)return;
@@ -4058,6 +4119,8 @@ function renderPlanTab(){
     <span class="plan-assum-item"><span class="plan-assum-num">${p.returnRate}%</span><span class="plan-assum-lbl">rendement</span></span>
     <span class="plan-assum-sep"></span>
     <span class="plan-assum-item"><span class="plan-assum-num">${p.inflation}%</span><span class="plan-assum-lbl">inflatie</span></span>
+    <span class="plan-assum-sep"></span>
+    <span class="plan-assum-item"><span class="plan-assum-num">±${p.volatility??15}%</span><span class="plan-assum-lbl">schommeling</span></span>
     <button class="plan-assum-edit" onclick="togglePlanAssumptions()" aria-label="Aanpassen">
       <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     </button>
@@ -4102,9 +4165,9 @@ function renderPlanTab(){
         const threshold=Math.max(100,Math.abs(endMedian)*0.005);
         if(spread>threshold){
           return `<div class="wp-stat">
-            <div class="wp-stat-label">Realistische marge</div>
+            <div class="wp-stat-label">Indicatieve marge</div>
             <div class="wp-stat-amt" style="font-size:14px;color:var(--n0)">${fmtN(Math.round(endLow))} – ${fmtN(Math.round(endHigh))}</div>
-            <div class="wp-stat-sub">80% kans dat je hierbinnen valt</div>
+            <div class="wp-stat-sub">P10–P90 uit 500 simulaties bij ±${p.volatility??15}% schommeling per jaar; geen kans-uitspraak over de echte wereld</div>
           </div>`;
         }
         return `<div class="wp-stat">
@@ -4140,8 +4203,15 @@ function renderPlanTab(){
             <span class="wp-stat-unit">% / jr</span>
           </div>
         </div>
+        <div class="wp-stat-row">
+          <label>Schommeling van het rendement</label>
+          <div class="wp-stat-input">
+            <input type="number" class="field-input" id="plan-volatility" value="${p.volatility??15}" min="0" max="60" step="1">
+            <span class="wp-stat-unit">% / jr</span>
+          </div>
+        </div>
       </div>
-      <div class="wp-hint" style="margin-top:8px">Schattingen die meteen worden toegepast. Wereldwijde aandelen leverden historisch ~5–7%/jaar; geen garantie voor de toekomst.</div>
+      <div class="wp-hint" style="margin-top:8px">Schattingen die meteen worden toegepast. Wereldwijde aandelen leverden historisch ~5–7%/jaar met een jaarlijkse schommeling (standaardafwijking) rond 15%; geen garantie voor de toekomst.</div>
     </div>
 
     <!-- GRAFIEK -->
@@ -4155,7 +4225,7 @@ function renderPlanTab(){
       <div style="position:relative;height:220px;margin-bottom:10px"><canvas id="plan-chart"></canvas></div>
       <div style="display:flex;justify-content:center;gap:14px;font-size:10px;color:var(--n3);flex-wrap:wrap">
         <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--g);margin-right:6px"></span>Verwacht pad</span>
-        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:8px;background:rgba(22,163,74,.18);margin-right:6px;border-radius:2px"></span>Realistische marge</span>
+        <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:8px;background:rgba(22,163,74,.18);margin-right:6px;border-radius:2px"></span>Indicatieve marge (P10–P90)</span>
         <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:8px;height:8px;background:var(--a);border-radius:50%;margin-right:6px"></span>Event</span>
       </div>
     </div>
@@ -4234,13 +4304,14 @@ function renderPlanTab(){
   `;
 
   // Wire input changes
-  ['plan-horizon','plan-return','plan-inflation'].forEach(id=>{
+  ['plan-horizon','plan-return','plan-inflation','plan-volatility'].forEach(id=>{
     const el=$(id);
     if(el)el.addEventListener('change',()=>{
       const v=parseFloat(el.value)||0;
       if(id==='plan-horizon')S.plan.horizon=Math.max(1,Math.min(30,Math.round(v)));
       if(id==='plan-return')S.plan.returnRate=Math.max(0,Math.min(20,v));
       if(id==='plan-inflation')S.plan.inflation=Math.max(0,Math.min(10,v));
+      if(id==='plan-volatility')S.plan.volatility=Math.max(0,Math.min(60,Math.round(v)));
       save();
       renderPlanTab();
     });
@@ -4375,7 +4446,7 @@ function togglePlanAssumptions(){
 }
 
 function openEventModal(eventId){
-  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
+  if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2,volatility:15};
   const isEdit=!!eventId;
   const e=isEdit?(S.plan.events||[]).find(x=>x.id===eventId):{id:genId(),name:'',startYear:new Date().getFullYear()+1,endYear:null,amount:0,enabled:true};
   if(isEdit&&!e)return;
@@ -5710,7 +5781,7 @@ function renderEvoCatChips(){
       <div class="evo-chip-icon" style="background:${clr.bg};color:${clr.c}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
       </div>
-      <span class="evo-chip-name" style="color:var(--n2)">${esc(cat.name)}</span>
+      <span class="evo-chip-name" style="color:var(--n2)"><span class="evo-chip-dot" style="background:${clr.c}"></span>${esc(cat.name)}</span>
     </button>`;
   }).join('');
   _syncEvoChips();
@@ -6234,12 +6305,12 @@ function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worst
     if(over>0){
       signals.push({type:'danger',icon:'alert',
         title:`${fmtNeg(Math.round(over))} over jaarbudget`,
-        body:`${Math.round(totalSpent/yb*100)}% van ${fmtN(yb)} jaarbudget benut over ${monthsFilled} maanden.`});
+        body:`${Math.round(totalSpent/yb*100)}% van ${fmtN(yb)} jaarbudget benut na ${monthsFilled} van 12 maanden.`});
     }else{
       const onPace=budget>0&&curMonthIdx>=0?Math.round((totalSpent/(curMonthIdx||1))*12):0;
       signals.push({type:'success',icon:'check',
         title:`${fmtPos(Math.round(-over))} onder jaarbudget`,
-        body:`${Math.round(totalSpent/yb*100)}% benut${onPace>0?' — op jaarbasis ca. '+fmtN(onPace):''}. Goed op schema.`});
+        body:`${Math.round(totalSpent/yb*100)}% van het jaarbudget benut na ${monthsFilled} van 12 maanden${monthsFilled<12?` (${Math.round(monthsFilled/12*100)}% van het jaar)`:''}${onPace>0?' — op jaarbasis ca. '+fmtN(onPace):''}.${monthsFilled<12&&totalSpent/yb<=monthsFilled/12?' Goed op schema.':''}`});
     }
   }
 
@@ -7637,37 +7708,11 @@ function buildHealthDetail(m){
   const savePct=income>0?Math.round(saved/income*100):0;
   const cats=S.categories.filter(c=>c.type==='monthly');
 
-  // Re-calculate score components
-  let scoreBase=100;
-  const components=[];
-
-  // Budget overall
-  if(budget>0){
-    const pctUsed=spent/budget;
-    if(pctUsed>1){scoreBase-=15;components.push({lbl:'Over budget',val:-15,sub:'Je hebt '+fmt(spent-budget)+' te veel uitgegeven',color:'var(--r)'});}
-    else if(pctUsed<0.7){scoreBase+=10;components.push({lbl:'Goed onder budget',val:+10,sub:Math.round((1-pctUsed)*100)+'% budget over',color:'var(--g)'});}
-    else{components.push({lbl:'Budget op schema',val:0,sub:Math.round(pctUsed*100)+'% benut',color:'var(--n3)'});}
-  }
-
-  // Category overspends
-  let catOver=0,catNear=0,catGood=0;
-  cats.forEach(cat=>{
-    const p=cat.budget>0?getCatSpent(cat.id,m)/cat.budget:0;
-    if(p>1){scoreBase-=10;catOver++;}
-    else if(p>0.9){scoreBase-=4;catNear++;}
-    else if(p<0.5&&getCatSpent(cat.id,m)>0){scoreBase+=2;catGood++;}
-  });
-  if(catOver>0)components.push({lbl:catOver+' categorie'+( catOver>1?'ën':'') +' overschreden',val:-(catOver*10),sub:'Bekijk de budgetten tab',color:'var(--r)'});
-  if(catNear>0)components.push({lbl:catNear+' categorie'+( catNear>1?'ën':'')+' bijna vol',val:-(catNear*4),sub:'Boven 90% van budget',color:'var(--w)'});
-  if(catGood>0)components.push({lbl:catGood+' categorie'+( catGood>1?'ën':'')+' onder 50%',val:+(catGood*2),sub:'Goed beheerst',color:'var(--g)'});
-
-  // Savings
-  if(savePct>=20){scoreBase+=5;components.push({lbl:'Spaardoel gehaald',val:+5,sub:savePct+'% gespaard (≥20%)',color:'var(--g)'});}
-  else if(savePct<5){components.push({lbl:'Laag spaartarief',val:0,sub:savePct+'% gespaard (doel: 20%)',color:'var(--r)'});}
-
-  const finalScore=Math.max(0,Math.min(100,scoreBase));
-  const scoreCapped=scoreBase>100;
-  const noSpendYet=isCurMonth(m)&&spent<=0;
+  // Score en opbouw komen uit één bron, dezelfde als de ring op Home
+  const hs=calcHealthScore(m);
+  const finalScore=hs.score,components=hs.components;
+  const noSpendYet=!hs.ready;
+  const catOver=cats.filter(c=>c.budget>0&&getCatSpent(c.id,m)>c.budget).length;
   const scoreColor=finalScore>=80?'var(--g)':finalScore>=60?'var(--w)':'var(--r)';
   const scoreText=finalScore>=80?'Uitstekend':finalScore>=60?'Goed bezig':finalScore>=40?'Let op':'Actie nodig';
 
@@ -7782,32 +7827,27 @@ function buildHealthDetail(m){
         <div style="font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)">/100</div>
       </div>
     </div>
-    <div style="font-size:14px;font-weight:700;color:${noSpendYet?'var(--n3)':scoreColor}">${noSpendYet?'Nog geen uitgaven':scoreText}</div>
+    <div style="font-size:14px;font-weight:700;color:${noSpendYet?'var(--n3)':scoreColor}">${noSpendYet?(spent<=0?'Nog geen uitgaven':'Nog te vroeg in de maand'):scoreText}</div>
   </div>
 
   <!-- SCORE OPBOUW -->
   <div class="dm-section">
     <div class="dm-section-title">score-opbouw</div>
-    <div class="dm-row" style="padding:6px 0">
-      <div class="dm-row-name" style="color:var(--n3)">Startpunt</div>
-      <div style="font-family:var(--mono);font-size:13px;color:var(--n3)">100</div>
-    </div>
-    ${components.map(c=>`
-    <div class="dm-row" style="padding:6px 0;border-top:1px solid var(--l0)">
-      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
-        <div style="width:6px;height:6px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:500;color:var(--n1)">${c.lbl}</div>
-          ${c.sub?`<div style="font-size:9px;color:var(--n3);margin-top:1px">${c.sub}</div>`:''}
-        </div>
+    <div style="font-size:10px;color:var(--n3);line-height:1.5;margin:0 0 6px">Drie delen, elk op basis van je eigen cijfers. Samen maximaal 100.</div>
+    ${components.map((c,i)=>`
+    <div style="padding:8px 0;${i>0?'border-top:1px solid var(--l0)':''}">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+        <div style="font-size:12px;font-weight:600;color:var(--n1)">${c.lbl}</div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${noSpendYet?'var(--n3)':c.color};flex-shrink:0">${noSpendYet?'—':c.val} <span style="font-weight:500;color:var(--n3)">/ ${c.max}</span></div>
       </div>
-      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${c.color};flex-shrink:0">${c.val>0?'+':''}${c.val}</div>
+      <div style="height:4px;border-radius:2px;background:var(--s2);margin:5px 0 4px;overflow:hidden"><div style="height:100%;width:${noSpendYet?0:Math.round(c.val/c.max*100)}%;background:${c.color};border-radius:2px"></div></div>
+      <div style="font-size:9.5px;color:var(--n3)">${c.sub}</div>
     </div>`).join('')}
     <div class="dm-row" style="border-top:2px solid var(--l1);margin-top:4px;padding-top:10px">
-      <div class="dm-row-name" style="font-weight:700;color:var(--n0)">Eindscore${scoreCapped?'<div style="font-size:9px;font-weight:500;color:var(--n3);margin-top:1px">berekend '+scoreBase+', afgetopt op 100</div>':''}</div>
-      <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:${scoreColor}">${finalScore}/100</div>
+      <div class="dm-row-name" style="font-weight:700;color:var(--n0)">Score</div>
+      <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:${noSpendYet?'var(--n3)':scoreColor}">${noSpendYet?'—':finalScore}/100</div>
     </div>
-    ${noSpendYet?'<div style="font-size:10px;color:var(--n3);line-height:1.5;margin-top:8px">Nog geen uitgaven deze maand. De score start op 100 en beweegt pas mee zodra je iets invoert.</div>':''}
+    ${noSpendYet?'<div style="font-size:10px;color:var(--n3);line-height:1.5;margin-top:8px">'+(spent<=0?'Nog geen uitgaven deze maand. De score verschijnt zodra je iets invoert en minstens 10% van de maand om is.':'Nog te vroeg: vanaf 10% van de maand is het tempo betrouwbaar genoeg voor een score.')+'</div>':''}
   </div>
 
   <!-- INZICHTEN -->
@@ -8098,6 +8138,10 @@ async function unlockVault(){
         if(!b64)throw new Error('Geen vault data');
         const data=await decryptVault(b64,pass);
         hydrateState(data);
+        // Oud formaat of oud iteratiegetal: nu we het wachtwoord hebben, éénmalig upgraden naar v2 met 600k.
+        if(_vaultIter!==VAULT_ITER||!b64.startsWith('QlYC')){
+          try{localStorage.setItem(VAULT_KEY,await encryptVault(S,pass));}catch(e){}
+        }
         lock.style.display='none';
         resolve();
       }catch(e){
@@ -8292,7 +8336,6 @@ function openVaultSetupModal(){
     btn.disabled=true;btn.textContent='Bezig met versleutelen…';
     try{
       const b64=await encryptVault(S,p1.value);
-      _vaultSalt=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).slice(0,16);
       localStorage.setItem(VAULT_KEY,b64);
       localStorage.setItem(VAULT_FLAG,'true');
       localStorage.removeItem(STORAGE);

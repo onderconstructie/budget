@@ -1,0 +1,7 @@
+node_modules/
+tests/output/
+*.log
+# Nooit echte data of back-ups in de repo
+*.backup.json
+buddy-budget-backup-*.json
+buddy-budget-*.csv

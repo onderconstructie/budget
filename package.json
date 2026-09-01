@@ -1,0 +1,12 @@
+{
+  "name": "buddy-budget",
+  "private": true,
+  "version": "2026.54.0",
+  "description": "Persoonlijke budget-app in één bestand. Tests draaien de echte index.html headless met fictieve data.",
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}
