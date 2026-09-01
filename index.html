@@ -109,7 +109,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   17%{transform:rotate(-2deg)}
   20%{transform:rotate(0deg)}
 }
-.logo-text{font-family:var(--sans);font-size:17px;font-weight:700;letter-spacing:-.4px;line-height:1;color:#b8155c}
+.logo-text{font-family:var(--sans);font-size:18px;font-weight:700;letter-spacing:-.4px;line-height:1.3;padding-bottom:1px;color:#b8155c;white-space:nowrap}
 
 /* ─────────────────────────────────────────────────────────
    DASHBOARD — TOP CHROME
@@ -126,12 +126,12 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dh-nav-btn:hover{color:var(--n0)}
 .dh-nav-btn:disabled{opacity:.22;cursor:not-allowed}
 .dh-nav-btn svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.8}
-.dh-nav-label{font-size:12px;font-weight:700;letter-spacing:-.1px;min-width:82px;text-align:center;color:var(--n0);padding:0 4px;white-space:nowrap}
+.dh-nav-label{font-size:13px;font-weight:700;letter-spacing:-.1px;min-width:82px;text-align:center;color:var(--n0);padding:0 4px;white-space:nowrap}
 
 /* Hero */
 .dh-hero{padding:14px 16px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .dh-hero:active{opacity:.8}
-.dh-hero-eyebrow{font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--a);opacity:.85}
+.dh-hero-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--a);opacity:.85}
 .dh-hero-amount{font-family:var(--display);font-size:46px;font-weight:700;letter-spacing:-2.2px;line-height:1;transition:color .25s;font-variant-numeric:lining-nums tabular-nums}
 .dh-hero-amount.pos{color:var(--n0)}
 .dh-hero-amount.neg{color:var(--r)}
@@ -142,7 +142,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dh-bar-tick{position:absolute;top:-4px;bottom:-4px;width:1.5px;transform:translateX(-50%);background:rgba(0,0,0,.2);border-radius:2px;pointer-events:none}
 
 /* Context line */
-.dh-context{font-size:10px;font-weight:600;color:var(--n3);padding:6px 16px 10px;letter-spacing:.05px}
+.dh-context{font-size:11.5px;font-weight:600;color:var(--n3);padding:6px 16px 10px;letter-spacing:.05px}
 .dh-context em{font-style:normal;color:var(--n2)}
 
 /* Stats strip — 4 tappable stats with dividers */
@@ -151,7 +151,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dh-stat:first-child{padding-left:16px}.dh-stat:last-child{padding-right:16px}
 .dh-stat:active{background:rgba(233,30,140,.05)}
 .dh-stat-v{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:-.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--n0)}
-.dh-stat-l{font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)}
+.dh-stat-l{font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)}
 .dh-stat-sep{width:1px;background:var(--l0);flex-shrink:0;margin:8px 0}
 
 /* ─────────────────────────────────────────────────────────
@@ -160,8 +160,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dh-body{padding:16px 16px calc(96px + var(--sb))}
 
 /* ── Section label ── */
-.dh-label{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
-.dh-label-meta{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--n2);text-transform:none;letter-spacing:0}
+.dh-label{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.dh-label-meta{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--n2);text-transform:none;letter-spacing:0}
 
 /* ── Alerts ── */
 
@@ -188,8 +188,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .alert.info .alert-icon{background:rgba(14,165,233,.15);color:#0ea5e9}
 .alert.info .alert-title{color:#0ea5e9}
 .alert-content{flex:1;min-width:0}
-.alert-title{font-size:12px;font-weight:700;line-height:1.3}
-.alert-text{font-size:11px;color:var(--n2);margin-top:3px;line-height:1.45}
+.alert-title{font-size:13.5px;font-weight:700;line-height:1.3}
+.alert-text{font-size:12.5px;color:var(--n2);margin-top:3px;line-height:1.45}
 
 /* ── Category rows — FLAT, no card wrapper ── */
 .dh-cats{display:flex;flex-direction:column}
@@ -197,7 +197,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 /* cost-type separator pills */
 .cost-type-label{padding:10px 0 5px;display:flex;align-items:center}
 .cost-type-label:first-child{padding-top:0}
-.cost-type-pill{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:3px 8px;border-radius:100px}
+.cost-type-pill{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:3px 8px;border-radius:100px}
 .cost-type-pill.semi{background:rgba(245,158,11,.07);color:var(--w);border:1px solid rgba(245,158,11,.14)}
 .cost-type-pill.variable{background:rgba(0,0,0,.04);color:var(--n2);border:1px solid var(--l1)}
 .cost-type-pill svg{width:8px;height:8px;stroke:currentColor;stroke-width:2.5}
@@ -222,13 +222,13 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .cat-icon svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
 
 .cat-info{flex:1;min-width:0}
-.cat-name{font-size:13px;font-weight:600;letter-spacing:-.1px;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px;margin-bottom:5px}
+.cat-name{font-size:14.5px;font-weight:600;letter-spacing:-.1px;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px;margin-bottom:5px}
 .cat-name .dot{width:3px;height:3px;border-radius:50%;flex-shrink:0}
 .cat-name .dot.warn{background:var(--w);animation:dot-fade 3.5s ease-in-out infinite}
 .cat-name .dot.danger{background:var(--r);animation:dot-fade 3s ease-in-out infinite}
 @keyframes dot-fade{0%,100%{opacity:.55}50%{opacity:.1}}
 /* Alarm badge — enkel bij werkelijk over budget */
-.cat-alarm{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:var(--r);color:#fff;font-size:7.5px;font-weight:900;flex-shrink:0;line-height:1;animation:alarm-ring 1.6s ease-in-out infinite;font-style:normal}
+.cat-alarm{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:var(--r);color:#fff;font-size:9px;font-weight:900;flex-shrink:0;line-height:1;animation:alarm-ring 1.6s ease-in-out infinite;font-style:normal}
 @keyframes alarm-ring{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(220,38,38,.35)}55%{transform:scale(1.08);box-shadow:0 0 0 5px rgba(220,38,38,0)}}
 
 /* The bar — semantic fill + pace tick */
@@ -236,7 +236,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .cat-bar-inner{position:absolute;inset:0;overflow:hidden;border-radius:4px}
 .cat-bar-fill{height:100%;border-radius:4px;transition:width .55s cubic-bezier(.4,0,.2,1)}
 /* Budget meta: €spent / €budget — block zodat text-overflow werkt */
-.cat-bar-meta{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-top:5px;font-size:9.5px;font-weight:600;color:var(--n3);font-family:var(--mono);letter-spacing:-.2px;line-height:1}
+.cat-bar-meta{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-top:5px;font-size:11px;font-weight:600;color:var(--n3);font-family:var(--mono);letter-spacing:-.2px;line-height:1}
 .cat-bar-meta-spent{color:var(--n1)}
 .cat-bar-meta-sep{color:var(--n4);margin:0 2px;font-weight:400}
 .cat-bar-fill.ok{background:var(--g)}
@@ -249,7 +249,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .cat-amount{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:-.35px;color:var(--n0);white-space:nowrap;overflow:hidden;display:block}
 .cat-amount.warn{color:var(--w)}
 .cat-amount.danger{color:var(--r)}
-.cat-pct{font-size:9.5px;font-weight:700;margin-top:2px;font-family:var(--mono);letter-spacing:-.1px;white-space:nowrap;display:block}
+.cat-pct{font-size:11px;font-weight:700;margin-top:2px;font-family:var(--mono);letter-spacing:-.1px;white-space:nowrap;display:block}
 
 /* Add button */
 .cat-add-btn{flex-shrink:0;width:30px;height:30px;border-radius:var(--r4);background:var(--l0);border:1px solid var(--l1);color:var(--n3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;padding:0;margin-left:6px}
@@ -268,7 +268,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dh-score{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--l0);cursor:pointer;margin-top:4px;transition:opacity .12s}
 .dh-score:active{opacity:.9;background:rgba(233,30,140,.03)}
 .dh-score-label{font-size:12px;font-weight:700;color:var(--n0);flex:1}
-.dh-score-caption{font-size:11px;color:var(--n2);margin-top:1px}
+.dh-score-caption{font-size:12.5px;color:var(--n2);margin-top:1px}
 .dh-score-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
 .dh-score-num{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-.8px;line-height:1}
 .dh-score-track{width:56px;height:3px;background:rgba(0,0,0,.06);border-radius:2px;overflow:hidden}
@@ -282,7 +282,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .tl-item:last-child{padding-bottom:0}
 .tl-dot{position:absolute;left:-15px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--s2);border:1.5px solid var(--l2)}
 .tl-dot.active{background:var(--a);border-color:var(--a);box-shadow:0 0 8px var(--a-glow)}
-.tl-month{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:3px}
+.tl-month{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:3px}
 .tl-event{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--s1);border-radius:var(--r4);border:1px solid var(--l0)}
 .tl-name{font-size:12px;font-weight:600;letter-spacing:-.1px;color:var(--n1)}
 .tl-amount{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--g);letter-spacing:-.3px}
@@ -305,14 +305,14 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
   display:flex;align-items:center;justify-content:space-between;padding:9px 16px 9px
 }
 #history .header-sub, #settings .header-sub{
-  display:block;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  display:block;font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
   color:var(--n3);padding:0 16px 10px
 }
 .metrics{display:none}
 .metric{display:none}
 .month-nav{display:none}
 .card{background:var(--s1);border:1px solid var(--l0);border-radius:var(--r8);padding:14px;margin-bottom:10px}
-.card-title{font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:12px;display:flex;align-items:center;gap:7px}
 .card-title svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.5}
 .header-balance{display:none}
 .header-budget-bar{display:none}
@@ -331,7 +331,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;background:none;border:none;border-radius:100px;color:var(--n3);cursor:pointer;transition:all .18s}
 .nav-btn.active{color:var(--a);background:var(--a-dim);position:relative}
 .nav-btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none}
-.nav-btn span{font-size:9px;font-weight:700;letter-spacing:.2px}
+.nav-btn span{font-size:10.5px;font-weight:700;letter-spacing:.2px}
 
 /* ─────────────────────────────────────────────────────────
    FAB
@@ -358,11 +358,11 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .modal-bg.open .modal{transform:translateY(0)}
 .modal-handle{display:none}
 .modal-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--l0);background:var(--s0);flex-shrink:0}
-.modal-title{font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:-.4px;line-height:1.1}
+.modal-title{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.4px;line-height:1.1}
 .modal-close{width:32px;height:32px;background:var(--s2);border:1px solid var(--l1);border-radius:var(--r4);color:var(--n2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .modal-close svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.5}
 .modal-body{padding:16px;overflow-y:auto;flex:1}
-.chart-offline{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;font-size:11px;color:var(--n3);line-height:1.5}
+.chart-offline{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;font-size:12.5px;color:var(--n3);line-height:1.5}
 .chart-wrap{position:relative}
 .modal-footer{padding:12px 16px calc(max(12px,env(safe-area-inset-bottom)));background:var(--s1);border-top:1px solid var(--l0);flex-shrink:0}
 
@@ -370,12 +370,12 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
    FIELDS
 ───────────────────────────────────────────────────────── */
 .field{margin-bottom:13px}
-.field-label{display:block;font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);margin-bottom:6px}
-.field-input{width:100%;padding:10px 12px;background:var(--s0);border:1px solid var(--l1);border-radius:var(--r6);font-family:var(--sans);font-size:14px;color:var(--n0);outline:none;transition:border-color .18s}
+.field-label{display:block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);margin-bottom:6px}
+.field-input{width:100%;padding:10px 12px;background:var(--s0);border:1px solid var(--l1);border-radius:var(--r6);font-family:var(--sans);font-size:16px;color:var(--n0);outline:none;transition:border-color .18s}
 .field-input:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(233,30,140,.10);outline:none}
 .field-input::placeholder{color:var(--n3)}
-.field-hint{font-size:10px;color:var(--n3);margin-top:4px}
-.field-hint .badge{background:var(--a-dim);color:var(--a);padding:2px 5px;border-radius:3px;font-weight:700;font-size:9px}
+.field-hint{font-size:11.5px;color:var(--n3);margin-top:4px}
+.field-hint .badge{background:var(--a-dim);color:var(--a);padding:2px 5px;border-radius:3px;font-weight:700;font-size:10.5px}
 .field-money{position:relative}
 .field-money::before{content:'€';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--n3);font-weight:600;font-size:13px}
 .field-money[data-cur="USD"]::before{content:'$'}
@@ -391,7 +391,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .qe-name{flex:1;font-size:13px;font-weight:600;min-width:0}
 .qe-input{width:84px;padding:6px 8px;background:var(--s0);border:1px solid var(--l1);border-radius:var(--r4);font-family:var(--mono);font-size:13px;color:var(--n0);text-align:right;outline:none;transition:border-color .15s}
 
-.qe-budget{font-size:10px;color:var(--n3);width:52px;text-align:right;font-weight:500}
+.qe-budget{font-size:11.5px;color:var(--n3);width:52px;text-align:right;font-weight:500}
 
 /* ─────────────────────────────────────────────────────────
    BUTTONS
@@ -423,8 +423,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .hist-month{font-size:14px;font-weight:700;letter-spacing:-.3px}
 .hist-bar{height:2px;background:rgba(0,0,0,.05);border-radius:2px;margin-top:9px;overflow:hidden}
 .hist-bar-fill{height:100%;border-radius:2px;transition:width .4s}
-.hist-meta{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--n3);font-weight:500}
-.hist-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px}
+.hist-meta{display:flex;justify-content:space-between;margin-top:5px;font-size:11.5px;color:var(--n3);font-weight:500}
+.hist-badge{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:100px}
 .hist-badge.ok{background:var(--g-dim);color:var(--g)}
 .hist-badge.warn{background:var(--w-dim);color:var(--w)}
 .hist-badge.over{background:var(--r-dim);color:var(--r)}
@@ -433,17 +433,17 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
    SETTINGS SCREEN
 ───────────────────────────────────────────────────────── */
 .set-section{margin-bottom:20px}
-.set-title{font-size:9px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--n3);margin-bottom:8px;padding-left:4px}
+.set-title{font-size:10.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--n3);margin-bottom:8px;padding-left:4px}
 .set-note{font-size:12px;color:var(--n2);line-height:1.5;margin-bottom:8px;padding-left:4px}
 .set-row-info{cursor:default;pointer-events:none}
 .set-row-info svg{stroke:var(--n2)}
-.set-row-sub{font-size:11px;color:var(--n3);margin-top:1px;font-weight:400}
+.set-row-sub{font-size:12.5px;color:var(--n3);margin-top:1px;font-weight:400}
 .set-list{background:var(--s1);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden}
 .set-row{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--l0);cursor:pointer;transition:background .12s}
 .set-row:last-child{border-bottom:none}
 .set-row:active{background:rgba(233,30,140,.05)}
 .set-row svg{width:16px;height:16px;stroke:var(--n2);stroke-width:2}
-.set-row span{font-size:13px;font-weight:500}
+.set-row span{font-size:14.5px;font-weight:500}
 .set-row.danger{color:var(--r)}
 .set-row.danger svg{stroke:var(--r)}
 /* === VAULT UI === */
@@ -472,14 +472,14 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .vlt-meter-bar.on-med{background:#fbbf24}
 .vlt-meter-bar.on-good{background:#84cc16}
 .vlt-meter-bar.on-strong{background:#16a34a}
-.vlt-meter-label{font-size:10px;font-weight:600;color:var(--n3);margin-bottom:10px;min-height:14px}
-.vlt-match{font-size:11px;font-weight:600;margin-top:5px;margin-bottom:10px;min-height:16px;display:flex;align-items:center;gap:5px}
+.vlt-meter-label{font-size:11.5px;font-weight:600;color:var(--n3);margin-bottom:10px;min-height:14px}
+.vlt-match{font-size:12.5px;font-weight:600;margin-top:5px;margin-bottom:10px;min-height:16px;display:flex;align-items:center;gap:5px}
 .vlt-match svg{width:14px;height:14px;flex-shrink:0}
 .vlt-match.ok{color:#16a34a}
 .vlt-match.bad{color:#dc2626}
 .vlt-check{display:flex;align-items:flex-start;gap:9px;padding:10px 11px;background:#fef3c7;border:1px solid #fcd34d;border-radius:9px;margin-bottom:12px;cursor:pointer;user-select:none}
 .vlt-check input{margin-top:2px;flex-shrink:0;accent-color:#be185d}
-.vlt-check-text{font-size:11px;color:#92400e;line-height:1.5}
+.vlt-check-text{font-size:12.5px;color:#92400e;line-height:1.5}
 .vlt-info{background:linear-gradient(135deg,rgba(244,114,182,.08),rgba(190,24,93,.04));border:1px solid rgba(244,114,182,.25);border-radius:9px;padding:11px 12px;margin-bottom:14px;font-size:12px;color:var(--n2);line-height:1.5;display:flex;align-items:flex-start;gap:8px}
 .vlt-info-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#fce7f3;color:#be185d;flex-shrink:0}
 .vlt-info-icon svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}
@@ -491,7 +491,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .vlt-secondary{width:100%;padding:12px;background:var(--n2);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
 .vlt-secondary:hover:not(:disabled){opacity:.92}
 .vlt-secondary:disabled{opacity:.5;cursor:not-allowed}
-.vlt-label{display:block;font-size:11px;font-weight:600;color:var(--n2);margin-bottom:5px}
+.vlt-label{display:block;font-size:12.5px;font-weight:600;color:var(--n2);margin-bottom:5px}
 .vlt-error{font-size:12px;color:#dc2626;min-height:16px;margin-bottom:10px;display:flex;align-items:center;gap:5px}
 .vlt-error svg{width:14px;height:14px;flex-shrink:0}
 .vlt-toast{position:fixed;top:16px;left:16px;right:16px;max-width:380px;margin:0 auto;background:linear-gradient(135deg,#10b981,#059669);color:white;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10000;display:flex;align-items:center;gap:8px;animation:vlt-toast-in .25s ease-out}
@@ -514,12 +514,12 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .wizard-logo{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 0 22px}
 .wizard-logo .logo-icon{width:60px;height:60px;border-radius:var(--r8);animation-delay:1.5s}
 .wizard-logo .logo-icon svg{width:32px;height:32px}
-.wizard-logo-text{font-family:var(--sans);font-size:26px;font-weight:700;letter-spacing:-.8px;line-height:1;color:#b8155c}
+.wizard-logo-text{font-family:var(--sans);font-size:28px;font-weight:700;letter-spacing:-.8px;line-height:1.3;color:#b8155c}
 .wizard-title{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-.9px;line-height:1.1;margin-bottom:6px}
 .wizard-sub{font-size:13px;color:var(--n2);margin-bottom:18px;line-height:1.6}
 .wizard-footer{padding:12px 16px calc(12px + var(--sb));display:flex;gap:8px;background:linear-gradient(0deg,var(--s0) 80%,transparent)}
 .wizard-footer .btn{flex:1}.wizard-footer .btn-primary{flex:2}
-.section-title{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--n3);margin:17px 0 9px;padding-left:2px;display:flex;align-items:center;gap:8px}
+.section-title{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--n3);margin:17px 0 9px;padding-left:2px;display:flex;align-items:center;gap:8px}
 .section-title::after{content:'';flex:1;height:1px;background:var(--l0)}
 .group{background:var(--s2);border:1px solid var(--l0);border-radius:var(--r8);margin-bottom:7px;overflow:hidden;transition:border-color .18s}
 .group:focus-within{border-color:rgba(236,72,153,.18)}
@@ -527,7 +527,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .group-icon{width:28px;height:28px;border-radius:var(--r4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .group-icon svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}
 .group-name{flex:1;font-size:13px;font-weight:700}
-.group-total{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--n2)}
+.group-total{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--n2)}
 .group-arrow{width:16px;height:16px;display:flex;align-items:center;justify-content:center;color:var(--n3);transition:transform .18s}
 .group-arrow svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.5}
 .group-body{display:none;padding:0 9px 9px}
@@ -542,7 +542,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .sub-check.on svg{opacity:1}
 .sub-info{flex:1;min-width:0}
 .sub-name{font-size:12px;font-weight:600}
-.sub-period{font-size:9px;color:var(--n3);font-weight:600;letter-spacing:.2px;text-transform:uppercase;margin-top:1px}
+.sub-period{font-size:10.5px;color:var(--n3);font-weight:600;letter-spacing:.2px;text-transform:uppercase;margin-top:1px}
 .sub-name-input{background:none;border:none;border-bottom:1px dashed rgba(0,0,0,.15);color:var(--n0);font-family:var(--sans);font-size:12px;font-weight:600;width:100%;outline:none;padding:0 0 1px;transition:border-color .15s}
 .sub-name-input:focus{border-bottom-color:var(--a)}
 .sub-name-input:disabled{color:var(--n3);border-bottom-color:transparent;cursor:default}
@@ -550,7 +550,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .sub-input:focus{border-color:var(--a)}
 .sub-input:disabled{opacity:.3;cursor:not-allowed}
 .period-toggle{display:flex;gap:2px}
-.period-btn{width:26px;height:26px;background:var(--s2);border:1px solid var(--l0);border-radius:5px;font-size:8px;font-weight:800;color:var(--n3);cursor:pointer;transition:all .15s}
+.period-btn{width:26px;height:26px;background:var(--s2);border:1px solid var(--l0);border-radius:5px;font-size:9.5px;font-weight:800;color:var(--n3);cursor:pointer;transition:all .15s}
 .period-btn.on{background:var(--a);border-color:var(--a);color:#fff;box-shadow:0 2px 8px var(--a-glow)}
 .period-btn:disabled{opacity:.25;cursor:not-allowed}
 .add-row{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;padding:10px;background:transparent;border:1.5px dashed rgba(0,0,0,.13);border-radius:var(--r6);font-size:12px;font-weight:700;color:var(--n3);cursor:pointer;transition:all .15s;margin-top:7px}
@@ -563,7 +563,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .cat-setup-name-input{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--n0);background:transparent;border:1px solid transparent;border-radius:var(--r4);padding:5px 7px;outline:none;font-family:var(--sans);letter-spacing:-.1px;transition:background .15s,border-color .15s}
 .cat-setup-name-input:hover{background:var(--s0)}
 .cat-setup-name-input:focus{background:var(--s0);border-color:var(--a)}
-.cat-setup-swap{display:inline-flex;align-items:center;gap:3px;background:var(--s0);border:1px solid var(--l1);color:var(--n2);font-size:9.5px;font-weight:700;letter-spacing:.3px;padding:5px 7px;border-radius:var(--r4);cursor:pointer;flex-shrink:0;text-transform:uppercase;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.cat-setup-swap{display:inline-flex;align-items:center;gap:3px;background:var(--s0);border:1px solid var(--l1);color:var(--n2);font-size:11px;font-weight:700;letter-spacing:.3px;padding:5px 7px;border-radius:var(--r4);cursor:pointer;flex-shrink:0;text-transform:uppercase;transition:all .15s;-webkit-tap-highlight-color:transparent}
 .cat-setup-swap:hover{background:var(--a-dim);border-color:rgba(233,30,140,.25);color:var(--a)}
 .cat-setup-swap svg{opacity:.7}
 .cat-setup-swap:active{transform:scale(.95)}
@@ -574,7 +574,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .income-row{background:var(--s2);border:1px solid var(--l0);border-radius:var(--r6);padding:11px;margin-bottom:6px}
 .income-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
 .income-label{font-size:12px;font-weight:700}
-.income-month{padding:5px 9px;background:var(--s0);border:1px solid var(--l1);border-radius:var(--r4);font-size:11px;font-weight:600;color:var(--n0);cursor:pointer;outline:none}
+.income-month{padding:5px 9px;background:var(--s0);border:1px solid var(--l1);border-radius:var(--r4);font-size:12.5px;font-weight:600;color:var(--n0);cursor:pointer;outline:none}
 .icon-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:9px}
 .icon-opt{aspect-ratio:1;background:var(--s2);border:1.5px solid transparent;border-radius:var(--r4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .icon-opt.on{border-color:var(--a);background:var(--a-dim)}
@@ -606,22 +606,22 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 /* gauge */
 .gauge{width:100%;height:5px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden;margin:7px 0}
 .gauge-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
-.gauge-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--n3);font-weight:600}
+.gauge-labels{display:flex;justify-content:space-between;font-size:10.5px;color:var(--n3);font-weight:600}
 /* detail modal */
 #detail-modal .modal-body{padding:0}
 .dm-section{padding:13px 16px;border-bottom:1px solid var(--l0)}
 .dm-section:last-child{border-bottom:none}
-.dm-section-title{font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--n3);margin-bottom:9px}
+.dm-section-title{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--n3);margin-bottom:9px}
 .dm-hero{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
 .dm-hero-val{font-family:var(--mono);font-size:27px;font-weight:700;letter-spacing:-.8px}
-.dm-hero-lbl{font-size:11px;color:var(--n2);font-weight:600}
+.dm-hero-lbl{font-size:12.5px;color:var(--n2);font-weight:600}
 .dm-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--l0)}
 .dm-row:last-child{border-bottom:none}
 .dm-row-left{display:flex;align-items:center;gap:8px}
 .dm-row-icon{width:26px;height:26px;border-radius:var(--r4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .dm-row-icon svg{width:11px;height:11px;stroke:currentColor;stroke-width:2;fill:none}
 .dm-row-name{font-size:12px;font-weight:600;color:var(--n1)}
-.dm-row-sub{font-size:9px;color:var(--n3);font-weight:500}
+.dm-row-sub{font-size:10.5px;color:var(--n3);font-weight:500}
 .dm-row-val{font-family:var(--mono);font-size:13px;font-weight:700}
 .dm-bar-wrap{height:4px;background:rgba(0,0,0,.06);border-radius:2px;overflow:hidden;margin-top:5px}
 .dm-bar-fill{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1)}
@@ -632,16 +632,16 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dm-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .dm-stat{background:var(--s2);border:1px solid var(--l0);border-radius:var(--r6);padding:8px 10px}
 .dm-stat-val{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:-.4px}
-.dm-stat-lbl{font-size:7px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-top:3px}
+.dm-stat-lbl{font-size:8.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-top:3px}
 .dm-score-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--l0)}
 .dm-score-row:last-child{border-bottom:none}
 .dm-score-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.dm-score-label{flex:1;font-size:11px;font-weight:600;color:var(--n2)}
-.dm-score-val{font-family:var(--mono);font-size:11px;font-weight:700}
+.dm-score-label{flex:1;font-size:12.5px;font-weight:600;color:var(--n2)}
+.dm-score-val{font-family:var(--mono);font-size:12.5px;font-weight:700}
 .dm-target-bar{flex:1;height:6px;background:rgba(0,0,0,.06);border-radius:3px;position:relative;overflow:hidden}
 .dm-target-fill{height:100%;border-radius:3px}
 .dm-target-tick{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.25);border-radius:1px}
-.dm-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;font-size:9px;font-weight:700}
+.dm-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;font-size:10.5px;font-weight:700}
 
 /* ANALYTICS */
 /* === ANALYTICS === */
@@ -655,12 +655,12 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .an-stat{flex:1;display:flex;flex-direction:column;gap:2px;padding:9px 6px;cursor:pointer;min-width:0;transition:background .12s;align-items:center;text-align:center}
 
 .an-stat:active{background:rgba(233,30,140,.05)}
-.an-stat-v{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:-.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--n0);max-width:100%}
-.an-stat-l{font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)}
+.an-stat-v{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:-.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--n0);max-width:100%}
+.an-stat-l{font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)}
 .an-stat-sep{width:1px;background:var(--l0);flex-shrink:0;margin:6px 0}
 /* Tabs */
 .an-tabs{display:flex;gap:4px;margin:6px 16px 8px;padding:4px;background:var(--s2);border:1px solid var(--l1);border-radius:14px;flex-shrink:0}
-.an-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;background:none;border:none;color:var(--n2);font-family:var(--sans);font-size:10.5px;font-weight:700;cursor:pointer;border-radius:10px;transition:background .18s ease,color .18s ease,box-shadow .18s ease;letter-spacing:-.1px;-webkit-tap-highlight-color:transparent}
+.an-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;background:none;border:none;color:var(--n2);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;border-radius:10px;transition:background .18s ease,color .18s ease,box-shadow .18s ease;letter-spacing:-.1px;-webkit-tap-highlight-color:transparent}
 .an-tab svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.7;transition:opacity .18s ease,transform .18s ease}
 .an-tab:active{transform:scale(.97)}
 .an-tab.active{background:linear-gradient(135deg,#f472b6,#be185d);color:#fff;box-shadow:0 2px 6px rgba(190,24,93,.25)}
@@ -674,13 +674,13 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ov-burn-bar{position:relative;height:4px;background:rgba(0,0,0,.06);border-radius:2px;margin-bottom:5px;overflow:visible}
 .ov-burn-fill{position:absolute;top:0;left:0;height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .ov-burn-tick{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:rgba(0,0,0,.25);border-radius:1px;transform:translateX(-50%)}
-.ov-burn-lbl{font-size:10px;color:var(--n3);font-weight:500}
+.ov-burn-lbl{font-size:11.5px;color:var(--n3);font-weight:500}
 .ov-burn-lbl em{font-style:normal;color:var(--n1);font-weight:700}
-.ov-insight{margin:8px 16px 0;padding:9px 12px;background:var(--s2);border-radius:var(--r6);border-left:3px solid var(--a);font-size:11px;color:var(--n2);line-height:1.5;flex-shrink:0}
+.ov-insight{margin:8px 16px 0;padding:9px 12px;background:var(--s2);border-radius:var(--r6);border-left:3px solid var(--a);font-size:12.5px;color:var(--n2);line-height:1.5;flex-shrink:0}
 .ov-insight strong{color:var(--n0)}
 .ov-cats-hdr{display:flex;justify-content:space-between;align-items:center;flex-shrink:0;padding:10px 16px 4px}
-.ov-cats-title{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3)}
-.ov-cats-meta{font-family:var(--mono);font-size:9px;color:var(--n2);font-weight:600}
+.ov-cats-title{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3)}
+.ov-cats-meta{font-family:var(--mono);font-size:10.5px;color:var(--n2);font-weight:600}
 .ov-cats{flex:1;overflow-y:auto;min-height:0;padding:0 16px calc(96px + var(--safe-b))}
 .ov-cat-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--l0);cursor:pointer;transition:opacity .12s}
 .ov-cat-row:last-child{border-bottom:none}
@@ -690,14 +690,14 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ov-cat-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .ov-cat-nameline{display:flex;align-items:baseline;justify-content:space-between;gap:4px}
 .ov-cat-name{font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ov-cat-budlbl{font-size:8.5px;color:var(--n3);font-weight:500;font-family:var(--mono);flex-shrink:0}
+.ov-cat-budlbl{font-size:10px;color:var(--n3);font-weight:500;font-family:var(--mono);flex-shrink:0}
 .ov-cat-bar-wrap{position:relative;height:3px}
 .ov-cat-bar-track{position:absolute;inset:0;background:rgba(0,0,0,.06);border-radius:2px;overflow:hidden}
 .ov-cat-bar-fill{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 .ov-cat-pace-tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(0,0,0,.25);border-radius:1px;transform:translateX(-50%)}
 .ov-cat-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;min-width:52px}
 .ov-cat-amount{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:-.3px}
-.ov-cat-delta{font-size:9px;font-weight:700}
+.ov-cat-delta{font-size:10.5px;font-weight:700}
 .ov-cat-delta.up{color:var(--r)}.ov-cat-delta.down{color:var(--g)}
 /* JAAR */
 #an-jaar{overflow:hidden}
@@ -708,22 +708,22 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .yr-stat{text-align:center;padding:14px 8px 12px;background:var(--s1);transition:background .12s}.yr-stat[onclick]{cursor:pointer}.yr-stat[onclick]:active{background:rgba(233,30,140,.06)}
 .yr-stat:last-child{border-right:none}
 .yr-stat-val{font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:-.6px;line-height:1}
-.yr-stat-lbl{font-size:7px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-top:4px}
+.yr-stat-lbl{font-size:8.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-top:4px}
 .yr-legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.yr-leg-item{display:flex;align-items:center;gap:3px;font-size:8px;color:var(--n3);font-weight:600}
+.yr-leg-item{display:flex;align-items:center;gap:3px;font-size:9.5px;color:var(--n3);font-weight:600}
 .yr-leg-dot{width:7px;height:7px;border-radius:2px}.yr-leg-dash{width:14px;border-top:2px dashed rgba(0,0,0,.2)}.yr-leg-line{width:14px;border-top:2px solid rgba(14,165,233,.7)}
 #an-jaar .chart-wrap{min-height:140px}
-.yr-insight{padding:9px 12px;background:var(--s2);border-left:3px solid var(--a);border-radius:var(--r6);font-size:11px;color:var(--n2);line-height:1.5;margin-top:10px}
+.yr-insight{padding:9px 12px;background:var(--s2);border-left:3px solid var(--a);border-radius:var(--r6);font-size:12.5px;color:var(--n2);line-height:1.5;margin-top:10px}
 .yr-insight strong{color:var(--n0)}
 /* TRENDS */
 #an-trends{overflow:hidden}
 #an-trends-body{flex:1;overflow-y:auto;padding:12px 16px calc(96px + var(--safe-b))}
-.an-section-lbl{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);padding:2px 0 6px}
+.an-section-lbl{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);padding:2px 0 6px}
 .signal-cards{display:flex;flex-direction:column;gap:0;margin-bottom:10px}
 .signal-card{padding:12px 14px;background:var(--s1);border:1px solid var(--l0);border-radius:var(--r8);border-left:3px solid var(--n4)}
 .signal-card.signal-warn{border-left-color:var(--w)}.signal-card.signal-good{border-left-color:var(--g)}.signal-card.signal-bad{border-left-color:var(--r)}.signal-card.signal-info{border-left-color:var(--a)}
 .signal-title{font-size:12px;font-weight:700;color:var(--n0);margin-bottom:3px}
-.signal-body{font-size:11px;color:var(--n2);line-height:1.5}.signal-body strong{color:var(--n0)}
+.signal-body{font-size:12.5px;color:var(--n2);line-height:1.5}.signal-body strong{color:var(--n0)}
 .ldrbrd{display:flex;flex-direction:column;border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden;margin-bottom:8px}
 .ldr-row{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--l0)}
 .ldr-row:last-child{border-bottom:none}
@@ -740,14 +740,14 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ldr-bar-cur{position:absolute;top:0;left:0;height:100%;border-radius:2px}
 .ldr-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;width:58px}
 .ldr-amt{font-family:var(--mono);font-size:13px;font-weight:700}
-.ldr-dev{font-size:9px;font-weight:700}
+.ldr-dev{font-size:10.5px;font-weight:700}
 
 /* ── Categorie-chips onder trends-grafiek ── */
 .evo-chip{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px 7px;border-radius:var(--r8);border:1.5px solid var(--l1);background:var(--s1);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;width:100%}
 .evo-chip:active{transform:scale(.93)}
 .evo-chip-icon{width:32px;height:32px;border-radius:var(--r6);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s}
 .evo-chip-icon svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
-.evo-chip-name{font-size:9.5px;font-weight:600;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;transition:color .15s}
+.evo-chip-name{font-size:11px;font-weight:600;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;transition:color .15s}
 .evo-chip.active{border-width:1.5px}
 /* Kleurstip = lijnkleur in de grafiek: chips zijn ook de legende */
 .evo-chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle;position:relative;top:-1px}
@@ -761,16 +761,16 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .fc-day-ring svg{width:100%;height:100%}
 .fc-day-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .fc-day-amount{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1}
-.fc-day-lbl{font-size:8px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);margin-top:3px}
-.fc-day-sub{font-size:11px;color:var(--n2);font-weight:500}
-.fc-breakeven{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:10px;font-weight:600;border:1px solid;margin-top:8px}
+.fc-day-lbl{font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);margin-top:3px}
+.fc-day-sub{font-size:12.5px;color:var(--n2);font-weight:500}
+.fc-breakeven{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:11.5px;font-weight:600;border:1px solid;margin-top:8px}
 .fc-band-section,.fc-cats-section,.fc-stats-section{padding:12px 16px;border-bottom:1px solid var(--l0)}
 /* Sectie-conventies voor Vermogen + Plan tabs */
 .wp-section{margin-bottom:18px}
 .wp-section:last-child{margin-bottom:14px}
 /* === VERMOGEN HERO + verdeling === */
 .wp-hero{padding:18px 18px 16px;background:radial-gradient(120% 90% at 0% 0%,rgba(233,30,140,.10),rgba(233,30,140,0) 62%),var(--s0);border:1px solid var(--l0);border-radius:var(--r12);margin-bottom:14px}
-.wp-hero-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--n3);margin-bottom:8px}
+.wp-hero-label{font-size:11.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--n3);margin-bottom:8px}
 .wp-hero-amount{font-family:var(--display);font-size:38px;font-weight:700;letter-spacing:-1.8px;color:var(--n0);line-height:1;margin-bottom:14px}
 .wp-hero-amount.compact{font-size:30px}
 .wp-prop-bar{height:14px;background:var(--l0);border-radius:7px;overflow:hidden;display:flex;margin-bottom:14px}
@@ -782,13 +782,13 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .wp-prop-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:9px;vertical-align:middle;flex-shrink:0}
 .wp-prop-name{font-size:13px;font-weight:600;color:var(--n0);display:flex;align-items:center}
 .wp-prop-amt{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--n0);text-align:right}
-.wp-prop-pct{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--n3);min-width:42px;text-align:right;padding-left:6px}
+.wp-prop-pct{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--n3);min-width:42px;text-align:right;padding-left:6px}
 /* Stat cards (toegankelijk + rendement) */
 .wp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .wp-stat{padding:14px;background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8)}
-.wp-stat-label{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--n3);margin-bottom:5px}
+.wp-stat-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--n3);margin-bottom:5px}
 .wp-stat-amt{font-family:var(--display);font-size:19px;font-weight:700;color:var(--n0);letter-spacing:-.6px;line-height:1.05;margin-bottom:4px}
-.wp-stat-sub{font-size:10.5px;color:var(--n2);line-height:1.35}
+.wp-stat-sub{font-size:12px;color:var(--n2);line-height:1.35}
 .wp-stat.accent{background:linear-gradient(135deg,rgba(22,163,74,.06),rgba(22,163,74,.02));border-color:rgba(22,163,74,.18)}
 .wp-stat.accent .wp-stat-amt{color:#16a34a}
 .wp-stat.profit-pos{background:linear-gradient(135deg,rgba(22,163,74,.06),rgba(22,163,74,.02));border-color:rgba(22,163,74,.18)}
@@ -800,14 +800,14 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .wp-group{margin-bottom:14px}
 .wp-group:last-child{margin-bottom:0}
 .wp-group-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:6px}
-.wp-group-title{font-size:11px;font-weight:700;color:var(--n1);display:flex;align-items:center;gap:2px}
+.wp-group-title{font-size:12.5px;font-weight:700;color:var(--n1);display:flex;align-items:center;gap:2px}
 .wp-group-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
-.wp-group-meta{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--n2);display:flex;align-items:center;gap:8px}
-.wp-group-pct{color:var(--n3);font-size:10px}
-.wp-label{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.wp-group-meta{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--n2);display:flex;align-items:center;gap:8px}
+.wp-group-pct{color:var(--n3);font-size:11.5px}
+.wp-label{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .wp-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .wp-label-row .wp-label{margin-bottom:0}
-.wp-add-btn{display:inline-flex;align-items:center;gap:4px;background:var(--a-dim);border:1px solid rgba(233,30,140,.25);color:var(--a);font-size:11px;font-weight:700;cursor:pointer;padding:6px 11px;border-radius:8px;letter-spacing:-.1px;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s;font-family:var(--sans)}
+.wp-add-btn{display:inline-flex;align-items:center;gap:4px;background:var(--a-dim);border:1px solid rgba(233,30,140,.25);color:var(--a);font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 11px;border-radius:8px;letter-spacing:-.1px;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s;font-family:var(--sans)}
 .wp-add-btn:hover{background:rgba(233,30,140,.18)}
 .wp-add-btn:active{transform:scale(.96)}
 .wp-card{background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden}
@@ -816,32 +816,32 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .wp-row{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .12s}
 .wp-row:not(:last-child){border-bottom:1px solid var(--l0)}
 .wp-row:active{background:var(--l0)}
-.wp-row-title{font-size:13px;font-weight:600;color:var(--n0);line-height:1.3;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
-.wp-row-meta{font-size:10px;color:var(--n3);margin-top:3px;line-height:1.4}
-.wp-row-amount{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--n0);line-height:1.3}
-.wp-row-amount-sub{font-size:10px;color:var(--n3);font-family:var(--mono);margin-top:3px}
-.wp-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:.4px;line-height:1.5}
+.wp-row-title{font-size:14.5px;font-weight:600;color:var(--n0);line-height:1.3;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.wp-row-meta{font-size:11.5px;color:var(--n3);margin-top:3px;line-height:1.4}
+.wp-row-amount{font-family:var(--mono);font-size:14.5px;font-weight:700;color:var(--n0);line-height:1.3}
+.wp-row-amount-sub{font-size:11.5px;color:var(--n3);font-family:var(--mono);margin-top:3px}
+.wp-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;line-height:1.5}
 .wp-badge-reserved{background:rgba(14,165,233,.13);color:#0ea5e9}
 .wp-badge-blocked{background:rgba(115,115,115,.13);color:var(--n3)}
-.wp-hint{font-size:10px;color:var(--n3);margin-top:6px;line-height:1.45}
+.wp-hint{font-size:11.5px;color:var(--n3);margin-top:6px;line-height:1.45}
 .wp-hint code{font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px}
 .wp-form-row{display:flex;gap:10px}
 .wp-form-row > div{flex:1;min-width:0}
-.wp-input-label{font-size:9px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px}
+.wp-input-label{font-size:10.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px}
 .wp-stat-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0}
 .wp-stat-row:not(:last-child){border-bottom:1px solid var(--l0)}
 .wp-stat-row label{font-size:12px;color:var(--n1);flex:1}
 .wp-stat-row .wp-stat-input{display:flex;align-items:center;gap:6px}
 .wp-stat-row input{width:64px;text-align:center;font-family:var(--mono);padding:7px 8px}
-.wp-stat-row .wp-stat-unit{font-size:10px;color:var(--n3);min-width:40px;text-align:left}
+.wp-stat-row .wp-stat-unit{font-size:11.5px;color:var(--n3);min-width:40px;text-align:left}
 /* Beschikbaarheids-groepen in Vermogen */
 .wp-group{margin-bottom:16px}
 .wp-group:last-child{margin-bottom:0}
 .wp-group-header{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
-.wp-group-title{font-size:11px;font-weight:700;color:var(--n1);display:inline-flex;align-items:center;gap:8px}
+.wp-group-title{font-size:12.5px;font-weight:700;color:var(--n1);display:inline-flex;align-items:center;gap:8px}
 .wp-group-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.wp-group-subtotal{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--n2)}
-.wp-row-type-pill{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;line-height:1.5}
+.wp-group-subtotal{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--n2)}
+.wp-row-type-pill{display:inline-block;padding:1px 5px;border-radius:3px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;line-height:1.5}
 .wp-type-cash{background:rgba(14,165,233,.13);color:#0284c7}
 .wp-type-invest{background:rgba(233,30,140,.13);color:var(--a)}
 /* Event modal segmented controls */
@@ -856,10 +856,10 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ev-switch input:checked+span{background:var(--g)}
 .ev-switch input:checked+span::before{transform:translateX(16px)}
 /* Compact aannames-strip onder hero */
-.plan-assum-strip{display:flex;align-items:center;gap:0;padding:10px 14px;margin-bottom:18px;background:rgba(0,0,0,.025);border-radius:var(--r6);font-size:11px}
+.plan-assum-strip{display:flex;align-items:center;gap:0;padding:10px 14px;margin-bottom:18px;background:rgba(0,0,0,.025);border-radius:var(--r6);font-size:12.5px}
 .plan-assum-item{display:inline-flex;align-items:baseline;gap:5px;flex:1;justify-content:center;min-width:0}
 .plan-assum-num{font-family:var(--mono);font-weight:700;color:var(--n0);font-size:13px}
-.plan-assum-lbl{color:var(--n3);font-size:10px;letter-spacing:-.1px;white-space:nowrap}
+.plan-assum-lbl{color:var(--n3);font-size:11.5px;letter-spacing:-.1px;white-space:nowrap}
 .plan-assum-sep{width:1px;height:18px;background:var(--l1);flex-shrink:0}
 .plan-assum-edit{background:none;border:none;color:var(--n3);cursor:pointer;padding:6px;margin-left:6px;border-radius:var(--r4);display:inline-flex;align-items:center;justify-content:center;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .plan-assum-edit:hover{color:var(--a)}
@@ -868,7 +868,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 @media (max-width:480px){.plan-assum-strip{flex-wrap:wrap;row-gap:8px}.plan-assum-item{flex:1 1 40%}.plan-assum-sep{display:none}.plan-assum-edit{margin-left:auto}}
 @keyframes planAssumOpen{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .fc-section-hd{display:flex;align-items:center;gap:6px;margin-bottom:8px}
-.fc-section-title{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3)}
+.fc-section-title{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3)}
 .fc-band-bar{position:relative;height:24px;background:rgba(0,0,0,.06);border-radius:6px;overflow:hidden;margin-bottom:8px}
 .fc-band-fill-low{position:absolute;top:0;left:0;height:100%;border-radius:6px;opacity:.22}
 .fc-band-fill-high{position:absolute;top:0;left:0;height:100%;border-radius:6px;opacity:.5}
@@ -876,35 +876,35 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .fc-band-budget-line{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.25);z-index:5}
 .fc-band-budget-line::after{content:'budget';position:absolute;top:50%;transform:translateY(-50%) translateX(3px);font-size:6px;font-weight:700;text-transform:uppercase;color:rgba(0,0,0,.35);white-space:nowrap}
 .fc-band-labels{display:flex;justify-content:space-between;align-items:center}
-.fc-band-lbl{font-size:9px;font-weight:600;color:var(--n3)}
+.fc-band-lbl{font-size:10.5px;font-weight:600;color:var(--n3)}
 .fc-band-lbl.main{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--n0)}
-.fc-conf-note{font-size:8px;color:var(--n3);text-align:center;margin-top:6px}
+.fc-conf-note{font-size:9.5px;color:var(--n3);text-align:center;margin-top:6px}
 .fc-cat-rows{display:flex;flex-direction:column;gap:8px}
 .fc-cat-row{display:flex;align-items:center;gap:10px}
 .fc-cat-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .fc-cat-icon svg{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none}
 .fc-cat-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.fc-cat-name{font-size:11px;font-weight:600;color:var(--n1)}
+.fc-cat-name{font-size:12.5px;font-weight:600;color:var(--n1)}
 .fc-cat-barwrap{position:relative;height:4px;background:rgba(0,0,0,.07);border-radius:2px;overflow:visible}
 .fc-cat-bar-cur{position:absolute;top:0;left:0;height:100%;border-radius:2px}
 .fc-cat-budget-tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(0,0,0,.25);border-radius:1px;z-index:2;transform:translateX(-50%)}
 .fc-cat-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;min-width:52px}
-.fc-cat-proj{font-family:var(--mono);font-size:11px;font-weight:700}
-.fc-cat-over{font-size:8px;font-weight:700;color:var(--r)}
+.fc-cat-proj{font-family:var(--mono);font-size:12.5px;font-weight:700}
+.fc-cat-over{font-size:9.5px;font-weight:700;color:var(--r)}
 .fc-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .fc-stat-card{background:var(--s1);border:1px solid var(--l0);border-radius:var(--r8);padding:10px 12px;position:relative;overflow:hidden}
 .fc-stat-card-stripe{position:absolute;left:0;top:0;bottom:0;width:3px}
 .fc-stat-val{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:-.4px;line-height:1;margin-left:6px}
-.fc-stat-lbl{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-top:5px;margin-left:6px}
-.fc-stat-sub{font-size:9px;color:var(--n2);margin-top:2px;margin-left:6px;line-height:1.4}
+.fc-stat-lbl{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--n3);margin-top:5px;margin-left:6px}
+.fc-stat-sub{font-size:10.5px;color:var(--n2);margin-top:2px;margin-left:6px;line-height:1.4}
 .fc-zscore{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--s1);border:1px solid var(--l0);border-radius:var(--r8);margin-bottom:10px}
 .fc-zscore-bar{flex:1;height:6px;background:rgba(0,0,0,.07);border-radius:3px;position:relative;overflow:hidden}
 .fc-zscore-fill{position:absolute;height:100%;border-radius:3px}
 .fc-zscore-label{font-family:var(--mono);font-size:13px;font-weight:700;flex-shrink:0;width:44px;text-align:right}
-.fc-zscore-note{font-size:9px;color:var(--n3);font-weight:600;width:80px;text-align:right}
-.fc-info-btn{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--n3);background:none;color:var(--n3);font-size:9px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:all .15s;flex-shrink:0;font-family:var(--sans)}
+.fc-zscore-note{font-size:10.5px;color:var(--n3);font-weight:600;width:80px;text-align:right}
+.fc-info-btn{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--n3);background:none;color:var(--n3);font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:all .15s;flex-shrink:0;font-family:var(--sans)}
 .fc-info-btn:hover,.fc-info-btn.on{border-color:var(--a);color:var(--a)}
-.fc-info-panel{display:none;font-size:11px;color:var(--n2);line-height:1.55;padding:9px 12px;background:var(--s2);border-radius:var(--r6);margin-top:6px;margin-bottom:8px;border-left:2px solid var(--a)}
+.fc-info-panel{display:none;font-size:12.5px;color:var(--n2);line-height:1.55;padding:9px 12px;background:var(--s2);border-radius:var(--r6);margin-top:6px;margin-bottom:8px;border-left:2px solid var(--a)}
 .fc-info-panel.on{display:block}
 .calc-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;display:flex;gap:4px;padding:6px 12px calc(6px + var(--safe-b));background:var(--bg-card);border-top:1px solid var(--border-mid);z-index:300;opacity:0;visibility:hidden;transition:all .2s}
 .calc-bar.show{opacity:1;visibility:visible}
@@ -920,13 +920,13 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .fresh-start-inner{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:linear-gradient(135deg,rgba(233,30,140,.06),rgba(233,30,140,.02));border:1px solid rgba(233,30,140,.15);border-radius:var(--r8)}
 .fresh-start-icon{width:32px;height:32px;border-radius:var(--r6);background:rgba(233,30,140,.1);color:var(--a);display:flex;align-items:center;justify-content:center;flex-shrink:0}.fresh-start-icon svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none}
 .fresh-start-title{font-size:12px;font-weight:700;color:var(--n0);margin-bottom:2px}
-.fresh-start-body{font-size:11px;color:var(--n2);line-height:1.45}
+.fresh-start-body{font-size:12.5px;color:var(--n2);line-height:1.45}
 .fresh-start-close{background:none;border:none;color:var(--n3);font-size:18px;cursor:pointer;padding:0 0 0 6px;line-height:1;flex-shrink:0;align-self:flex-start;margin-top:-1px}
 
 /* ── Info toggle (prognose tab uitleg) ── */
-.fc-info-btn{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--n3);background:none;color:var(--n3);font-size:9px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:all .15s;flex-shrink:0;font-family:var(--sans)}
+.fc-info-btn{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--n3);background:none;color:var(--n3);font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:all .15s;flex-shrink:0;font-family:var(--sans)}
 .fc-info-btn:hover,.fc-info-btn.on{border-color:var(--a);color:var(--a)}
-.fc-info-panel{display:none;font-size:11px;color:var(--n2);line-height:1.55;padding:9px 12px;background:var(--s2);border-radius:var(--r6);margin-top:6px;margin-bottom:8px;border-left:2px solid var(--a)}
+.fc-info-panel{display:none;font-size:12.5px;color:var(--n2);line-height:1.55;padding:9px 12px;background:var(--s2);border-radius:var(--r6);margin-top:6px;margin-bottom:8px;border-left:2px solid var(--a)}
 .fc-info-panel.on{display:block}
 .fc-section-hd{display:flex;align-items:center;gap:6px;margin-bottom:0}
 .fc-section-hd .fc-section-title{margin-bottom:0}
@@ -938,7 +938,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .qe-row-expand.open{max-height:120px;opacity:1;pointer-events:auto;margin-top:8px}
 /* Chips */
 .qe-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
-.qe-chip{padding:3px 9px;background:rgba(0,0,0,.05);border:none;border-radius:100px;font-size:11px;font-weight:600;color:var(--n2);cursor:pointer;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.qe-chip{padding:3px 9px;background:rgba(0,0,0,.05);border:none;border-radius:100px;font-size:12.5px;font-weight:600;color:var(--n2);cursor:pointer;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent}
 .qe-chip:active,.qe-chip.selected{background:var(--a-dim);color:var(--a)}
 /* Detail input */
 .qe-detail-input{width:100%;padding:7px 10px;font-size:13px;font-family:var(--sans);background:rgba(0,0,0,.04);border:none;border-radius:var(--r6);color:var(--n0);outline:none;transition:background .15s;box-sizing:border-box}
@@ -955,13 +955,13 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .tx-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
 .tx-body{flex:1;min-width:0}
 .tx-detail{font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tx-meta{font-size:10px;color:var(--n3);margin-top:1px}
+.tx-meta{font-size:11.5px;color:var(--n3);margin-top:1px}
 .tx-amount{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--n0);flex-shrink:0;text-align:right}
 /* ── Toast notification ── */
 #_toast{position:fixed;bottom:calc(130px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(4px);background:var(--n0);color:var(--n7);padding:9px 18px;border-radius:100px;font-size:12px;font-weight:700;z-index:9999;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.12)}
 #_toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 /* ── Income modal title ── */
-.modal-title-sub{font-size:10px;font-weight:500;color:var(--n3);margin-top:1px}
+.modal-title-sub{font-size:11.5px;font-weight:500;color:var(--n3);margin-top:1px}
 /* ─────────────────────────────────────────────────────────
    CONSOLE — alles wat bediening is (titels, labels, knoppen, invoer, navigatie,
    namen in rijen) in IBM Plex Mono. Lopende zinnen (meldingen, hints, uitleg)
@@ -969,10 +969,10 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 ───────────────────────────────────────────────────────── */
 .dh-hero-eyebrow,.dh-label,.set-title,.wp-hero-label,.wp-stat-label,.an-stat-l,.an-section-lbl,.dm-section-title,.field-label,.wp-input-label,.cost-type-pill,.nav-btn span,.an-tab,.btn,.field-input,.dh-nav-label,.set-row span,.alert-title,.ev-seg-btn,.wp-add-btn,.fab-label,.evo-chip-name,.wp-row-title,.wp-group-title,.sub-name,.sub-name-input,.group-name,.cat-name,.summary-label,.summary-value,.sub-period,.calc-btn,.vlt-field-input,.vlt-primary,.header-sub,.cat-setup-name-input,.modal-title,.wizard-title,.dm-row-name,.wp-row-type-pill,input,select,button{font-family:var(--mono)}
 .set-row-sub,.alert-text,.set-note,.wizard-sub,.wp-hint,.wp-stat-sub,.modal-title-sub{font-family:var(--sans)}
-.nav-btn span{font-size:10px;letter-spacing:0}
-.an-stat-l{font-size:9px;letter-spacing:.3px}
-.dh-label,.set-title{font-size:10px;letter-spacing:.5px}
-.an-tab{font-size:10.5px;letter-spacing:-.2px}
+.nav-btn span{font-size:11.5px;letter-spacing:0}
+.an-stat-l{font-size:10.5px;letter-spacing:.3px}
+.dh-label,.set-title{font-size:11.5px;letter-spacing:.5px}
+.an-tab{font-size:12px;letter-spacing:-.2px}
 .cat-name{letter-spacing:-.3px}
 .btn{letter-spacing:-.3px}
 </style>
@@ -993,7 +993,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
     <div id="vault-pass-err" style="font-size:12px;color:#dc2626;min-height:18px;margin:8px 0 10px;text-align:left;display:flex;align-items:center;gap:6px"></div>
     <button id="vault-unlock-btn" class="vlt-primary">Ontgrendelen</button>
     <div style="margin-top:18px">
-      <button id="vault-forgot-btn" style="background:none;border:none;color:#94a3b8;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Wachtwoord vergeten? Reset alle data</button>
+      <button id="vault-forgot-btn" style="background:none;border:none;color:#94a3b8;font-size:12.5px;text-decoration:underline;cursor:pointer;font-family:inherit">Wachtwoord vergeten? Reset alle data</button>
     </div>
   </div>
 </div>
@@ -1035,7 +1035,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
     <div class="dh-hero">
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px">
         <div class="dh-hero-eyebrow" id="d-hero-eyebrow" style="margin-bottom:0">Beschikbaar deze maand</div>
-        <div id="d-score-lbl" style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(0,0,0,.25);opacity:.7;line-height:1">Score</div>
+        <div id="d-score-lbl" style="font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(0,0,0,.25);opacity:.7;line-height:1">Score</div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div class="dh-hero-amount pos" id="d-available" style="flex:1;min-width:0">€0</div>
@@ -1047,7 +1047,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
               style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .3s"/>
           </svg>
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <span id="d-score-v" style="font-family:var(--mono);font-size:11px;font-weight:700;color:rgba(0,0,0,.3)">—</span>
+            <span id="d-score-v" style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:rgba(0,0,0,.3)">—</span>
           </div>
         </div>
       </div>
@@ -1109,7 +1109,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 
     <!-- Disclaimer link: boven de FAB, genoeg ruimte -->
     <div style="padding:16px 0 calc(100px + var(--sb));text-align:center">
-      <button onclick="showScreen('settings');setTimeout(()=>{const el=document.getElementById('disclaimer-section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},200)" style="background:none;border:none;font-size:10px;color:var(--n3);cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:2px;padding:10px 20px">Disclaimer</button>
+      <button onclick="showScreen('settings');setTimeout(()=>{const el=document.getElementById('disclaimer-section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},200)" style="background:none;border:none;font-size:11.5px;color:var(--n3);cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:2px;padding:10px 20px">Disclaimer</button>
     </div>
   </div>
 
@@ -1179,10 +1179,10 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
       <!-- Verdeling per winkel/doel over maanden -->
       <div id="evo-breakdown" style="padding:16px 16px 0;display:none">
         <div class="an-section-lbl" id="evo-breakdown-title">Verdeling</div>
-        <div id="evo-breakdown-note" style="font-size:9px;color:var(--n3);margin-bottom:8px"></div>
+        <div id="evo-breakdown-note" style="font-size:10.5px;color:var(--n3);margin-bottom:8px"></div>
         <div class="chart-wrap" style="height:180px"><canvas id="chart-breakdown"></canvas></div>
         <div id="evo-breakdown-legend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
-        <div id="evo-breakdown-insight" style="margin-top:8px;padding:8px 10px;background:var(--s1);border-radius:var(--r6);font-size:10px;color:var(--n2);line-height:1.5"></div>
+        <div id="evo-breakdown-insight" style="margin-top:8px;padding:8px 10px;background:var(--s1);border-radius:var(--r6);font-size:11.5px;color:var(--n2);line-height:1.5"></div>
       </div>
 
       <!-- Scheidingslijn -->
@@ -1299,16 +1299,16 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-row" id="s-vault" style="background:linear-gradient(135deg,rgba(244,114,182,.06),rgba(190,24,93,.04))">
 <svg viewBox="0 0 24 24" style="color:#be185d"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
 <span id="s-vault-label" style="font-weight:600">Beveilig met wachtwoord</span>
-<span id="s-vault-state" style="margin-left:auto;font-size:11px;color:var(--n3);font-weight:600"></span>
+<span id="s-vault-state" style="margin-left:auto;font-size:12.5px;color:var(--n3);font-weight:600"></span>
 </div>
 </div></div>
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.057</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.058</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
-  <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
+  <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
     Buddy Budget is een persoonlijk hulpmiddel om inzicht te krijgen in je eigen uitgaven en budgetten. De weergegeven bedragen, prognoses en inzichten zijn indicatief en gebaseerd op de door jou ingevoerde gegevens. Je blijft te allen tijde zelf verantwoordelijk voor je financiële beslissingen, uitgaven en de juistheid van de ingevoerde informatie. Buddy Budget geeft geen financieel advies en is geen vervanging voor professionele begeleiding. Gebruik de app op eigen risico.
   </p>
 </div>
@@ -1875,7 +1875,7 @@ function _updateMonthStats(m){
 // === DASHBOARD ===
 function updateDash(){
   const m=mkd();const now=new Date();
-  $('d-month').textContent=MONTHS[viewMonth.getMonth()]+' '+viewMonth.getFullYear();
+  $('d-month').textContent=MONTHS_S[viewMonth.getMonth()]+' '+viewMonth.getFullYear(); // kort, zodat de pil op smalle schermen past; de volledige naam staat in de kop
   $('d-next').disabled=viewMonth.getMonth()===now.getMonth()&&viewMonth.getFullYear()===now.getFullYear();
   // Terugknop: uitgegrijsd als vroegste data bereikt
   const _em=getEarliestMonth();
@@ -2018,7 +2018,7 @@ function updateWealthCard(){
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700;color:var(--n0)">Vermogen bijhouden</div>
-        <div style="font-size:11px;color:var(--n3);margin-top:2px">Spaarrekeningen en beleggingen op één plek</div>
+        <div style="font-size:12.5px;color:var(--n3);margin-top:2px">Spaarrekeningen en beleggingen op één plek</div>
       </div>
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--n3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`;
@@ -2054,8 +2054,8 @@ function updateWealthCard(){
   el.innerHTML=`
     <div style="margin-top:18px">
       <div class="dh-label" style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
-        <span style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px">Vermogen</span>
-        <button onclick="showScreen('wealth')" style="background:none;border:none;color:var(--a);font-size:11px;font-weight:700;cursor:pointer;padding:0">Beheren →</button>
+        <span style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px">Vermogen</span>
+        <button onclick="showScreen('wealth')" style="background:none;border:none;color:var(--a);font-size:12.5px;font-weight:700;cursor:pointer;padding:0">Beheren →</button>
       </div>
       <div onclick="showScreen('wealth')" style="background:var(--s0);border:1px solid var(--l0);border-radius:var(--r8);padding:14px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">
         <!-- Hoofdregel: totaal + winst/verlies -->
@@ -2069,14 +2069,14 @@ function updateWealthCard(){
             ${accPct>0?`<div style="width:${accPct}%;background:#0ea5e9"></div>`:''}
             ${hldPct>0?`<div style="width:${hldPct}%;background:var(--a)"></div>`:''}
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--n3)">
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--n3)">
             <span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#0ea5e9;margin-right:5px;vertical-align:middle"></span>Spaarrekeningen ${fmt(Math.round(tot.accounts))}</span>
             <span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--a);margin-right:5px;vertical-align:middle"></span>Beleggingen ${fmt(Math.round(tot.holdings))}</span>
           </div>
         `:''}
         <!-- Buffer-relatie: contextueel inzicht -->
         ${monthlyBuffer>0&&bufferYears!==null?`
-          <div style="margin-top:11px;padding-top:10px;border-top:1px solid var(--l0);font-size:11px;color:var(--n2);line-height:1.5">
+          <div style="margin-top:11px;padding-top:10px;border-top:1px solid var(--l0);font-size:12.5px;color:var(--n2);line-height:1.5">
             ${bufferYears<0.5
               ?`Je maandelijkse buffer is ${fmtPos(Math.round(monthlyBuffer))}. Met dit vermogen overbrug je ${(bufferYears*12).toFixed(1)} maand.`
               :bufferYears<2
@@ -2505,8 +2505,8 @@ function renderCatEdit(){
   <div style="padding:4px 0 18px;border-bottom:1px solid var(--l0);margin-bottom:18px">
     <div style="display:flex;align-items:center;gap:5px;margin-bottom:12px">
       <div style="width:8px;height:8px;border-radius:50%;background:${statusC};flex-shrink:0"></div>
-      <div style="font-size:11px;font-weight:600;color:var(--n3)">${MONTHS[ceMonth.getMonth()]} ${ceMonth.getFullYear()}</div>
-      ${avg!==null?`<div style="margin-left:auto;font-size:10px;color:var(--n3)">⌀ ${fmt(avg)}/mnd</div>`:''}
+      <div style="font-size:12.5px;font-weight:600;color:var(--n3)">${MONTHS[ceMonth.getMonth()]} ${ceMonth.getFullYear()}</div>
+      ${avg!==null?`<div style="margin-left:auto;font-size:11.5px;color:var(--n3)">⌀ ${fmt(avg)}/mnd</div>`:''}
     </div>
     <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
       <div style="font-family:var(--mono);font-size:36px;font-weight:700;letter-spacing:-1.5px;line-height:1;color:${statusC}">${fmt(spent)}</div>
@@ -2516,13 +2516,13 @@ function renderCatEdit(){
     <div style="height:6px;background:rgba(0,0,0,.07);border-radius:3px;overflow:hidden;margin-bottom:7px">
       <div style="height:100%;width:${Math.min(100,pct)}%;background:${statusC};border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)"></div>
     </div>
-    <div style="font-size:11px;line-height:1.4">${pct}% benut &nbsp;·&nbsp; ${delta}</div>
-    `:'<div style="font-size:11px;color:var(--n3)">Geen maandbudget ingesteld</div>'}
+    <div style="font-size:12.5px;line-height:1.4">${pct}% benut &nbsp;·&nbsp; ${delta}</div>
+    `:'<div style="font-size:12.5px;color:var(--n3)">Geen maandbudget ingesteld</div>'}
   </div>
 
   <!-- ② INVOER ─────────────────────────────────────── -->
   <div style="margin-bottom:20px">
-    <div style="font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);margin-bottom:10px">
+    <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);margin-bottom:10px">
       ${isCurM?'Totaal invullen':'Bedrag voor deze maand'}
     </div>
     <div style="position:relative">
@@ -2531,12 +2531,12 @@ function renderCatEdit(){
         value="${spent||''}" placeholder="0"
         style="width:100%;padding:14px 14px 14px 32px;font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-.5px;background:var(--s2);border:2px solid var(--l1);border-radius:var(--r8);color:var(--n0);outline:none;transition:border-color .15s">
     </div>
-    <div style="font-size:11px;color:var(--n3);margin-top:6px;padding-left:2px">Rekenmachine: typ bijv. <code style="background:var(--s2);padding:1px 5px;border-radius:3px">85+12.50</code></div>
+    <div style="font-size:12.5px;color:var(--n3);margin-top:6px;padding-left:2px">Rekenmachine: typ bijv. <code style="background:var(--s2);padding:1px 5px;border-radius:3px">85+12.50</code></div>
   </div>
 
   <!-- ③ GESCHIEDENIS ───────────────────────────────── -->
   <div style="margin-bottom:20px">
-    <div style="font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);margin-bottom:10px">Vorige maanden</div>
+    <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);margin-bottom:10px">Vorige maanden</div>
     <div style="border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden">
       ${hist.slice().reverse().map((h,i)=>{
         const rowPct=budget>0&&h.v>0?Math.min(Math.round(h.v/budget*100),999):null;
@@ -2544,7 +2544,7 @@ function renderCatEdit(){
         return`<div onclick="ceMonth=new Date('${h.mk}-01');renderCatEdit()"
           style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;transition:background .12s;${i>0?'border-top:1px solid var(--l0)':''};${h.isCur?'background:'+clr.bg:''}">
           <div style="width:52px;font-size:12px;font-weight:${h.isCur?700:500};color:${h.isCur?'var(--n0)':'var(--n2)'}">
-            ${h.label}<span style="font-size:10px;opacity:.6"> '${String(h.yr).slice(2)}</span>
+            ${h.label}<span style="font-size:11.5px;opacity:.6"> '${String(h.yr).slice(2)}</span>
           </div>
           <div style="flex:1;height:4px;background:rgba(0,0,0,.06);border-radius:2px;overflow:hidden">
             ${h.v>0?`<div style="height:100%;width:${Math.round(h.v/hMax*100)}%;background:${rc};border-radius:2px"></div>`:''}
@@ -2552,7 +2552,7 @@ function renderCatEdit(){
           <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${h.v>0?rc:'var(--n4)'};min-width:58px;text-align:right">
             ${h.v>0?fmt(h.v):'—'}
           </div>
-          ${rowPct!==null?`<div style="font-size:10px;color:var(--n3);min-width:32px;text-align:right">${rowPct}%</div>`:`<div style="min-width:32px"></div>`}
+          ${rowPct!==null?`<div style="font-size:11.5px;color:var(--n3);min-width:32px;text-align:right">${rowPct}%</div>`:`<div style="min-width:32px"></div>`}
         </div>`;
       }).join('')}
     </div>
@@ -2560,27 +2560,27 @@ function renderCatEdit(){
 
   <!-- ④ INSTELLINGEN ──────────────────────────────── -->
   <details style="margin-bottom:16px">
-    <summary style="font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;padding:4px 0">
+    <summary style="font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--n3);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;padding:4px 0">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.68 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Instellingen
     </summary>
     <div style="padding-top:12px;display:flex;gap:8px;margin-bottom:10px">
       <div style="flex:1">
-        <div style="font-size:9px;color:var(--n3);margin-bottom:5px">Naam</div>
+        <div style="font-size:10.5px;color:var(--n3);margin-bottom:5px">Naam</div>
         <input type="text" id="ce-name" value="${esc(cat.name)}" class="field-input" style="font-size:13px;padding:9px 12px">
       </div>
       <div style="width:96px">
-        <div style="font-size:9px;color:var(--n3);margin-bottom:5px">Budget/mnd</div>
+        <div style="font-size:10.5px;color:var(--n3);margin-bottom:5px">Budget/mnd</div>
         <div class="field-money"><input type="text" id="ce-budget" value="${cat.budget||''}" inputmode="decimal" placeholder="0" class="field-input" style="font-size:13px;padding:9px 10px 9px 22px"></div>
       </div>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-size:9px;color:var(--n3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Soort kost</div>
+      <div style="font-size:10.5px;color:var(--n3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Soort kost</div>
       <div class="ev-segment" style="margin:0">
         <button type="button" class="ev-seg-btn ${cat.costType==='semi'?'active':''}" data-ce-type="semi" onclick="document.querySelectorAll('[data-ce-type]').forEach(b=>b.classList.toggle('active',b.dataset.ceType==='semi'))">Semi-vast</button>
         <button type="button" class="ev-seg-btn ${(!cat.costType||cat.costType==='variable')?'active':''}" data-ce-type="variable" onclick="document.querySelectorAll('[data-ce-type]').forEach(b=>b.classList.toggle('active',b.dataset.ceType==='variable'))">Variabel</button>
       </div>
-      <div style="font-size:10px;color:var(--n3);margin-top:5px;line-height:1.4">Semi-vast = redelijk voorspelbaar (bv. boodschappen, abonnementen). Variabel = wisselt sterk per maand (bv. vrije tijd, restaurants).</div>
+      <div style="font-size:11.5px;color:var(--n3);margin-top:5px;line-height:1.4">Semi-vast = redelijk voorspelbaar (bv. boodschappen, abonnementen). Variabel = wisselt sterk per maand (bv. vrije tijd, restaurants).</div>
     </div>
     <button id="ce-del" class="btn btn-ghost" style="width:100%;padding:10px;font-size:12px;color:var(--r);border-color:rgba(220,38,38,.2)">${ic('trash')} Categorie verwijderen</button>
   </details>
@@ -2687,7 +2687,7 @@ function renderCatDetail(){
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px">${IC[cat.icon]||IC.folder}</svg>
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">${MONTHS[ceMonth.getMonth()]} ${ceMonth.getFullYear()}${avg!==null?' &nbsp;·&nbsp; ⌀ '+fmt(avg)+'/mnd':''}</div>
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-bottom:3px">${MONTHS[ceMonth.getMonth()]} ${ceMonth.getFullYear()}${avg!==null?' &nbsp;·&nbsp; ⌀ '+fmt(avg)+'/mnd':''}</div>
         <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
           <div style="font-family:var(--mono);font-size:32px;font-weight:700;letter-spacing:-1.4px;line-height:1;color:${statusC}">${fmt(spent)}</div>
           ${budget>0?`<div style="font-size:13px;color:var(--n2);white-space:nowrap">van ${fmt(budget)}</div>`:''}
@@ -2698,33 +2698,33 @@ function renderCatDetail(){
     <div style="height:7px;background:rgba(0,0,0,.07);border-radius:4px;overflow:hidden;margin:12px 0 7px">
       <div style="height:100%;width:${Math.min(100,pct)}%;background:${statusC};border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)"></div>
     </div>
-    <div style="font-size:11px;color:var(--n2);display:flex;gap:10px">
+    <div style="font-size:12.5px;color:var(--n2);display:flex;gap:10px">
       <span>${pct}% benut</span>
       <span style="color:var(--n4)">·</span>
       ${isOver
         ?`<span style="color:var(--r);font-weight:600">+${fmt(spent-budget)} over budget</span>`
         :`<span style="color:var(--g);font-weight:600">${fmt(budget-spent)} nog over</span>`}
     </div>`
-    :'<div style="font-size:11px;color:var(--n3);margin-top:8px">Geen maandbudget ingesteld</div>'}
+    :'<div style="font-size:12.5px;color:var(--n3);margin-top:8px">Geen maandbudget ingesteld</div>'}
   </div>
 
   <!-- TRANSACTIES ─────────────────────────────────────── -->
   <div style="padding:14px 16px 0">
-    <div style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:2px">Transacties</div>
+    <div style="font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:2px">Transacties</div>
     ${txs.length
       ? txs.map((tx,i)=>`
         <div onclick="openTxEditModal('${tx.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 0;${i<txs.length-1?'border-bottom:1px solid var(--l0)':''};cursor:pointer;-webkit-tap-highlight-color:transparent">
           <div style="width:7px;height:7px;border-radius:50%;background:${clr.c};flex-shrink:0;margin-left:1px"></div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(tx.detail||cat.name)}</div>
-            <div style="font-size:10px;color:var(--n3);margin-top:2px">${fmtTs(tx.ts)}</div>
+            <div style="font-size:11.5px;color:var(--n3);margin-top:2px">${fmtTs(tx.ts)}</div>
           </div>
           <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--r);flex-shrink:0">${fmt(tx.amount)}</div>
         </div>`).join('')
       : legacyAmt>0
         ? `<div style="padding:10px 0;font-size:12px;color:var(--n2)">
             Totaal ingevoerd: <strong>${fmt(legacyAmt)}</strong>
-            <div style="font-size:10px;color:var(--n3);margin-top:3px">Geen transactiedetails beschikbaar voor oude invoer.</div>
+            <div style="font-size:11.5px;color:var(--n3);margin-top:3px">Geen transactiedetails beschikbaar voor oude invoer.</div>
            </div>`
         : `<div style="padding:20px 0;text-align:center">
             <div style="font-size:12px;color:var(--n3)">Geen uitgaven geregistreerd deze maand.</div>
@@ -2733,7 +2733,7 @@ function renderCatDetail(){
 
   <!-- GESCHIEDENIS ────────────────────────────────────── -->
   <div style="padding:14px 16px 24px">
-    <div style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:10px">Vorige maanden</div>
+    <div style="font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--n3);margin-bottom:10px">Vorige maanden</div>
     <div style="border:1px solid var(--l0);border-radius:var(--r8);overflow:hidden">
       ${hist.slice().reverse().map((h,i)=>{
         const rc=barC(h.v);
@@ -2741,13 +2741,13 @@ function renderCatDetail(){
         return`<div onclick="ceMonth=new Date('${h.mk}-01');renderCatDetail()"
           style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .12s;${i>0?'border-top:1px solid var(--l0)':''}${h.isCur?';background:'+clr.bg:''}">
           <div style="width:44px;font-size:12px;font-weight:${h.isCur?700:500};color:${h.isCur?'var(--n0)':'var(--n2)'};flex-shrink:0">
-            ${h.label}<span style="font-size:10px;opacity:.5"> '${String(h.yr).slice(2)}</span>
+            ${h.label}<span style="font-size:11.5px;opacity:.5"> '${String(h.yr).slice(2)}</span>
           </div>
           <div style="flex:1;height:5px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden">
             ${h.v>0?`<div style="height:100%;width:${Math.round(h.v/hMax*100)}%;background:${rc};border-radius:3px"></div>`:''}
           </div>
           <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${h.v>0?rc:'var(--n4)'};min-width:58px;text-align:right;flex-shrink:0">${h.v>0?fmt(h.v):'—'}</div>
-          ${rowPct!==null?`<div style="font-size:10px;color:var(--n3);min-width:30px;text-align:right;flex-shrink:0">${rowPct}%</div>`:`<div style="min-width:30px"></div>`}
+          ${rowPct!==null?`<div style="font-size:11.5px;color:var(--n3);min-width:30px;text-align:right;flex-shrink:0">${rowPct}%</div>`:`<div style="min-width:30px"></div>`}
         </div>`;
       }).join('')}
     </div>
@@ -2783,7 +2783,7 @@ function renderQuickEntry(focusCatId){
           <div style="width:26px;height:26px;border-radius:var(--r4);background:${clr.bg};color:${clr.c};display:flex;align-items:center;justify-content:center;flex-shrink:0">${ic(cat.icon)}</div>
           <div style="flex:1;min-width:0;overflow:hidden">
             <div style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">${esc(cat.name)}</div>
-            <div style="font-size:10px;color:var(--n3);line-height:1.2;margin-top:1px">${spent>0?`${fmt(spent)} uitgegeven`:`Budget: ${fmt(cat.budget)}`}</div>
+            <div style="font-size:11.5px;color:var(--n3);line-height:1.2;margin-top:1px">${spent>0?`${fmt(spent)} uitgegeven`:`Budget: ${fmt(cat.budget)}`}</div>
           </div>
           <input type="text" class="qe-amount-input" id="qa-${cat.id}" data-qid="${cat.id}" data-existing="${spent}" placeholder="0" inputmode="decimal" autocomplete="off">
         </div>
@@ -3062,10 +3062,10 @@ function openSingleCatEntry(catId){
       <div style="width:44px;height:44px;border-radius:var(--r6);display:flex;align-items:center;justify-content:center;background:${clr.bg};color:${clr.c};flex-shrink:0">${ic(cat.icon)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:14px;font-weight:700;color:var(--n0)">${esc(cat.name)}</div>
-        <div style="font-size:11px;color:var(--n3);margin-top:2px">${budget>0?'Budget: '+fmt(budget)+' · ':''} Uitgegeven: ${fmt(spent)}</div>
+        <div style="font-size:12.5px;color:var(--n3);margin-top:2px">${budget>0?'Budget: '+fmt(budget)+' · ':''} Uitgegeven: ${fmt(spent)}</div>
       </div>
       ${budget>0?`<div style="text-align:right;flex-shrink:0"><div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${spent>=budget?'var(--r)':spent>=budget*.85?'var(--w)':'var(--g)'}">
-        ${Math.round(spent/budget*100)}%</div><div style="font-size:8px;color:var(--n3);font-weight:600">benut</div></div>`:''}
+        ${Math.round(spent/budget*100)}%</div><div style="font-size:9.5px;color:var(--n3);font-weight:600">benut</div></div>`:''}
     </div>
 
     <!-- Bedrag -->
@@ -3093,7 +3093,7 @@ function openSingleCatEntry(catId){
         <div id="sce-bar" style="height:100%;border-radius:2px;width:${Math.min(100,Math.round(spent/budget*100))}%;background:${spent>=budget?'var(--r)':spent>=budget*.85?'var(--w)':'var(--g)'};transition:width .3s,background .2s"></div>
       </div>`:''}
     </div>
-    <div id="sce-friction" style="display:none;margin-top:8px;padding:9px 12px;border:1px solid;border-radius:var(--r6);font-size:11px;font-weight:600;line-height:1.4"></div>
+    <div id="sce-friction" style="display:none;margin-top:8px;padding:9px 12px;border:1px solid;border-radius:var(--r6);font-size:12.5px;font-weight:600;line-height:1.4"></div>
     `;
   $('m-add-footer').innerHTML=`<button class="btn btn-primary btn-block" id="sce-save">Toevoegen</button>`;
 
@@ -3452,7 +3452,7 @@ function renderWealth(){
     ${!hasWealth?`
       <div class="wp-section" style="background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:var(--r8);padding:16px;text-align:center">
         <div style="font-size:13px;font-weight:700;color:var(--n0);margin-bottom:6px">Nog geen vermogen toegevoegd</div>
-        <div style="font-size:11px;color:var(--n2);line-height:1.5">Voeg spaarrekeningen en beleggingen toe om je vermogen tegenover je maandelijkse buffer te zien evolueren.</div>
+        <div style="font-size:12.5px;color:var(--n2);line-height:1.5">Voeg spaarrekeningen en beleggingen toe om je vermogen tegenover je maandelijkse buffer te zien evolueren.</div>
       </div>
     `:''}
 
@@ -3520,7 +3520,7 @@ function renderWealth(){
           allItems.push({type:'holding',item:h,value:getHoldingValueEurNet(h),availability:h.availability||'belegd',blocked:isBlocked(h)});
         });
         if(allItems.length===0){
-          return `<div class="wp-card"><div class="wp-empty">Nog geen rekeningen, aandelen of ETFs toegevoegd.<br><span style="font-size:10px;color:var(--n4)">Begin met de + knoppen hierboven.</span></div></div>`;
+          return `<div class="wp-card"><div class="wp-empty">Nog geen rekeningen, aandelen of ETFs toegevoegd.<br><span style="font-size:11.5px;color:var(--n4)">Begin met de + knoppen hierboven.</span></div></div>`;
         }
         const groups=[
           {key:'vrij',title:'Vrij beschikbaar',color:'var(--g)',colorHex:'#16a34a',items:allItems.filter(x=>!x.blocked&&x.availability==='vrij')},
@@ -3608,13 +3608,13 @@ function renderWealth(){
         }).join('');
       })()}
       ${(w.holdings||[]).length>0?`
-        <div style="font-size:10px;color:var(--n3);text-align:center;margin-top:10px;line-height:1.5">Koersen vul je zelf in bij elke belegging. Er wordt niets opgehaald.</div>
+        <div style="font-size:11.5px;color:var(--n3);text-align:center;margin-top:10px;line-height:1.5">Koersen vul je zelf in bij elke belegging. Er wordt niets opgehaald.</div>
       `:''}
     </div>
 
     <!-- PRIVACY -->
     <div class="wp-section" style="background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:var(--r6);padding:11px 12px">
-      <div style="font-size:10px;line-height:1.55;color:var(--n2)"><strong style="color:var(--n1)">Privacy:</strong> je vermogen blijft volledig op dit toestel. De app maakt geen enkele netwerkverbinding voor koersen of wisselkoersen; alle bedragen zijn in euro en vul je zelf in.</div>
+      <div style="font-size:11.5px;line-height:1.55;color:var(--n2)"><strong style="color:var(--n1)">Privacy:</strong> je vermogen blijft volledig op dit toestel. De app maakt geen enkele netwerkverbinding voor koersen of wisselkoersen; alle bedragen zijn in euro en vul je zelf in.</div>
     </div>
   `;
 }
@@ -3936,7 +3936,7 @@ function renderYearOverviewBody(){
   if(!target)return;
   const years=getYearsWithData();
   if(years.length===0){
-    target.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--n3);font-size:12px">Nog geen transacties om te vergelijken.<br><span style="font-size:10px;color:var(--n4)">Voeg eerst uitgaven toe op de homepagina.</span></div>`;
+    target.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--n3);font-size:12px">Nog geen transacties om te vergelijken.<br><span style="font-size:11.5px;color:var(--n4)">Voeg eerst uitgaven toe op de homepagina.</span></div>`;
     return;
   }
   const now=new Date();
@@ -3971,12 +3971,12 @@ function renderYearOverviewBody(){
   target.innerHTML=`
     <!-- YTD hero -->
     <div style="padding:12px 14px;background:rgba(0,0,0,.025);border-radius:var(--r8);margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Uitgegeven in ${curYear} t/m ${monthNames[curMonth-1]}</div>
+      <div style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Uitgegeven in ${curYear} t/m ${monthNames[curMonth-1]}</div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
         <span style="font-size:24px;font-weight:800;color:var(--n0);font-family:var(--mono);line-height:1">${fmt(Math.round(ytdNow))}</span>
-        ${hasPrevYTD?`<span style="font-size:11px;font-weight:700;color:${cmpColor};font-family:var(--mono)">${cmpSign}${fmt(Math.round(delta))} (${cmpSign}${fmtPct(Math.abs(deltaPct),1)})</span>`:''}
+        ${hasPrevYTD?`<span style="font-size:12.5px;font-weight:700;color:${cmpColor};font-family:var(--mono)">${cmpSign}${fmt(Math.round(delta))} (${cmpSign}${fmtPct(Math.abs(deltaPct),1)})</span>`:''}
       </div>
-      <div style="font-size:10.5px;color:var(--n3);line-height:1.5">
+      <div style="font-size:12px;color:var(--n3);line-height:1.5">
         ${hasPrevYTD?
           (delta<0?`<strong style="color:var(--g)">${fmt(Math.round(Math.abs(delta)))}</strong> minder dan zelfde periode ${curYear-1} (${fmt(Math.round(ytdPrev))}).`:
            delta>0?`<strong style="color:var(--r)">${fmt(Math.round(delta))}</strong> meer dan zelfde periode ${curYear-1} (${fmt(Math.round(ytdPrev))}).`:
@@ -3986,9 +3986,9 @@ function renderYearOverviewBody(){
     </div>
 
     <!-- Bar chart per kalenderjaar -->
-    <div style="font-size:10px;color:var(--n3);text-align:center;margin-bottom:4px">${filterDescription}</div>
+    <div style="font-size:11.5px;color:var(--n3);text-align:center;margin-bottom:4px">${filterDescription}</div>
     <div style="position:relative;height:200px;margin-bottom:6px"><canvas id="jaar-chart"></canvas></div>
-    <div style="font-size:10px;color:var(--n3);text-align:center;margin-bottom:10px">Som van variabele categorieën (zelfde scope als Per-maand). Vaste kosten en jaarlijkse reserveringen tellen niet mee. ${curYear} is nog niet afgelopen (${monthNames[curMonth-1]}).</div>
+    <div style="font-size:11.5px;color:var(--n3);text-align:center;margin-bottom:10px">Som van variabele categorieën (zelfde scope als Per-maand). Vaste kosten en jaarlijkse reserveringen tellen niet mee. ${curYear} is nog niet afgelopen (${monthNames[curMonth-1]}).</div>
 
     <!-- Categorie-chips: gedeeld met de Per-maand view, klikken filtert ook deze bar chart -->
     <div id="yr-year-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-bottom:14px"></div>
@@ -4108,7 +4108,7 @@ function renderYearOverviewBody(){
           y:{
             stacked:hasFilter,beginAtZero:true,
             grid:{color:'rgba(0,0,0,.06)'},
-            ticks:{font:{family:'var(--mono)',size:9},color:'#94a3b8',callback:v=>v>=1000?'€'+(v/1000).toFixed(0)+'k':'€'+v},
+            ticks:{font:{family:'var(--mono)',size:10},color:'#94a3b8',callback:v=>v>=1000?'€'+(v/1000).toFixed(0)+'k':'€'+v},
             grace:'15%'
           }
         }
@@ -4250,7 +4250,7 @@ function renderPlanTab(){
         <button type="button" class="ev-seg-btn ${planChartMode==='blocked'?'active':''}" data-plan-mode="blocked" onclick="setPlanChartMode('blocked')">Geblokkeerd</button>
       </div>
       <div style="position:relative;height:220px;margin-bottom:10px"><canvas id="plan-chart"></canvas></div>
-      <div style="display:flex;justify-content:center;gap:14px;font-size:10px;color:var(--n3);flex-wrap:wrap">
+      <div style="display:flex;justify-content:center;gap:14px;font-size:11.5px;color:var(--n3);flex-wrap:wrap">
         <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:2px;background:var(--g);margin-right:6px"></span>Verwacht pad</span>
         <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:12px;height:8px;background:rgba(22,163,74,.18);margin-right:6px;border-radius:2px"></span>Indicatieve marge (P10–P90)</span>
         <span style="display:inline-flex;align-items:center"><span style="display:inline-block;width:8px;height:8px;background:var(--a);border-radius:50%;margin-right:6px"></span>Event</span>
@@ -4272,7 +4272,7 @@ function renderPlanTab(){
       </div>
       <div class="wp-card">
         ${(p.events||[]).length===0
-          ?`<div class="wp-empty">Nog geen geplande gebeurtenissen.<br><span style="font-size:10px;color:var(--n4)">Toekomstige grote uitgaven (studies, renovaties, auto…) of inkomenswijzigingen.</span></div>`
+          ?`<div class="wp-empty">Nog geen geplande gebeurtenissen.<br><span style="font-size:11.5px;color:var(--n4)">Toekomstige grote uitgaven (studies, renovaties, auto…) of inkomenswijzigingen.</span></div>`
           :(p.events||[]).slice().sort((a,b)=>(a.startYear||0)-(b.startYear||0)).map(e=>{
             const positive=(e.amount||0)<0;
             const sym=positive?'+':'−';
@@ -4535,7 +4535,7 @@ function openEventModal(eventId){
       <button class="btn btn-ghost" style="flex:1" id="ev-cancel">Annuleer</button>
       <button class="btn btn-primary" style="flex:1" id="ev-save">${isEdit?'Opslaan':'Toevoegen'}</button>
     </div>
-    ${isEdit?`<button id="ev-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Verwijderen</button>`:''}`;
+    ${isEdit?`<button id="ev-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:12.5px;font-weight:600;cursor:pointer">Verwijderen</button>`:''}`;
   // Segment-knop logica
   modal.querySelectorAll('.ev-seg-btn[data-kind]').forEach(b=>{
     b.onclick=()=>{
@@ -4604,23 +4604,23 @@ function openAccountModal(accountId){
     ${(()=>{const t=$('m-new-title');if(t)t.textContent=isEdit?'Spaarrekening aanpassen':'Nieuwe spaarrekening';return '';})()}
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
         <input type="text" class="field-input" id="acc-name" value="${esc(a.name||'')}" placeholder="bv. Gewone spaarrekening" autocomplete="off">
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Instelling</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Instelling</label>
         <input type="text" class="field-input" id="acc-inst" value="${esc(a.institution||'')}" placeholder="bv. KBC, Argenta..." autocomplete="off">
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Saldo</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Saldo</label>
         <div class="field-money" style="margin:0"><input type="text" class="field-input" id="acc-bal" value="${a.balance||''}" inputmode="decimal" autocomplete="off"></div>
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Rente (% per jaar, optioneel)</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Rente (% per jaar, optioneel)</label>
         <input type="text" class="field-input" id="acc-int" value="${a.interest||''}" inputmode="decimal" placeholder="bv. 1.5" autocomplete="off">
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Beschikbaarheid</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Beschikbaarheid</label>
         <select class="field-input" id="acc-availability" style="width:100%">
           <option value="vrij" ${av==='vrij'?'selected':''}>Vrij — vrij beschikbaar</option>
           <option value="gereserveerd" ${av==='gereserveerd'?'selected':''}>Gereserveerd — bestemd voor specifieke kosten</option>
@@ -4629,19 +4629,19 @@ function openAccountModal(accountId){
         </select>
       </div>
       <div id="acc-purpose-wrap" style="display:${av==='gereserveerd'?'block':'none'}">
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Waarvoor gereserveerd?</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Waarvoor gereserveerd?</label>
         <input type="text" class="field-input" id="acc-purpose" value="${esc(a.purpose||'')}" placeholder="bv. onderhoudsgeld kinderen, grote kosten" autocomplete="off">
         ${(S.plan?.events||[]).length>0?`
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin:10px 0 5px">Koppel aan plan-event (optioneel)</label>
+          <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin:10px 0 5px">Koppel aan plan-event (optioneel)</label>
           <select class="field-input" id="acc-linked-event" style="width:100%">
             <option value="">— Geen koppeling —</option>
             ${(S.plan.events||[]).slice().sort((x,y)=>(x.startYear||0)-(y.startYear||0)).map(ev=>`<option value="${ev.id}" ${a.linkedEventId===ev.id?'selected':''}>${esc(ev.name)} (${ev.endYear&&ev.endYear!==ev.startYear?ev.startYear+'–'+ev.endYear:ev.startYear})</option>`).join('')}
           </select>
-          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Bij gekoppelde events wordt deze reservering eerst aangesproken voor díé uitgaven.</div>
+          <div style="font-size:11.5px;color:var(--n3);margin-top:4px;line-height:1.4">Bij gekoppelde events wordt deze reservering eerst aangesproken voor díé uitgaven.</div>
         `:''}
       </div>
       <div id="acc-unblock-wrap" style="display:${av==='geblokkeerd'?'block':'none'}">
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vrij vanaf</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vrij vanaf</label>
         <input type="date" class="field-input" id="acc-unblock" value="${esc(a.unblockDate||'')}" autocomplete="off">
       </div>
     </div>
@@ -4649,7 +4649,7 @@ function openAccountModal(accountId){
       <button class="btn btn-ghost" style="flex:1" id="acc-cancel">Annuleer</button>
       <button class="btn btn-primary" style="flex:1" id="acc-save">${isEdit?'Opslaan':'Toevoegen'}</button>
     </div>
-    ${isEdit?`<button id="acc-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Rekening verwijderen</button>`:''}`;
+    ${isEdit?`<button id="acc-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:12.5px;font-weight:600;cursor:pointer">Rekening verwijderen</button>`:''}`;
   $('acc-cancel').onclick=()=>modal.classList.remove('open');
   // Toggle conditionele velden op basis van beschikbaarheid
   $('acc-availability').addEventListener('change',()=>{
@@ -4717,38 +4717,38 @@ function openHoldingModal(holdingId){
         </div>
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
         <input type="text" class="field-input" id="h-name" value="${esc(h.name||'')}" placeholder="${kind==='fund'?'bv. KBC Pensioensparen, AG Fonds':'bv. iShares Core MSCI World'}" autocomplete="off">
       </div>
 
       <!-- AANDEEL / ETF velden -->
       <div id="h-stock-fields" style="${kind==='fund'?'display:none':''};display:${kind==='fund'?'none':'flex'};flex-direction:column;gap:12px">
         <div>
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Ticker</label>
+          <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Ticker</label>
           <input type="text" class="field-input" id="h-ticker" value="${esc(h.ticker||'')}" placeholder="optioneel, bv. IWDA" autocomplete="off" style="font-family:var(--mono);text-transform:uppercase">
-          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Enkel als label om de belegging te herkennen. Er wordt niets mee opgehaald.</div>
+          <div style="font-size:11.5px;color:var(--n3);margin-top:4px;line-height:1.4">Enkel als label om de belegging te herkennen. Er wordt niets mee opgehaald.</div>
         </div>
 
         <!-- AANKOPEN: meerdere lots mogelijk -->
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px">Aankopen</label>
-            <button type="button" id="h-add-lot" style="background:rgba(233,30,140,.1);border:1px solid rgba(233,30,140,.3);color:var(--a);font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:var(--mono);display:inline-flex;align-items:center;gap:4px">
+            <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px">Aankopen</label>
+            <button type="button" id="h-add-lot" style="background:rgba(233,30,140,.1);border:1px solid rgba(233,30,140,.3);color:var(--a);font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:var(--mono);display:inline-flex;align-items:center;gap:4px">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
               Aankoop bijtellen
             </button>
           </div>
           <div id="h-lots-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-          <div id="h-lots-summary" style="padding:9px 12px;background:var(--s2);border:1px solid var(--l1);border-radius:8px;font-size:11px;color:var(--n1);line-height:1.6"></div>
-          <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Per aankoop: het aantal aandelen dat je kocht en het totale EUR-bedrag dat de bank van je rekening haalde (inclusief beurstaks, fees en wisselkost). Koop je later bij? Klik "Aankoop bijtellen". Komma's mogen.</div>
+          <div id="h-lots-summary" style="padding:9px 12px;background:var(--s2);border:1px solid var(--l1);border-radius:8px;font-size:12.5px;color:var(--n1);line-height:1.6"></div>
+          <div style="font-size:11.5px;color:var(--n3);margin-top:6px;line-height:1.4">Per aankoop: het aantal aandelen dat je kocht en het totale EUR-bedrag dat de bank van je rekening haalde (inclusief beurstaks, fees en wisselkost). Koop je later bij? Klik "Aankoop bijtellen". Komma's mogen.</div>
         </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers per stuk (€)${h.lastUpdate?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)"> — ingevuld op '+new Date(h.lastUpdate).toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'})+'</span>':''}</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers per stuk (€)${h.lastUpdate?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)"> — ingevuld op '+new Date(h.lastUpdate).toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'})+'</span>':''}</label>
         <div class="field-money" data-cur="EUR" style="margin:0" id="h-last-wrap"><input type="text" class="field-input" id="h-last" value="${inputDec(h.lastPrice)}" inputmode="decimal" placeholder="bv. 96,50" autocomplete="off"></div>
-        <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">In euro. Noteert het aandeel in een andere munt, reken dan zelf om. Open de link hieronder om de koers na te kijken.</div>
+        <div style="font-size:11.5px;color:var(--n3);margin-top:4px;line-height:1.4">In euro. Noteert het aandeel in een andere munt, reken dan zelf om. Open de link hieronder om de koers na te kijken.</div>
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">URL naar live koers (optioneel)</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">URL naar live koers (optioneel)</label>
         <input type="text" class="field-input" id="h-url" value="${esc(h.url||'')}" placeholder="https://..." autocomplete="off">
       </div>
       </div><!-- /h-stock-fields -->
@@ -4756,25 +4756,25 @@ function openHoldingModal(holdingId){
       <!-- FONDS / TOTAALBEDRAG velden -->
       <div id="h-fund-fields" style="display:${kind==='fund'?'flex':'none'};flex-direction:column;gap:12px">
         <div>
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige waarde</label>
+          <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige waarde</label>
           <div class="field-money" data-cur="EUR" style="margin:0"><input type="text" class="field-input" id="h-manual-value" value="${h.manualValue||''}" inputmode="decimal" placeholder="bv. 12500" autocomplete="off"></div>
-          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Vul het totaalbedrag in zoals jouw bank/fonds-rapport het toont. Geen ticker of aantal nodig.</div>
+          <div style="font-size:11.5px;color:var(--n3);margin-top:4px;line-height:1.4">Vul het totaalbedrag in zoals jouw bank/fonds-rapport het toont. Geen ticker of aantal nodig.</div>
         </div>
       </div>
 
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Beschikbaarheid</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Beschikbaarheid</label>
         <select class="field-input" id="h-availability" style="width:100%">
           <option value="belegd" ${(h.availability||'belegd')==='belegd'?'selected':''}>Belegd — aandeel/ETF/fonds (marktrisico, T+2 verkoop)</option>
           <option value="geblokkeerd" ${h.availability==='geblokkeerd'?'selected':''}>Geblokkeerd — vast tot een bepaalde datum (bv. pensioensparen)</option>
         </select>
-        <div style="font-size:10px;color:var(--n3);margin-top:5px;line-height:1.4">Een belegging is geen vrij of gereserveerd cash. Hoort altijd onder "Belegd", behalve als ze geblokkeerd is tot een datum.</div>
+        <div style="font-size:11.5px;color:var(--n3);margin-top:5px;line-height:1.4">Een belegging is geen vrij of gereserveerd cash. Hoort altijd onder "Belegd", behalve als ze geblokkeerd is tot een datum.</div>
       </div>
       <div id="h-purpose-wrap" style="display:${h.availability==='gereserveerd'?'block':'none'}">
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Waarvoor gereserveerd?</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Waarvoor gereserveerd?</label>
         <input type="text" class="field-input" id="h-purpose" value="${esc(h.purpose||'')}" placeholder="bv. studies kinderen, renovatie" autocomplete="off">
         ${(S.plan?.events||[]).length>0?`
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin:10px 0 5px">Koppel aan plan-event (optioneel)</label>
+          <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin:10px 0 5px">Koppel aan plan-event (optioneel)</label>
           <select class="field-input" id="h-linked-event" style="width:100%">
             <option value="">— Geen koppeling —</option>
             ${(S.plan.events||[]).slice().sort((x,y)=>(x.startYear||0)-(y.startYear||0)).map(ev=>`<option value="${ev.id}" ${h.linkedEventId===ev.id?'selected':''}>${esc(ev.name)} (${ev.endYear&&ev.endYear!==ev.startYear?ev.startYear+'–'+ev.endYear:ev.startYear})</option>`).join('')}
@@ -4782,9 +4782,9 @@ function openHoldingModal(holdingId){
         `:''}
       </div>
       <div id="h-unblock-wrap" style="display:${h.availability==='geblokkeerd'?'block':'none'}">
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vrij vanaf</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vrij vanaf</label>
         <input type="date" class="field-input" id="h-unblock" value="${esc(h.unblockDate||'')}" autocomplete="off">
-        <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Voor pensioensparen typisch <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">2036-01-01</code> (60 jaar) — vroeger opnemen kost ±30% belasting.</div>
+        <div style="font-size:11.5px;color:var(--n3);margin-top:4px;line-height:1.4">Voor pensioensparen typisch <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">2036-01-01</code> (60 jaar) — vroeger opnemen kost ±30% belasting.</div>
         <div class="wp-form-row" style="margin-top:12px">
           <div>
             <label class="wp-input-label">Jaarlijkse aanvulling</label>
@@ -4795,7 +4795,7 @@ function openHoldingModal(holdingId){
             <input type="number" class="field-input" id="h-contrib-until" value="${h.contributionUntilYear||''}" placeholder="bv. 2040" min="${new Date().getFullYear()}" max="${new Date().getFullYear()+50}" style="font-family:var(--mono)">
           </div>
         </div>
-        <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Het bedrag dat je jaarlijks bijstort (typisch al opgenomen in je <strong>vaste kosten</strong>). De projectie laat dit aankomen in geblokkeerd vermogen, en raakt je vrije cash niet (want al meegerekend).</div>
+        <div style="font-size:11.5px;color:var(--n3);margin-top:6px;line-height:1.4">Het bedrag dat je jaarlijks bijstort (typisch al opgenomen in je <strong>vaste kosten</strong>). De projectie laat dit aankomen in geblokkeerd vermogen, en raakt je vrije cash niet (want al meegerekend).</div>
         <div class="wp-form-row" style="margin-top:14px">
           <div>
             <label class="wp-input-label">Heffing bij vroege opname</label>
@@ -4806,12 +4806,12 @@ function openHoldingModal(holdingId){
             <div class="field-money" data-cur="%" style="margin:0"><input type="text" class="field-input" id="h-normal-tax" value="${h.normalWithdrawalTax||''}" inputmode="decimal" placeholder="0" autocomplete="off"></div>
           </div>
         </div>
-        <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Voor BE-pensioensparen typisch <strong>30%</strong> bij vroege opname (vóór 60) en <strong>8%</strong> bij normale opname op vrijgavedatum. Het netto-bedrag verschijnt overal waar je vermogen wordt getoond.</div>
+        <div style="font-size:11.5px;color:var(--n3);margin-top:6px;line-height:1.4">Voor BE-pensioensparen typisch <strong>30%</strong> bij vroege opname (vóór 60) en <strong>8%</strong> bij normale opname op vrijgavedatum. Het netto-bedrag verschijnt overal waar je vermogen wordt getoond.</div>
       </div>
     </div>
     <!-- Link naar koerspagina: alleen bij Aandeel/ETF -->
     <div id="h-stock-actions" style="display:${kind==='fund'?'none':'flex'};gap:8px;margin-top:14px">
-      <button id="h-link" style="flex:1;padding:10px;border:1px solid var(--l1);background:transparent;color:${h.url?'var(--n1)':'var(--n4)'};border-radius:var(--r6);font-size:11px;font-weight:600;cursor:${h.url?'pointer':'not-allowed'};display:flex;align-items:center;justify-content:center;gap:6px" ${h.url?'':'disabled'}>
+      <button id="h-link" style="flex:1;padding:10px;border:1px solid var(--l1);background:transparent;color:${h.url?'var(--n1)':'var(--n4)'};border-radius:var(--r6);font-size:12.5px;font-weight:600;cursor:${h.url?'pointer':'not-allowed'};display:flex;align-items:center;justify-content:center;gap:6px" ${h.url?'':'disabled'}>
         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
         Open link
       </button>
@@ -4820,7 +4820,7 @@ function openHoldingModal(holdingId){
       <button class="btn btn-ghost" style="flex:1" id="h-cancel">Annuleer</button>
       <button class="btn btn-primary" style="flex:1" id="h-save">${isEdit?'Opslaan':'Toevoegen'}</button>
     </div>
-    ${isEdit?`<button id="h-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Verwijderen</button>`:''}`;
+    ${isEdit?`<button id="h-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:12.5px;font-weight:600;cursor:pointer">Verwijderen</button>`:''}`;
   $('h-cancel').onclick=()=>modal.classList.remove('open');
   if($('h-link')&&h.url){
     $('h-link').onclick=()=>{
@@ -5670,7 +5670,7 @@ function updateYearChart(y){
         display:(ctx)=>{const tot=data[ctx.dataIndex];const cat=catDataClean[ctx.dataIndex]||0;return !!(tot>0&&cat>0);},
         formatter:(_,ctx)=>{const tot=data[ctx.dataIndex];const cat=catDataClean[ctx.dataIndex]||0;const pct=tot>0?Math.round(cat/tot*100):0;return ctx.dataIndex===curMonth?'~'+pct+'%':pct+'%';},
         color:`rgba(${rr},${gg},${bb},1)`,
-        anchor:'end',align:'end',font:{size:7.5,weight:'700'},offset:1,clamp:true
+        anchor:'end',align:'end',font:{size:8.5,weight:'700'},offset:1,clamp:true
       }
     });
   } else {
@@ -5687,7 +5687,7 @@ function updateYearChart(y){
           return hasBudget?Math.round(v/budget*100)+'%':fmt(Math.round(v));
         },
         color:(ctx)=>ctx.dataIndex===curMonth?'rgba(0,0,0,.30)':labelColor(data[ctx.dataIndex]),
-        anchor:'end',align:'end',font:{size:7.5,weight:'700'},offset:1,clamp:true
+        anchor:'end',align:'end',font:{size:8.5,weight:'700'},offset:1,clamp:true
       }
     });
   }
@@ -5714,7 +5714,7 @@ function updateYearChart(y){
         formatter:()=>budPadded,
         color:'rgba(0,0,0,.38)',
         anchor:'end',align:budAlign,offset:2,
-        font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
+        font:{size:10,weight:'700',family:'IBM Plex Mono,monospace'},
         clip:false
       }
     });
@@ -5728,7 +5728,7 @@ function updateYearChart(y){
         formatter:()=>avgPadded,
         color:'rgba(233,30,140,0.80)',
         anchor:'end',align:avgAlign,offset:2,
-        font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
+        font:{size:10,weight:'700',family:'IBM Plex Mono,monospace'},
         clip:false
       }
     });
@@ -5770,9 +5770,9 @@ function updateYearChart(y){
       },
       scales:{
         x:{stacked:hasSelection,grid:{display:false},border:{display:false},
-          ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'},padding:4}},
+          ticks:{color:'rgba(0,0,0,.30)',font:{size:9,weight:'600'},padding:4}},
         y:{stacked:hasSelection,min:0,max:yMax,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
-          ticks:{color:'rgba(0,0,0,.30)',font:{size:8},padding:8,callback:v=>fmt(v),maxTicksLimit:5}}
+          ticks:{color:'rgba(0,0,0,.30)',font:{size:9},padding:8,callback:v=>fmt(v),maxTicksLimit:5}}
       }
     }
   });
@@ -5931,7 +5931,7 @@ function _applyEvoCat(){
             formatter:()=>avgPadded,
             color:`rgba(${rv},${gv},${bv},0.85)`,
             anchor:'end',align:avgAlign,offset:2,
-            font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
+            font:{size:10,weight:'700',family:'IBM Plex Mono,monospace'},
             clip:false
           }
         });
@@ -5949,7 +5949,7 @@ function _applyEvoCat(){
             formatter:()=>budPadded,
             color:'rgba(0,0,0,.40)',
             anchor:'end',align:budAlign,offset:2,
-            font:{size:9,weight:'700',family:'IBM Plex Mono,monospace'},
+            font:{size:10,weight:'700',family:'IBM Plex Mono,monospace'},
             clip:false
           }
         });
@@ -6130,13 +6130,13 @@ function updateEvoChart(y){
       },
       interaction:{mode:'index',intersect:false},
       scales:{
-        x:{grid:{display:false},ticks:{color:'rgba(0,0,0,.4)',font:{size:8}}},
+        x:{grid:{display:false},ticks:{color:'rgba(0,0,0,.4)',font:{size:9}}},
         y:{
           min:0,
           max:_evoYMax,
           grid:{color:'rgba(0,0,0,.06)'},
           border:{display:false},
-          ticks:{color:'rgba(0,0,0,.4)',font:{size:8},callback:v=>fmt(v),stepSize:100}
+          ticks:{color:'rgba(0,0,0,.4)',font:{size:9},callback:v=>fmt(v),stepSize:100}
         }
       },
       onClick:(evt,elements)=>{
@@ -6286,7 +6286,7 @@ function updateEvoBreakdown(){
 
   // Legenda
   $('evo-breakdown-legend').innerHTML=storeLabels.map((s,i)=>
-    `<span style="display:flex;align-items:center;gap:4px;font-size:8.5px;color:var(--n2)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${storeColors[i]};flex-shrink:0"></span>${esc(s)}</span>`
+    `<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--n2)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${storeColors[i]};flex-shrink:0"></span>${esc(s)}</span>`
   ).join('');
 
   // Grafiek
@@ -6308,9 +6308,9 @@ function updateEvoBreakdown(){
       },
       scales:{
         x:{stacked:true,grid:{display:false},border:{display:false},
-          ticks:{color:'rgba(0,0,0,.30)',font:{size:8,weight:'600'}}},
+          ticks:{color:'rgba(0,0,0,.30)',font:{size:9,weight:'600'}}},
         y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,.04)'},border:{display:false},
-          ticks:{color:'rgba(0,0,0,.30)',font:{size:8},callback:v=>fmt(v),stepSize:20}}
+          ticks:{color:'rgba(0,0,0,.30)',font:{size:9},callback:v=>fmt(v),stepSize:20}}
       }
     }
   });
@@ -6630,7 +6630,7 @@ function renderDayHero(){
   const pace=calcPace();
   const budget=getMonthBudget();
   const spent=getMonthSpent(mkd());
-  if(!da){hero.innerHTML='<div style="font-size:11px;color:var(--n3);padding:16px;text-align:center">Stel een budget in om voorspellingen te zien.</div>';return;}
+  if(!da){hero.innerHTML='<div style="font-size:12.5px;color:var(--n3);padding:16px;text-align:center">Stel een budget in om voorspellingen te zien.</div>';return;}
   const{allowance,daysLeft,remaining,avgDailyBudget,isOver}=da;
   const ratio=avgDailyBudget>0?allowance/avgDailyBudget:1;
   const ringColor=isOver?'var(--r)':ratio<0.5?'var(--w)':'var(--g)';
@@ -6668,10 +6668,10 @@ function renderDayHero(){
     const absPct=Math.abs(tempoPct);
     tempoHTML=`
     <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;text-align:left">
-      <div style="font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">tempo</div>
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">tempo</div>
       <div style="font-size:28px;line-height:1;color:${tempoColor};font-weight:300">${arrow}</div>
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${tempoColor};margin-top:2px">${absPct<10?'±0%':absPct+'%'}</div>
-      <div style="font-size:9px;color:var(--n4);margin-top:3px">${absPct<10?'op schema':label}</div>
+      <div style="font-size:10.5px;color:var(--n4);margin-top:3px">${absPct<10?'op schema':label}</div>
     </div>`;
   } else {
     tempoHTML=`<div style="flex:1"></div>`;
@@ -6683,9 +6683,9 @@ function renderDayHero(){
 
       <!-- Links: tekst naar de cirkel toe (rechts uitgelijnd) -->
       <div style="flex:1;display:flex;flex-direction:column;align-items:flex-end;text-align:right">
-        <div style="font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">resterend</div>
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--n4);margin-bottom:3px">resterend</div>
         <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:${remaining<0?'var(--r)':'var(--n2)'};letter-spacing:-.5px">${fmt(Math.abs(Math.round(remaining)))}</div>
-        <div style="font-size:9px;color:var(--n4);margin-top:4px">dag ${pace.dayOfMonth} / ${pace.daysInMonth}</div>
+        <div style="font-size:10.5px;color:var(--n4);margin-top:4px">dag ${pace.dayOfMonth} / ${pace.daysInMonth}</div>
       </div>
 
       <!-- Midden: cirkel, flex-shrink:0 zodat hij nooit samengeperst wordt -->
@@ -6703,7 +6703,7 @@ function renderDayHero(){
             <div class="fc-day-lbl">per dag</div>
           </div>
         </div>
-        <div style="font-size:9px;color:var(--n3);font-weight:600">${daysLeft} dag${daysLeft!==1?'en':''} over</div>
+        <div style="font-size:10.5px;color:var(--n3);font-weight:600">${daysLeft} dag${daysLeft!==1?'en':''} over</div>
       </div>
 
       <!-- Rechts: tekst weg van de cirkel (links uitgelijnd) -->
@@ -6755,7 +6755,7 @@ function renderMonthBand(){
   </div>
 
   <!-- Legende: min — budget met waarde — max -->
-  <div style="position:relative;height:14px;font-size:8.5px;font-weight:600;color:var(--n3)">
+  <div style="position:relative;height:14px;font-size:10px;font-weight:600;color:var(--n3)">
     <span style="position:absolute;left:0">${fmt(fc.low)}</span>
     ${budgetLabelLeft!==null?`<span style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);white-space:nowrap">${fmt(budget)} budget</span>`:''}
     <span style="position:absolute;right:0">${fmt(fc.high)}</span>
@@ -6819,7 +6819,7 @@ function renderCatForecasts(){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;gap:6px">
           <span style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${esc(cat.name)}</span>
-          ${pctProj!==null?`<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${sem};flex-shrink:0">${pctProj}%</span>`:''}
+          ${pctProj!==null?`<span style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:${sem};flex-shrink:0">${pctProj}%</span>`:''}
         </div>
 
         <!-- Twee-tone balk — genormaliseerd op budget = 100% -->
@@ -6831,10 +6831,10 @@ function renderCatForecasts(){
 
         <!-- Subtekst: besteed · budget -->
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:9.5px;font-weight:600;color:var(--n3);font-family:var(--mono)">
+          <span style="font-size:11px;font-weight:600;color:var(--n3);font-family:var(--mono)">
             <span style="font-weight:400">Besteed</span> <span style="color:${overBudget?'var(--r)':'var(--n2)'};font-weight:700">${fmt(spent)}</span><span style="font-weight:400"> · budget ${fmt(budget)}</span>
           </span>
-          <span style="font-size:9.5px;font-weight:700;color:${overBudget?'var(--r)':remaining>0?'var(--g)':'var(--n3)'}">
+          <span style="font-size:11px;font-weight:700;color:${overBudget?'var(--r)':remaining>0?'var(--g)':'var(--n3)'}">
             ${overBudget?'+'+fmt(overshoot)+' over':remaining>0?fmt(remaining)+' vrij':'≈ op budget'}
           </span>
         </div>
@@ -6842,7 +6842,7 @@ function renderCatForecasts(){
 
       <!-- Prognose-bedrag rechts -->
       <div style="flex-shrink:0;text-align:right;min-width:56px">
-        <div style="font-size:10px;font-weight:600;color:var(--n3);margin-bottom:2px">prognose</div>
+        <div style="font-size:11.5px;font-weight:600;color:var(--n3);margin-bottom:2px">prognose</div>
         <div style="font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:-.4px;color:${sem}">${fmt(projected)}</div>
       </div>
 
@@ -6851,9 +6851,9 @@ function renderCatForecasts(){
   </div>
   <!-- Legenda -->
   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--l0);margin-top:2px">
-    <div style="display:flex;align-items:center;gap:4px"><div style="width:14px;height:6px;background:rgba(0,0,0,.22);border-radius:2px"></div><span style="font-size:9px;color:var(--n3)">Besteed</span></div>
-    <div style="display:flex;align-items:center;gap:4px"><div style="width:14px;height:6px;border-radius:2px;background:linear-gradient(90deg,rgba(0,0,0,.22) 0%,rgba(0,0,0,.12) 100%)"></div><span style="font-size:9px;color:var(--n3)">+ prognose</span></div>
-    <div style="display:flex;align-items:center;gap:4px"><div style="width:2px;height:12px;background:rgba(0,0,0,.28);border-radius:1px"></div><span style="font-size:9px;color:var(--n3)">Budget</span></div>
+    <div style="display:flex;align-items:center;gap:4px"><div style="width:14px;height:6px;background:rgba(0,0,0,.22);border-radius:2px"></div><span style="font-size:10.5px;color:var(--n3)">Besteed</span></div>
+    <div style="display:flex;align-items:center;gap:4px"><div style="width:14px;height:6px;border-radius:2px;background:linear-gradient(90deg,rgba(0,0,0,.22) 0%,rgba(0,0,0,.12) 100%)"></div><span style="font-size:10.5px;color:var(--n3)">+ prognose</span></div>
+    <div style="display:flex;align-items:center;gap:4px"><div style="width:2px;height:12px;background:rgba(0,0,0,.28);border-radius:1px"></div><span style="font-size:10.5px;color:var(--n3)">Budget</span></div>
   </div>`;
 }
 
@@ -6988,21 +6988,21 @@ function renderStatsSection(){
     ${z!==null?`
     <div class="fc-zscore" style="margin-bottom:10px">
       <div style="flex:1">
-        <div style="margin-bottom:6px"><span style="font-size:8.5px;font-weight:700;color:var(--n3)">${zLabel}${zDir}</span></div>
+        <div style="margin-bottom:6px"><span style="font-size:10px;font-weight:700;color:var(--n3)">${zLabel}${zDir}</span></div>
         <div class="fc-zscore-bar">
           <div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(0,0,0,.18)"></div>
           <div class="fc-zscore-fill" style="background:${zColor};${z<0?`right:50%;left:${Math.max(0,50-zBarPct/2)}%`:`left:50%;width:${Math.min(50,zBarPct/2)}%`}"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:3px">
-          <span style="font-size:7px;color:var(--n3)">minder</span>
-          <span style="font-size:7px;color:var(--n3)">normaal</span>
-          <span style="font-size:7px;color:var(--n3)">meer</span>
+          <span style="font-size:8.5px;color:var(--n3)">minder</span>
+          <span style="font-size:8.5px;color:var(--n3)">normaal</span>
+          <span style="font-size:8.5px;color:var(--n3)">meer</span>
         </div>
       </div>
       <div style="text-align:right;flex-shrink:0;padding-left:8px">
         <div class="fc-zscore-label" style="color:${zColor}">${z>=0?'+':''}${z.toFixed(1)}σ</div>
         <div class="fc-zscore-note">${zText}</div>
-        ${zBasis?`<div style="font-size:7px;color:var(--n3);margin-top:1px">${zBasis}</div>`:''}
+        ${zBasis?`<div style="font-size:8.5px;color:var(--n3);margin-top:1px">${zBasis}</div>`:''}
       </div>
     </div>`:''}
 
@@ -7046,15 +7046,15 @@ function openTxEditModal(txId){
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Bedrag</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Bedrag</label>
         <div class="field-money" style="margin:0"><input type="text" class="field-input" id="tx-edit-amount" value="${tx.amount}" inputmode="decimal" autocomplete="off"></div>
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Detail</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Detail</label>
         <input type="text" class="field-input" id="tx-edit-detail" value="${esc(tx.detail||'')}" placeholder="bv. Colruyt" autocomplete="off">
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Categorie</label>
+        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Categorie</label>
         <select class="field-input" id="tx-edit-cat" style="width:100%">
           ${monthlyCats.map(c=>`<option value="${esc(c.id)}" ${c.id===tx.catId?'selected':''}>${esc(c.name)}</option>`).join('')}
         </select>
@@ -7064,7 +7064,7 @@ function openTxEditModal(txId){
       <button class="btn btn-ghost" style="flex:1" id="tx-edit-cancel">Annuleer</button>
       <button class="btn btn-primary" style="flex:1" id="tx-edit-save">Opslaan</button>
     </div>
-    <button id="tx-edit-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer">Transactie verwijderen</button>`;
+    <button id="tx-edit-delete" style="margin-top:10px;width:100%;padding:9px;border:none;background:transparent;color:var(--r);border-radius:var(--r6);font-size:12.5px;font-weight:600;cursor:pointer">Transactie verwijderen</button>`;
   $('tx-edit-cancel').onclick=()=>modal.classList.remove('open');
   $('tx-edit-save').onclick=()=>saveTxEdit(txId);
   $('tx-edit-delete').onclick=()=>deleteTx(txId);
@@ -7209,7 +7209,7 @@ function buildInkomenDetail(m){
     </div>
     <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin:14px 0 8px;gap:2px">${segBars}</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
-      ${seg.filter(s=>s.val>0).map(s=>`<span style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:var(--n2)"><span style="width:7px;height:7px;border-radius:2px;background:${s.color};display:inline-block"></span>${s.lbl}&nbsp;${fmt(Math.round(s.val))}</span>`).join('')}
+      ${seg.filter(s=>s.val>0).map(s=>`<span style="display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--n2)"><span style="width:7px;height:7px;border-radius:2px;background:${s.color};display:inline-block"></span>${s.lbl}&nbsp;${fmt(Math.round(s.val))}</span>`).join('')}
     </div>
   </div>
   <div class="dm-section">
@@ -7326,7 +7326,7 @@ function buildUitgegevenDetail(m){
         </div>
         <div class="tx-amount">${fmt(tx.amount)}</div>
       </div>`;
-    }).join(''):`<div style="font-size:11px;color:var(--n3);padding:8px 0">Geen transacties voor deze categorie.</div>`}
+    }).join(''):`<div style="font-size:12.5px;color:var(--n3);padding:8px 0">Geen transacties voor deze categorie.</div>`}
   </div>`:'';
 
   const maxCatSpent=cats.length?cats[0].spent:1;
@@ -7336,7 +7336,7 @@ function buildUitgegevenDetail(m){
   <div class="dm-section" style="padding-bottom:6px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div class="dm-section-title" style="margin-bottom:0">Per categorie</div>
-      ${activeCat?`<button onclick="filterUitgegevenByCat(null)" style="background:none;border:none;font-size:10px;font-weight:700;color:var(--a);cursor:pointer;padding:0;font-family:var(--sans)">× Alles</button>`:'<span style="font-size:9px;color:var(--n3)">tik om te filteren</span>'}
+      ${activeCat?`<button onclick="filterUitgegevenByCat(null)" style="background:none;border:none;font-size:11.5px;font-weight:700;color:var(--a);cursor:pointer;padding:0;font-family:var(--sans)">× Alles</button>`:'<span style="font-size:10.5px;color:var(--n3)">tik om te filteren</span>'}
     </div>
     <div style="display:flex;flex-direction:column;gap:0">
     ${cats.map(({cat,spent:cs},i)=>{
@@ -7367,16 +7367,16 @@ function buildUitgegevenDetail(m){
             ${isOver?`<div style="position:absolute;top:0;left:0;height:100%;width:100%;background:${barColor};opacity:.35;border-radius:3px"></div>`:''}
           </div>
           ${catBudget>0?`<div style="display:flex;justify-content:space-between;margin-top:3px">
-            <span style="font-size:9px;color:var(--n3)">€0</span>
-            <span style="font-size:9px;font-weight:700;color:${isOver?'var(--r)':isWarn?'var(--w)':'var(--n3)'}">${pctLbl}</span>
-            <span style="font-size:9px;color:var(--n3)">${fmt(catBudget)}</span>
+            <span style="font-size:10.5px;color:var(--n3)">€0</span>
+            <span style="font-size:10.5px;font-weight:700;color:${isOver?'var(--r)':isWarn?'var(--w)':'var(--n3)'}">${pctLbl}</span>
+            <span style="font-size:10.5px;color:var(--n3)">${fmt(catBudget)}</span>
           </div>`:''}
         </div>
         <!-- Bedrag -->
         <div style="flex-shrink:0;text-align:right;min-width:58px">
           <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${isOver?'var(--r)':isWarn?'var(--w)':'var(--n0)'}">${fmt(cs)}</div>
-          ${isOver?`<div style="font-size:9px;font-weight:700;color:var(--r);margin-top:1px">+${fmt(Math.round(cs-catBudget))}</div>`:
-            isWarn?`<div style="font-size:9px;color:var(--w);margin-top:1px">${fmt(catBudget-cs)} vrij</div>`:''}
+          ${isOver?`<div style="font-size:10.5px;font-weight:700;color:var(--r);margin-top:1px">+${fmt(Math.round(cs-catBudget))}</div>`:
+            isWarn?`<div style="font-size:10.5px;color:var(--w);margin-top:1px">${fmt(catBudget-cs)} vrij</div>`:''}
         </div>
       </div>`;
     }).join('')}
@@ -7419,7 +7419,7 @@ function buildUitgegevenDetail(m){
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
               <span style="font-size:12px;font-weight:${isOther?500:600};color:${isOther?'var(--n3)':'var(--n0)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">${esc(r.label)}</span>
-              <span style="font-size:10px;color:var(--n3);flex-shrink:0;margin-left:6px">${r.count}×</span>
+              <span style="font-size:11.5px;color:var(--n3);flex-shrink:0;margin-left:6px">${r.count}×</span>
             </div>
             <div style="position:relative;height:5px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden">
               <div style="position:absolute;top:0;left:0;height:100%;width:${barW}%;background:${isOther?'rgba(0,0,0,.15)':clr.c};border-radius:3px;opacity:${isOther?.5:1};transition:width .4s cubic-bezier(.4,0,.2,1)"></div>
@@ -7427,7 +7427,7 @@ function buildUitgegevenDetail(m){
           </div>
           <div style="flex-shrink:0;text-align:right;min-width:66px">
             <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${isOther?'var(--n3)':'var(--n0)'}">${fmt(Math.round(r.total))}</div>
-            <div style="font-size:9px;color:var(--n3);margin-top:1px">${pctOfCat}%</div>
+            <div style="font-size:10.5px;color:var(--n3);margin-top:1px">${pctOfCat}%</div>
           </div>
         </div>`;
       }).join('')}
@@ -7465,7 +7465,7 @@ function buildUitgegevenDetail(m){
       </div>
       ${pacePct!==null?`<div style="position:absolute;top:-3px;bottom:-3px;left:${pacePct}%;width:2px;background:rgba(0,0,0,.25);border-radius:1px;transform:translateX(-50%)"></div>`:''}
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--n3);position:relative">
+    <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--n3);position:relative">
       <span>€0</span>
       ${pacePct!==null&&pacePct>12&&pacePct<88?`<span style="position:absolute;left:${pacePct}%;transform:translateX(-50%);font-weight:700;color:rgba(0,0,0,.35)">nu</span>`:''}
       <span>${fmt(budget)}</span>
@@ -7474,11 +7474,11 @@ function buildUitgegevenDetail(m){
     <div style="display:flex;gap:12px;margin-top:12px">
       <div style="flex:1;background:var(--s2);border-radius:var(--r6);padding:9px 12px">
         <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--n0)">€${dailyAvg}</div>
-        <div style="font-size:8.5px;color:var(--n3);font-weight:600;margin-top:2px">gemiddeld/dag</div>
+        <div style="font-size:10px;color:var(--n3);font-weight:600;margin-top:2px">gemiddeld/dag</div>
       </div>
       ${pace.isCurrentMonth&&budget>0?`<div style="flex:1;background:var(--s2);border-radius:var(--r6);padding:9px 12px">
         <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${remaining>=0?'var(--g)':'var(--r)'}">${fmt(Math.abs(remaining))}</div>
-        <div style="font-size:8.5px;color:var(--n3);font-weight:600;margin-top:2px">${remaining>=0?'resterend':'over budget'}</div>
+        <div style="font-size:10px;color:var(--n3);font-weight:600;margin-top:2px">${remaining>=0?'resterend':'over budget'}</div>
       </div>`:''}
     </div>
   </div>
@@ -7503,16 +7503,16 @@ function buildVastDetail(){
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div class="dm-row-icon" style="background:${clr.bg};color:${clr.c}">${ic(g.icon||'folder')}</div>
         <div style="flex:1;font-size:12px;font-weight:700">${esc(g.name)}</div>
-        <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#38bdf8">${fmt(Math.round(gTotal))}<span style="font-size:8px;color:var(--text-muted);font-weight:600">/m</span></div>
+        <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#38bdf8">${fmt(Math.round(gTotal))}<span style="font-size:9.5px;color:var(--text-muted);font-weight:600">/m</span></div>
       </div>
       ${g.items.filter(it=>it.enabled===true).map(it=>{
         const monthly=it.period==='y'?it.amount/12:it.period==='q'?it.amount/3:it.period==='m'?it.amount:it.amount;
         const periodLbl=it.period==='y'?'jaarlijks':it.period==='q'?'per kwartaal':'maandelijks';
         return`<div class="dm-row">
-          <div><div class="dm-row-name" style="font-size:11px">${esc(it.name)}</div><div class="dm-row-sub">${periodLbl}${it.period!=='m'?' · '+fmt(it.amount)+'/periode':''}</div></div>
+          <div><div class="dm-row-name" style="font-size:12.5px">${esc(it.name)}</div><div class="dm-row-sub">${periodLbl}${it.period!=='m'?' · '+fmt(it.amount)+'/periode':''}</div></div>
           <div style="text-align:right">
             <div class="dm-row-val" style="color:#38bdf8">${fmt(Math.round(monthly))}</div>
-            <div style="font-size:8px;color:var(--text-muted);font-weight:600">/m</div>
+            <div style="font-size:9.5px;color:var(--text-muted);font-weight:600">/m</div>
           </div>
         </div>`;
       }).join('')}
@@ -7523,7 +7523,7 @@ function buildVastDetail(){
   return`
   <div class="dm-section">
     <div style="display:flex;gap:16px">
-      <div><div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#38bdf8">${fmt(Math.round(totalFixed))}</div><div style="font-size:8px;color:var(--text-muted);font-weight:600;margin-top:2px">vaste kosten/m</div></div>
+      <div><div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#38bdf8">${fmt(Math.round(totalFixed))}</div><div style="font-size:9.5px;color:var(--text-muted);font-weight:600;margin-top:2px">vaste kosten/m</div></div>
     </div>
   </div>
   ${groups.map(groupSection).join('')}`;
@@ -7612,12 +7612,12 @@ function buildGespaardDetail(m){
   <div class="dm-section">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
       <div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-bottom:4px">${isCur?'Geplande buffer deze maand':'Werkelijk gespaard'}</div>
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-bottom:4px">${isCur?'Geplande buffer deze maand':'Werkelijk gespaard'}</div>
         <div style="font-family:var(--mono);font-size:36px;font-weight:700;letter-spacing:-1.5px;line-height:1;color:var(--n2)">${fmt(saved)}</div>
         <div style="font-size:12px;color:var(--n2);margin-top:5px">${savePct}% van je inkomen</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:10px;color:var(--n3);margin-bottom:3px">doel ${target}%</div>
+        <div style="font-size:11.5px;color:var(--n3);margin-bottom:3px">doel ${target}%</div>
         <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--n3)">${fmt(targetAmt)}</div>
       </div>
     </div>
@@ -7626,7 +7626,7 @@ function buildGespaardDetail(m){
       <div style="position:absolute;top:0;bottom:0;left:${Math.round(target/30*100)}%;width:2px;background:rgba(0,0,0,.28)"></div>
     </div>
     <!-- Balkasislabels: schaal 0–30%, tick op target/30 -->
-    <div style="position:relative;height:14px;font-size:9px;color:var(--n3);margin-bottom:10px">
+    <div style="position:relative;height:14px;font-size:10.5px;color:var(--n3);margin-bottom:10px">
       <span style="position:absolute;left:0">0%</span>
       ${target>0&&target<30?`<span style="position:absolute;left:${Math.round(target/30*100)}%;transform:translateX(-50%);font-weight:700;color:rgba(0,0,0,.45)">${target}%</span>`:''}
       <span style="position:absolute;right:0">30%</span>
@@ -7648,7 +7648,7 @@ function buildGespaardDetail(m){
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--a);min-width:42px;text-align:right">${target}%</div>
     </div>
     <!-- Slideraxis: zelfde schaal 0–30% als de balk, gecorrigeerd voor browser thumb offset -->
-    <div style="position:relative;height:14px;margin-top:4px;font-size:9px;color:var(--n3)">
+    <div style="position:relative;height:14px;margin-top:4px;font-size:10.5px;color:var(--n3)">
       <span style="position:absolute;left:0">0%</span>
       ${target>0&&target<30?`<span style="position:absolute;left:calc(${Math.round(target/30*100)}% + ${((0.5-target/30)*16).toFixed(1)}px);transform:translateX(-50%);font-weight:700;color:var(--a)">${target}%</span>`:''}
       <span style="position:absolute;right:0">30%</span>
@@ -7659,21 +7659,21 @@ function buildGespaardDetail(m){
   <div class="dm-section" style="background:var(--s1);border-radius:var(--r8);padding:14px">
     <div style="display:flex;gap:0;margin-bottom:14px">
       <div style="flex:1;padding-right:14px;border-right:1px solid var(--l0)">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-bottom:5px">Gespaard ${curYear} t.e.m. nu</div>
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-bottom:5px">Gespaard ${curYear} t.e.m. nu</div>
         <div style="font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-.8px;color:var(--n0)">${fmt(ytdSaved)}</div>
-        <div style="font-size:10px;color:var(--n3);margin-top:3px">${curMonthIdx+1} maand${curMonthIdx>0?'en':''} · gem. ${fmt(avgMonthly)}/mnd</div>
+        <div style="font-size:11.5px;color:var(--n3);margin-top:3px">${curMonthIdx+1} maand${curMonthIdx>0?'en':''} · gem. ${fmt(avgMonthly)}/mnd</div>
       </div>
       <div style="flex:1;padding-left:14px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-bottom:5px">Jaarprognose ${curYear}</div>
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3);margin-bottom:5px">Jaarprognose ${curYear}</div>
         <div style="font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-.8px;color:${yearFcColor}">${fmt(yearForecast)}</div>
-        <div style="font-size:10px;color:var(--n3);margin-top:3px">${monthsLeft} mnd. resten · ${fmt(remainingProjected)} prognose</div>
+        <div style="font-size:11.5px;color:var(--n3);margin-top:3px">${monthsLeft} mnd. resten · ${fmt(remainingProjected)} prognose</div>
       </div>
     </div>
     ${yearForecast>0?`
     <div style="position:relative;height:6px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden">
       <div style="height:100%;width:${Math.min(100,Math.round(ytdSaved/yearForecast*100))}%;background:${yearFcColor};border-radius:3px;transition:width .5s"></div>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--n3)">
+    <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10.5px;color:var(--n3)">
       <span>Werkelijk: ${fmt(ytdSaved)}</span><span>Prognose: ${fmt(yearForecast)}</span>
     </div>`:''}
   </div>
@@ -7701,12 +7701,12 @@ function buildGespaardDetail(m){
         const rowColor=income>0&&h.val>0?(h.val/income>=target/100?'var(--g)':h.val/income>=target/200?'var(--w)':'var(--r)'):'var(--n4)';
         const rowPct=income>0&&h.val>0?Math.round(h.val/income*100):0;
         return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;${i>0?'border-top:1px solid var(--l0)':''}${h.isCur?';background:rgba(233,30,140,.04);margin:0 -16px;padding:8px 16px;border-radius:var(--r4)':''}">
-          <div style="width:40px;font-size:11px;font-weight:${h.isCur?700:500};color:${h.isCur?'var(--n0)':'var(--n2)'}">${h.label}</div>
+          <div style="width:40px;font-size:12.5px;font-weight:${h.isCur?700:500};color:${h.isCur?'var(--n0)':'var(--n2)'}">${h.label}</div>
           <div style="flex:1;height:4px;background:rgba(0,0,0,.06);border-radius:2px;overflow:hidden">
             ${h.val>0?`<div style="height:100%;width:${Math.min(100,Math.round(h.val/histMax*100))}%;background:${rowColor};border-radius:2px"></div>`:''}
           </div>
           <div style="font-family:var(--mono);font-size:12px;font-weight:${h.isCur?700:400};color:${h.val>0?rowColor:'var(--n4)'};min-width:52px;text-align:right">${h.val>0?fmt(h.val):'—'}</div>
-          <div style="font-size:10px;color:var(--n3);min-width:26px;text-align:right">${rowPct>0?rowPct+'%':''}</div>
+          <div style="font-size:11.5px;color:var(--n3);min-width:26px;text-align:right">${rowPct>0?rowPct+'%':''}</div>
         </div>`;
       }).join('')}
     </div>
@@ -7720,7 +7720,7 @@ function buildGespaardDetail(m){
       <div class="dm-stat"><div class="dm-stat-val" style="color:${streak>=3?'var(--g)':'var(--n1)'}">${streak>0?streak+'×':'—'}</div><div class="dm-stat-lbl">maanden op norm</div></div>
       <div class="dm-stat"><div class="dm-stat-val" style="color:${yearFcColor}">${fmt(targetAmt*12)}</div><div class="dm-stat-lbl">spaardoel/jaar</div></div>
     </div>
-    <div style="margin-top:10px;padding:10px;background:${savePct>=target?'var(--g-dim)':'var(--w-dim)'};border:1px solid ${savePct>=target?'rgba(22,163,74,.2)':'rgba(217,119,6,.2)'};border-radius:var(--r6);font-size:11px;color:var(--n2);line-height:1.5">${tip}</div>
+    <div style="margin-top:10px;padding:10px;background:${savePct>=target?'var(--g-dim)':'var(--w-dim)'};border:1px solid ${savePct>=target?'rgba(22,163,74,.2)':'rgba(217,119,6,.2)'};border-radius:var(--r6);font-size:12.5px;color:var(--n2);line-height:1.5">${tip}</div>
   </div>`;
 }
 
@@ -7851,7 +7851,7 @@ function buildHealthDetail(m){
       </svg>
       <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
         <div style="font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-1px;line-height:1;color:${noSpendYet?'var(--n3)':scoreColor}">${noSpendYet?'—':finalScore}</div>
-        <div style="font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)">/100</div>
+        <div style="font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)">/100</div>
       </div>
     </div>
     <div style="font-size:14px;font-weight:700;color:${noSpendYet?'var(--n3)':scoreColor}">${noSpendYet?(spent<=0?'Nog geen uitgaven':'Nog te vroeg in de maand'):scoreText}</div>
@@ -7860,7 +7860,7 @@ function buildHealthDetail(m){
   <!-- SCORE OPBOUW -->
   <div class="dm-section">
     <div class="dm-section-title">score-opbouw</div>
-    <div style="font-size:10px;color:var(--n3);line-height:1.5;margin:0 0 6px">Drie delen, elk op basis van je eigen cijfers. Samen maximaal 100.</div>
+    <div style="font-size:11.5px;color:var(--n3);line-height:1.5;margin:0 0 6px">Drie delen, elk op basis van je eigen cijfers. Samen maximaal 100.</div>
     ${components.map((c,i)=>`
     <div style="padding:8px 0;${i>0?'border-top:1px solid var(--l0)':''}">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
@@ -7868,13 +7868,13 @@ function buildHealthDetail(m){
         <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${noSpendYet?'var(--n3)':c.color};flex-shrink:0">${noSpendYet?'—':c.val} <span style="font-weight:500;color:var(--n3)">/ ${c.max}</span></div>
       </div>
       <div style="height:4px;border-radius:2px;background:var(--s2);margin:5px 0 4px;overflow:hidden"><div style="height:100%;width:${noSpendYet?0:Math.round(c.val/c.max*100)}%;background:${c.color};border-radius:2px"></div></div>
-      <div style="font-size:9.5px;color:var(--n3)">${c.sub}</div>
+      <div style="font-size:11px;color:var(--n3)">${c.sub}</div>
     </div>`).join('')}
     <div class="dm-row" style="border-top:2px solid var(--l1);margin-top:4px;padding-top:10px">
       <div class="dm-row-name" style="font-weight:700;color:var(--n0)">Score</div>
       <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:${noSpendYet?'var(--n3)':scoreColor}">${noSpendYet?'—':finalScore}/100</div>
     </div>
-    ${noSpendYet?'<div style="font-size:10px;color:var(--n3);line-height:1.5;margin-top:8px">'+(spent<=0?'Nog geen uitgaven deze maand. De score verschijnt zodra je iets invoert en minstens 10% van de maand om is.':'Nog te vroeg: vanaf 10% van de maand is het tempo betrouwbaar genoeg voor een score.')+'</div>':''}
+    ${noSpendYet?'<div style="font-size:11.5px;color:var(--n3);line-height:1.5;margin-top:8px">'+(spent<=0?'Nog geen uitgaven deze maand. De score verschijnt zodra je iets invoert en minstens 10% van de maand om is.':'Nog te vroeg: vanaf 10% van de maand is het tempo betrouwbaar genoeg voor een score.')+'</div>':''}
   </div>
 
   <!-- INZICHTEN -->
@@ -7957,7 +7957,7 @@ if(!document.getElementById('wiz-privacy')){
   const pn=document.createElement('div');
   pn.id='wiz-privacy';
   pn.style.cssText='margin-top:24px;padding:10px 12px;background:rgba(14,165,233,.05);border:1px solid rgba(14,165,233,.15);border-radius:var(--r6);display:flex;align-items:flex-start;gap:8px';
-  pn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" width="14" height="14" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span style="font-size:11px;color:var(--n2);line-height:1.5"><strong style="color:var(--n1)">Je data blijft op jouw toestel.</strong> Niets wordt verstuurd naar een server. Alles staat enkel in de lokale opslag van deze browser.</span>';
+  pn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" width="14" height="14" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span style="font-size:12.5px;color:var(--n2);line-height:1.5"><strong style="color:var(--n1)">Je data blijft op jouw toestel.</strong> Niets wordt verstuurd naar een server. Alles staat enkel in de lokale opslag van deze browser.</span>';
   $('w-body').appendChild(pn);
 }
 break;
@@ -8017,7 +8017,7 @@ case 4:{
       <span class="summary-value">−${fmt(bud)}</span>
     </div>`:`<div class="summary-row" style="opacity:.4">
       <span class="summary-label">Budgetten</span>
-      <span class="summary-value" style="font-size:11px;color:var(--n3)">geen categorieën ingesteld</span>
+      <span class="summary-value" style="font-size:12.5px;color:var(--n3)">geen categorieën ingesteld</span>
     </div>`}
     <div class="summary-row total">
       <span class="summary-label">${buf>=0?'Buffer / spaargeld':'Tekort'}</span>
