@@ -24,7 +24,7 @@ Dit is een privé-budgetapp. **Vóór elke commit, elk document, elke screenshot
 - Taal van de UI en van commentaar: Nederlands (België). Maandnamen in lopende zinnen met kleine letter.
 - Bedragen via `fmt()`; komma als decimaalteken in invoervelden (`parseDec`, `inputDec`).
 - Kleur betekent iets: groen/rood/oranje alleen voor financiële waarheid, accentkleur alleen voor interactie.
-- Geen nieuwe externe afhankelijkheden.
+- Geen nieuwe externe afhankelijkheden. Lettertypes (Fraunces voor titels en grote bedragen, Plus Jakarta Sans voor tekst, IBM Plex Mono voor cijfers in rijen) zitten als data-URI in het bestand; nooit via Google Fonts of een andere externe host laden.
 
 ## Werkwijze
 
