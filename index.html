@@ -6,15 +6,17 @@
 <meta name="theme-color" content="#ffffff">
 <!-- Content Security Policy: beperkt waar code en data vandaan mogen komen.
      'unsafe-inline' nodig voor inline scripts/styles in deze single-file app.
-     'unsafe-eval' omdat Chart.js intern eval-constructies gebruikt.
-     CDN beperkt tot jsdelivr (Chart.js). Connect alleen naar Alpha Vantage voor koersen. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob: https://www.alphavantage.co; object-src 'none'; base-uri 'self';">
+     Geen 'unsafe-eval': de rekenbalk gebruikt een eigen parser, geen Function()/eval.
+     CDN beperkt tot jsdelivr (Chart.js, met SRI-hash). Geen enkele andere netwerkverbinding. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'self';">
 <title>Buddy Budget</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23f472b6'/><stop offset='100%25' stop-color='%23be185d'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><ellipse cx='46' cy='56' rx='22' ry='18' fill='white'/><ellipse cx='70' cy='56' rx='8' ry='6' fill='white'/><ellipse cx='46' cy='36' rx='10' ry='7' fill='white'/><ellipse cx='46' cy='36' rx='5' ry='3.5' fill='%23f472b6'/><circle cx='53' cy='49' r='2.5' fill='%23be185d'/><ellipse cx='70' cy='55' rx='4' ry='3' fill='%23f9a8d4'/><line x1='37' y1='74' x2='35' y2='86' stroke='white' stroke-width='5' stroke-linecap='round'/><line x1='47' y1='74' x2='49' y2='86' stroke='white' stroke-width='5' stroke-linecap='round'/></svg>">
 <!-- Fonts: lokaal laden via system-ui om Google Fonts privacy-lek te vermijden -->
-<!-- SECURITY: voeg integrity="sha384-..." toe via https://www.srihash.org/ voor CDN-pinning -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" crossorigin="anonymous"></script>
+<!-- SRI-hashes berekend uit de npm-tarballs van chart.js@4.4.1 en chartjs-plugin-datalabels@2.2.0.
+     Let op: chart.umd.min.js bestaat niet in het pakket (jsDelivr minificeert on-the-fly), daarom chart.umd.js.
+     Laadt een script niet (offline, blokkering, hash-mismatch), dan blijft de app werken zonder grafieken. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" integrity="sha384-y49Zu59jZHJL/PLKgZPv3k2WI9c0Yp3pWB76V8OBVCb0QBKS8l4Ff3YslzHVX76Y" crossorigin="anonymous"></script>
 <!-- xlsx CDN verwijderd: exports gebruiken nu CSV (geen externe afhankelijkheid) -->
 <style>
 /* ─────────────────────────────────────────────────────────
@@ -109,7 +111,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dh-nav-btn:hover{color:var(--n0)}
 .dh-nav-btn:disabled{opacity:.22;cursor:not-allowed}
 .dh-nav-btn svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.8}
-.dh-nav-label{font-size:12px;font-weight:700;letter-spacing:-.1px;min-width:82px;text-align:center;color:var(--n0);padding:0 2px}
+.dh-nav-label{font-size:12px;font-weight:700;letter-spacing:-.1px;min-width:82px;text-align:center;color:var(--n0);padding:0 4px;white-space:nowrap}
 
 /* Hero */
 .dh-hero{padding:14px 16px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -326,6 +328,10 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .fab:hover{box-shadow:0 6px 24px rgba(236,72,153,.45);opacity:1!important}
 /* FAB dimmen bij scrollen — laat content eronder zien */
 .fab.fab-dim{opacity:.25;pointer-events:none}
+/* Buiten Home: compacte ronde knop rechtsonder, zodat grafieken en lijsten vrij blijven */
+.fab.fab-compact{left:auto;right:16px;transform:none;width:46px;height:46px;padding:0;gap:0;box-shadow:0 3px 14px rgba(236,72,153,.3),0 1px 3px rgba(0,0,0,.25)}
+.fab.fab-compact .fab-label{display:none}
+.fab.fab-compact:active{transform:scale(.93)}
 .fab.fab-scrolled{opacity:.18;pointer-events:none}
 
 /* ─────────────────────────────────────────────────────────
@@ -341,6 +347,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .modal-close{width:32px;height:32px;background:var(--s2);border:1px solid var(--l1);border-radius:var(--r4);color:var(--n2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .modal-close svg{width:12px;height:12px;stroke:currentColor;stroke-width:2.5}
 .modal-body{padding:16px;overflow-y:auto;flex:1}
+.chart-offline{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;font-size:11px;color:var(--n3);line-height:1.5}
+.chart-wrap{position:relative}
 .modal-footer{padding:12px 16px calc(max(12px,env(safe-area-inset-bottom)));background:var(--s1);border-top:1px solid var(--l0);flex-shrink:0}
 
 /* ─────────────────────────────────────────────────────────
@@ -511,7 +519,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .group.open .group-body{display:block}
 .group.open .group-arrow{transform:rotate(180deg)}
 .sub-item{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--s1);border-radius:var(--r4);margin-bottom:3px;border:1px solid var(--l0);transition:opacity .15s,filter .15s}
-.sub-item.off{opacity:.28;filter:grayscale(.6)}
+.sub-item.off{opacity:.6}
+.sub-item.off .sub-name,.sub-item.off .sub-name-input{color:var(--n2)}
 .sub-check{width:20px;height:20px;border:1.5px solid var(--n4);border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0}
 .sub-check.on{background:var(--a);border-color:var(--a);box-shadow:0 0 8px var(--a-glow)}
 .sub-check svg{width:9px;height:9px;stroke:#fff;stroke-width:3.5;opacity:0}
@@ -820,7 +829,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .wp-type-invest{background:rgba(233,30,140,.13);color:var(--a)}
 /* Event modal segmented controls */
 .ev-segment{display:flex;gap:0;background:var(--l0);border-radius:var(--r6);padding:3px}
-.ev-seg-btn{flex:1;border:none;background:transparent;color:var(--n3);font-family:var(--sans);font-size:12px;font-weight:600;padding:8px 6px;border-radius:calc(var(--r6) - 3px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.ev-seg-btn{flex:1;border:none;background:transparent;color:var(--n3);font-family:var(--sans);font-size:12px;font-weight:600;padding:8px 6px;white-space:nowrap;border-radius:calc(var(--r6) - 3px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;-webkit-tap-highlight-color:transparent}
 .ev-seg-btn.active{background:var(--a);color:var(--n7);box-shadow:0 1px 2px rgba(233,30,140,.18)}
 /* Toggle switch */
 .ev-switch{position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0}
@@ -1265,7 +1274,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.052</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:10px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.053</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:10px;line-height:1.6;color:var(--n3)">
@@ -1297,12 +1306,29 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 </div>
 <div class="modal-bg" id="m-add"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><button class="month-nav-btn" id="m-add-prev" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><span class="modal-title" id="m-add-title">Maand</span><button class="month-nav-btn" id="m-add-next" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button><button class="modal-close" id="m-add-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-add-body"></div><div class="modal-footer" id="m-add-footer"></div></div></div>
 <div class="modal-bg" id="m-cat"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><button class="month-nav-btn" id="m-cat-prev" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><span class="modal-title" id="m-cat-title">Categorie</span><button class="month-nav-btn" id="m-cat-next" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button><button class="modal-close" id="m-cat-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-cat-body"></div><div class="modal-footer" id="m-cat-footer"></div></div></div>
-<div class="modal-bg" id="m-new"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><span class="modal-title">Nieuw item</span><button class="modal-close" id="m-new-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-new-body"></div></div></div>
+<div class="modal-bg" id="m-new"><div class="modal"><div class="modal-handle"></div><div class="modal-head"><span class="modal-title" id="m-new-title">Nieuw item</span><button class="modal-close" id="m-new-x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body" id="m-new-body"></div></div></div>
 </div>
 <div class="calc-bar" id="calc-bar"><button class="calc-btn" data-op="+">+</button><button class="calc-btn" data-op="-">−</button><button class="calc-btn" data-op="*">×</button><button class="calc-btn" data-op="/">/</button><button class="calc-btn eq" data-op="=">=</button></div>
 <!-- PLACEHOLDER FOR JS -->
 <script>
-Chart.register(ChartDataLabels);
+// Grafiekbibliotheek is optioneel: zonder Chart.js (offline, geblokkeerde CDN) blijft de rest van de app werken.
+const CHARTS_OK=typeof Chart!=='undefined';
+if(CHARTS_OK){if(typeof ChartDataLabels!=='undefined')Chart.register(ChartDataLabels);}
+else{
+  // Stub met dezelfde oppervlakte als de gebruikte Chart-API; toont een korte melding in de grafiekruimte.
+  window.Chart=class{
+    constructor(ctx){
+      this.data={datasets:[],labels:[]};this.options={};this.tooltip={setActiveElements(){}};
+      const canvas=ctx&&ctx.canvas?ctx.canvas:ctx;const wrap=canvas&&canvas.parentElement;
+      if(wrap&&!wrap.querySelector('.chart-offline')){
+        const d=document.createElement('div');d.className='chart-offline';
+        d.textContent='Grafiek niet beschikbaar (grafiekbibliotheek kon niet laden). Je cijfers en invoer werken gewoon.';
+        wrap.appendChild(d);
+      }
+    }
+    update(){}destroy(){}resize(){}setActiveElements(){}
+  };
+}
 const IC={briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',pie:'<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',heart:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',building:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',car:'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-3-5H9L6 10l-2.5 1.1C2.7 11.3 2 12.1 2 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',plane:'<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>',tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',trending:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',cart:'<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>',users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',tv:'<rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/>',coffee:'<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',check:'<polyline points="20 6 9 17 4 12"/>',chevDown:'<polyline points="6 9 12 15 18 9"/>',alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',credit:'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>',piggy:'<path d="M19 11a7 7 0 0 1-7 7A7 7 0 0 1 5 11V9a2 2 0 0 1 4 0v2a3 3 0 0 0 6 0V9a2 2 0 0 1 4 0v2z"/><path d="M12 18v3"/><path d="M8 21h8"/>',scale:'<path d="M12 3v18"/><path d="M3 9l4-3 4 3"/><path d="M17 9l4-3"/><path d="M5 18a4 4 0 0 1-4-4h8a4 4 0 0 1-4 4z"/><path d="M19 18a4 4 0 0 1-4-4h8a4 4 0 0 1-4 4z"/>',percent:'<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>'};
 const ic=(n,c='')=>`<svg class="${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[n]||IC.folder}</svg>`;
 const COLORS=[{n:'emerald',c:'#10b981',bg:'rgba(16,185,129,0.15)'},{n:'sky',c:'#0ea5e9',bg:'rgba(14,165,233,0.15)'},{n:'amber',c:'#f59e0b',bg:'rgba(245,158,11,0.15)'},{n:'rose',c:'#f43f5e',bg:'rgba(244,63,94,0.15)'},{n:'violet',c:'#8b5cf6',bg:'rgba(139,92,246,0.15)'},{n:'cyan',c:'#06b6d4',bg:'rgba(6,182,212,0.15)'},{n:'orange',c:'#f97316',bg:'rgba(249,115,22,0.15)'},{n:'pink',c:'#ec4899',bg:'rgba(236,72,153,0.15)'},{n:'lime',c:'#84cc16',bg:'rgba(132,204,22,0.15)'},{n:'slate',c:'#64748b',bg:'rgba(100,116,139,0.15)'}];
@@ -1379,60 +1405,14 @@ async function decryptVault(b64,passphrase){
   return JSON.parse(new TextDecoder().decode(pt));
 }
 let _vaultSalt=null;
-let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null},plan:{events:[],horizon:15,returnRate:5,inflation:2},alertState:{dismissed:{},lastActivity:0},init:false};
+let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[]},plan:{events:[],horizon:15,returnRate:5,inflation:2},alertState:{dismissed:{},lastActivity:0},init:false};
 let charts={},wStep=1,wData={},viewMonth=new Date();
 const $=id=>document.getElementById(id),$$=sel=>document.querySelectorAll(sel),genId=()=>Math.random().toString(36).substr(2,9);
 
-// ═══ VERMOGEN: Alpha Vantage koers ophalen ════════════════════════════════
-// Vereist een gratis API key, in te stellen in de Vermogen-tab.
-// Key wordt lokaal opgeslagen in localStorage, nooit gelogd in console/toast/export.
-// Provider ziet IP + ticker, gekoppeld aan jouw API-key account.
-async function fetchAlphaVantagePrice(ticker){
-  if(!ticker||typeof ticker!=='string')throw new Error('Ongeldige ticker');
-  const clean=ticker.trim().toUpperCase();
-  if(!/^[A-Z0-9.-]{1,20}$/.test(clean))throw new Error('Ticker bevat ongeldige tekens');
-  const key=(S.wealth?.apiKey||'').trim();
-  if(!key)throw new Error('Geen API key');
-  if(!/^[A-Z0-9]{8,32}$/.test(key))throw new Error('API key ongeldig');
-  const url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(clean)}&apikey=${encodeURIComponent(key)}`;
-  let resp;
-  try{resp=await fetch(url);}catch(e){throw new Error('Netwerk geblokkeerd');}
-  if(!resp.ok)throw new Error('HTTP '+resp.status);
-  const data=await resp.json();
-  if(data['Note']||data['Information'])throw new Error('Rate limit (25/dag)');
-  if(data['Error Message'])throw new Error('Ticker niet gevonden');
-  const q=data['Global Quote'];
-  if(!q||!q['05. price'])throw new Error('Geen koers');
-  const price=parseFloat(q['05. price']);
-  if(!isFinite(price)||price<=0)throw new Error('Ongeldige koers');
-  return{price,date:q['07. latest trading day']||''};
-}
-
-// USD → EUR omrekeningskoers. Idem privacy-overwegingen.
-async function fetchUsdEurRate(){
-  const key=(S.wealth?.apiKey||'').trim();
-  if(!key)throw new Error('Geen API key');
-  const url=`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=EUR&apikey=${encodeURIComponent(key)}`;
-  let resp;
-  try{resp=await fetch(url);}catch(e){throw new Error('Netwerk geblokkeerd');}
-  if(!resp.ok)throw new Error('HTTP '+resp.status);
-  const data=await resp.json();
-  if(data['Note']||data['Information'])throw new Error('Rate limit');
-  const r=data['Realtime Currency Exchange Rate'];
-  if(!r||!r['5. Exchange Rate'])throw new Error('Geen wisselkoers');
-  const rate=parseFloat(r['5. Exchange Rate']);
-  if(!isFinite(rate)||rate<=0)throw new Error('Ongeldige koers');
-  return{rate,date:r['6. Last Refreshed']||''};
-}
-
-// Converteer holding waarde naar EUR. Gebruikt gecachte USD/EUR rate.
-function getHoldingValueEur(h){
-  const val=getHoldingValue(h);
-  if(h.kind==='fund')return val;  // Fonds-totaal is altijd in EUR opgeslagen
-  if((h.currency||'USD')==='EUR')return val;
-  const rate=S.wealth?.usdEurRate||0.92;  // fallback indien nog niet opgehaald
-  return val*rate;
-}
+// ═══ VERMOGEN: waardering ══════════════════════════════════════════════════
+// Alles in euro, handmatig ingevuld. Er worden géén koersen opgehaald (geen API, geen netwerk).
+// Aandeel/ETF: aantal × laatst ingevulde koers. Fonds: één totaalbedrag.
+function getHoldingValueEur(h){return getHoldingValue(h);}
 // Netto-waarde na heffing — relevant voor geblokkeerd vermogen.
 // Vóór vrijgavedatum: earlyWithdrawalTax (= vroege opname kost meer).
 // Op/na vrijgavedatum: normalWithdrawalTax (= normale eindbelasting).
@@ -1448,61 +1428,25 @@ function isUnblocked(it){
   return new Date(it.unblockDate)<=new Date();
 }
 function getHoldingCostEur(h){
-  // Werkelijke kost in EUR die de gebruiker heeft ingegeven heeft voorrang (= wat de bank effectief afhield).
+  // Werkelijke kost in EUR die de gebruiker heeft ingegeven (= wat de bank effectief afhield).
   if(h.totalCostEur&&h.totalCostEur>0)return h.totalCostEur;
-  // Fonds: manualValue is per definitie in EUR (geen aankoopkoers, geen valuta-conversie).
+  // Fonds: manualValue is per definitie in EUR (geen aankoopkoers). Kost = waarde, P&L = 0.
   if(h.kind==='fund')return h.manualValue||0;
-  const cost=getHoldingCost(h);
-  if((h.currency||'USD')==='EUR')return cost;
-  const rate=S.wealth?.usdEurRate||0.92;
-  return cost*rate;
+  return getHoldingCost(h);
 }
 function getHoldingPnLEur(h){return getHoldingValueEur(h)-getHoldingCostEur(h);}
 
 // Vermogensberekeningen
-// Detecteer munt op basis van Alpha Vantage ticker-formaat.
-// Ondersteunde notaties:
-//   • US-tickers (geen prefix/suffix): AAPL, MSFT → USD
-//   • Prefix-stijl: EBR:ABI, EPA:AIR, AMS:ASML, ELI:GALP, BIT:ENI, ETR:SAP → EUR
-//   • Suffix-stijl: ABI.BR, AIR.PA, ASML.AS, ENI.MI, SAP.DE → EUR
-// Andere munten (GBP, CHF, NOK, etc.) vallen terug op USD; gebruiker kan handmatig overrulen.
-function detectCurrency(ticker){
-  if(!ticker)return 'USD';
-  const t=ticker.toUpperCase().trim();
-  // Prefix-formaat: PREFIX:TICKER
-  const prefixMatch=t.match(/^([A-Z]+):/);
-  if(prefixMatch){
-    const eurPrefixes=['EBR','EPA','AMS','ELI','BIT','FRA','ETR','BME','VSE','HEX','CPH'];
-    return eurPrefixes.includes(prefixMatch[1])?'EUR':'USD';
-  }
-  // Suffix-formaat: TICKER.SUFFIX
-  const suffixMatch=t.match(/\.([A-Z]+)$/);
-  if(!suffixMatch)return 'USD';
-  const sfx=suffixMatch[1];
-  // Korte (Yahoo-stijl) eurozone suffixen
-  const eurShort=['BR','PA','AS','LS','LI','MI','MC','DE','VI','HE','ST','IR','PR'];
-  // Lange suffixen die soms gebruikt worden
-  const eurLong=['BRU','PAR','AMS','LIS','MIL','MAD','DEX','FRK','VIE','HEL','STO','DUB','PRA','ETR','FRA','BIT','EPA','EBR','ELI','BME'];
-  return eurShort.includes(sfx)||eurLong.includes(sfx)?'EUR':'USD';
-}
 function getHoldingValue(h){
   // Fonds-type: één manueel totaalbedrag (in EUR), geen ticker × koers
   if(h.kind==='fund')return h.manualValue||0;
   return(h.quantity||0)*(h.lastPrice||0);
 }
 function getHoldingCost(h){
-  // Native-currency cost (USD voor USD aandelen, EUR voor EUR aandelen).
-  // Fonds-type heeft geen aankoopkoers-notie → kost = waarde (P&L = 0)
   if(h.kind==='fund')return h.manualValue||0;
-  // Legacy data: h.totalCost was de native USD-kost (vóór de lots-refactor in v043)
+  // Legacy data (vóór de lots-refactor in v043): h.totalCost
   if(h.totalCost&&h.totalCost>0)return h.totalCost;
-  // Nieuwe lots-data: h.totalCostEur is in EUR → converteer terug naar native via huidige koers
-  if(h.totalCostEur>0){
-    if((h.currency||'USD')==='EUR')return h.totalCostEur;
-    const rate=S.wealth?.usdEurRate||0.92;
-    return rate>0?h.totalCostEur/rate:0;
-  }
-  // Edge case: nooit een aankoop ingevuld
+  if(h.totalCostEur>0)return h.totalCostEur;
   return 0;
 }
 function getHoldingPnL(h){return getHoldingValue(h)-getHoldingCost(h);}
@@ -1585,7 +1529,24 @@ const mkd=(d=viewMonth)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2
 // inputDec(180.25) → "180,25" ; inputDec(0) → "" ; inputDec(undefined) → ""
 const inputDec=(v)=>v?String(v).replace('.',','):'';
 function parseDec(v){if(v==null)return 0;const s=String(v).trim().replace(',','.');const f=parseFloat(s);return isFinite(f)?f:0;}
-function calc(expr){try{const c=String(expr).replace(/\s/g,'').replace(/,/g,'.');if(!/^[\d+\-*/().]+$/.test(c)||/[+\-*/]{2,}/.test(c))return null;const r=Function('"use strict";return('+c+')')();return typeof r==='number'&&isFinite(r)?Math.round(r*10000)/10000:null}catch{return null}}
+// Rekenbalk: recursieve-afdalingsparser voor + - * / ( ) met komma als decimaalteken.
+// Bewust geen Function()/eval, zodat de CSP zonder 'unsafe-eval' kan. Geeft null bij ongeldige invoer.
+function calc(expr){
+  const c=String(expr??'').replace(/\s/g,'').replace(/,/g,'.');
+  if(!c||!/^[\d+\-*/().]+$/.test(c)||/[+\-*/]{2,}/.test(c))return null;
+  let i=0;
+  const peek=()=>c[i],take=()=>c[i++];
+  function num(){const st=i;while(i<c.length&&/[\d.]/.test(c[i]))i++;const t=c.slice(st,i);if(!t||t==='.'||(t.match(/\./g)||[]).length>1)throw 0;return parseFloat(t);}
+  function factor(){
+    if(peek()==='('){take();const v=sum();if(take()!==')')throw 0;return v;}
+    if(peek()==='-'){take();return -factor();}
+    if(peek()==='+'){take();return factor();}
+    return num();
+  }
+  function product(){let v=factor();while(peek()==='*'||peek()==='/'){const op=take();const r=factor();v=op==='*'?v*r:v/r;}return v;}
+  function sum(){let v=product();while(peek()==='+'||peek()==='-'){const op=take();const r=product();v=op==='+'?v+r:v-r;}return v;}
+  try{const r=sum();if(i!==c.length)throw 0;return typeof r==='number'&&isFinite(r)?Math.round(r*10000)/10000:null}catch{return null}
+}
 let calcTarget=null;
 function enableCalc(inp){inp.style.fontFamily='var(--font-mono)';const ev=()=>{const r=calc(inp.value);if(r!==null&&/[+\-*/]/.test(inp.value)){inp.value=r;inp.dispatchEvent(new Event('input',{bubbles:true}))}};const updateBar=()=>{const hasOp=/[+\-*/]/.test(inp.value);$('calc-bar').classList.toggle('show',calcTarget===inp&&hasOp);};inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ev()}});inp.addEventListener('input',updateBar);inp.addEventListener('blur',()=>{ev();setTimeout(()=>{if(calcTarget===inp)hideCalcBar()},150)});inp.addEventListener('focus',()=>{calcTarget=inp;updateBar();})}
 function hideCalcBar(){calcTarget=null;$('calc-bar').classList.remove('show')}
@@ -1598,18 +1559,38 @@ function save(){
       try{
         const b64=await encryptWithKey(snapshot,_vaultKey,_vaultSalt);
         localStorage.setItem(VAULT_KEY,b64);
-      }catch(e){}
+      }catch(e){
+        // Nooit stil falen: de gebruiker denkt anders dat alles bewaard is.
+        showToast('⚠ Opslaan mislukt — je laatste wijziging is niet bewaard',4500);
+      }
     });
   } else {
-    localStorage.setItem(STORAGE,JSON.stringify(S));
+    try{localStorage.setItem(STORAGE,JSON.stringify(S));}
+    catch(e){showToast('⚠ Opslaan mislukt (opslag vol?) — wijziging niet bewaard',4500);}
   }
 }
 // Hydrate S vanuit een geladen object (gedeeld door load() en vault-decrypt)
 function hydrateState(p){
   S={...S,...p};
   if(!S.monthlyData)S.monthlyData={};
-  if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null};
-  else{if(S.wealth.apiKey===undefined)S.wealth.apiKey='';if(S.wealth.usdEurRate===undefined)S.wealth.usdEurRate=null;if(S.wealth.usdEurUpdated===undefined)S.wealth.usdEurUpdated=null;}
+  if(!S.wealth)S.wealth={accounts:[],holdings:[]};
+  if(!Array.isArray(S.wealth.accounts))S.wealth.accounts=[];
+  if(!Array.isArray(S.wealth.holdings))S.wealth.holdings=[];
+  // Migratie v2026.053: koers-API verwijderd. Alles is voortaan in EUR en handmatig.
+  // USD-holdings worden éénmalig omgerekend met de laatst bekende koers (of 0,92 als er nooit gesynchroniseerd is):
+  // exact het eurobedrag dat de app al toonde, dus geen nieuwe afwijking. Sleutel en syncvelden verdwijnen.
+  if(S.wealth.schema!==2){
+    // Eénmalig (schema-vlag), anders zou de omrekening bij elke start opnieuw toegepast worden.
+    const rate=(S.wealth.usdEurRate>0)?S.wealth.usdEurRate:0.92;
+    S.wealth.holdings.forEach(h=>{
+      const usd=h.kind!=='fund'&&(h.currency||'USD')==='USD';
+      if(usd&&h.lastPrice>0)h.lastPrice=Math.round(h.lastPrice*rate*10000)/10000;
+      if(h.kind!=='fund'&&h.totalCost>0&&!(h.totalCostEur>0))h.totalCostEur=Math.round(h.totalCost*(usd?rate:1)*100)/100;
+      delete h.currency;delete h.totalCost;
+    });
+    ['apiKey','usdEurRate','usdEurUpdated','lastSync'].forEach(k=>{delete S.wealth[k];});
+    S.wealth.schema=2;
+  }
   if(!S.alertState)S.alertState={dismissed:{},lastActivity:0};
   if(!S.plan)S.plan={events:[],horizon:15,returnRate:5,inflation:2};
   else{if(S.plan.events===undefined)S.plan.events=[];if(S.plan.horizon===undefined)S.plan.horizon=15;if(S.plan.returnRate===undefined)S.plan.returnRate=5;if(S.plan.inflation===undefined)S.plan.inflation=2;}
@@ -1622,8 +1603,8 @@ function hydrateState(p){
   _invalidateCaches();
 }
 let _incomeCache=null,_fixedCache=null;
-function load(){const d=localStorage.getItem(STORAGE);if(d){try{const p=JSON.parse(d);hydrateState(p);if(p.transactions&&!Object.keys(S.monthlyData).length){p.transactions.forEach(t=>{const tm=t.date?.substring(0,7);if(tm&&t.categoryId){if(!S.monthlyData[tm])S.monthlyData[tm]={};S.monthlyData[tm][t.categoryId]=(S.monthlyData[tm][t.categoryId]||0)+t.amount}});save()}return true}catch{}}return false}
-function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active');$$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===id));const nav=['dashboard','analytics','settings'].includes(id);document.querySelector('.nav').style.display=nav?'block':'none';const fab=$('fab');if(fab){fab.style.display=nav?'flex':'none';fab.classList.remove('fab-dim');}if(id==='dashboard')updateDash();if(id==='analytics')updateAnalytics();}
+function load(){const d=localStorage.getItem(STORAGE);if(d){try{hydrateState(JSON.parse(d));return true}catch{}}return false}
+function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active');$$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.s===id));const nav=['dashboard','analytics','settings'].includes(id);document.querySelector('.nav').style.display=nav?'block':'none';const fab=$('fab');if(fab){fab.style.display=(id==='dashboard'||id==='analytics')?'flex':'none';fab.classList.remove('fab-dim');fab.classList.toggle('fab-compact',id==='analytics');}if(id==='dashboard')updateDash();if(id==='analytics')updateAnalytics();}
 function initDetailModal(){
   const bg=$('detail-modal-bg');
   if(bg)bg.addEventListener('click',function(e){if(e.target===this)closeDetailModal()});
@@ -1676,9 +1657,16 @@ function initAnalyticsTabs(){
   $('an-prev').addEventListener('click',()=>{viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-1,1);updateAnalytics()});
   $('an-next').addEventListener('click',()=>{const now=new Date();if(viewMonth.getMonth()===now.getMonth()&&viewMonth.getFullYear()===now.getFullYear())return;viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1);updateAnalytics()});
 }
-function getMonthlyIncome(){if(_incomeCache!==null)return _incomeCache;const i=S.income;return _incomeCache=i.monthly+(i.maaltijdcheques||0)+((i.endYear?.amount||0)/12)+((i.vacation?.amount||0)/12)+((i.refund?.amount||0)/12)+(i.otherMonthly||0)+((i.otherYearly?.amount||0)/12)}
+function _calcMonthlyIncome(){const i=S.income;return i.monthly+(i.maaltijdcheques||0)+((i.endYear?.amount||0)/12)+((i.vacation?.amount||0)/12)+((i.refund?.amount||0)/12)+(i.otherMonthly||0)+((i.otherYearly?.amount||0)/12)}
+// Zonder maand of voor de huidige maand: live. Voor een afgesloten maand: snapshot indien aanwezig,
+// zodat "Gespaard" van vroeger niet verandert wanneer je inkomen wijzigt.
+function getMonthlyIncome(mk){
+  if(mk&&!isCurMonth(mk)){const snap=S.monthlyData?.[mk]?.__incomeSnapshot;if(snap!=null)return snap;}
+  if(_incomeCache!==null)return _incomeCache;
+  return _incomeCache=_calcMonthlyIncome();
+}
 function getEarliestMonth(){
-  const keys=Object.keys(S.monthlyData||{}).filter(k=>Object.values(S.monthlyData[k]||{}).some(v=>v>0)).sort();
+  const keys=Object.keys(S.monthlyData||{}).filter(k=>Object.entries(S.monthlyData[k]||{}).some(([cid,v])=>!cid.startsWith('__')&&v>0)).sort();
   return keys.length?keys[0]:null;
 }
 function getEarliestYear(){
@@ -1702,10 +1690,10 @@ function _snapshotFixedIfNeeded(){
   const prev=new Date(now.getFullYear(),now.getMonth()-1,1);
   const mk=mkd(prev);
   if(!S.monthlyData[mk])S.monthlyData[mk]={};
-  if(S.monthlyData[mk].__fixedSnapshot==null){
-    S.monthlyData[mk].__fixedSnapshot=_calcFixedCosts(S.fixedGroups);
-    save();
-  }
+  let changed=false;
+  if(S.monthlyData[mk].__fixedSnapshot==null){S.monthlyData[mk].__fixedSnapshot=_calcFixedCosts(S.fixedGroups);changed=true;}
+  if(S.monthlyData[mk].__incomeSnapshot==null){S.monthlyData[mk].__incomeSnapshot=_calcMonthlyIncome();changed=true;}
+  if(changed)save();
 }
 function getReserved(){return 0;} // reserveringen verwijderd
 let _budgetCache=null,_txIndex=null;
@@ -1836,7 +1824,7 @@ function getAllTransactions(month){
 // Helper: vult de 4 stat-knoppen (Inkomen / Uitgegeven / Vast / Buffer-of-Gespaard).
 // Gebruikt door zowel updateDash() (Home) als updateAnalytics() (Analyse).
 function _updateMonthStats(m){
-  const income=getMonthlyIncome(),fixed=getFixedCosts();
+  const income=getMonthlyIncome(m),fixed=getFixedCosts(m);
   const spent=getMonthSpent(m),saved=getSaved(m);
   const ie=$('an-s-income');if(ie){ie.textContent=fmt(Math.round(income));ie.style.color='var(--g)';}
   const fe=$('an-s-fixed');if(fe){fe.textContent=fmt(Math.round(fixed));fe.style.color='#38bdf8';}
@@ -1862,7 +1850,7 @@ function updateDash(){
     delBtn.style.visibility=(!isCurrentM&&hasData)?'visible':'hidden';
   }
 
-  const budget=getMonthBudget(),spent=getMonthSpent(m),income=getMonthlyIncome(),fixed=getFixedCosts();
+  const budget=getMonthBudget(),spent=getMonthSpent(m),income=getMonthlyIncome(m),fixed=getFixedCosts(m);
   const available=budget-spent;
   const pace=calcPace();
 
@@ -1935,7 +1923,7 @@ function updateDash(){
     if(!isCurMonth(m)){eyebrow.textContent='Overschot '+MONTHS[viewMonth.getMonth()];}
     else if(available<0){eyebrow.textContent=`⚠ ${fmt(-available)} over budget`;}
     else if(budget>0&&paceRatio>1.15){eyebrow.textContent='Pas op — je spendeert te snel';}
-    else{eyebrow.textContent='Nog beschikbaar vandaag';}
+    else{eyebrow.textContent='Nog beschikbaar deze maand';}
     // Kleur eyebrow mee met status
     eyebrow.style.color=available<0?'var(--r)':budget>0&&paceRatio>1.15?'var(--w)':'var(--a)';
     eyebrow.style.opacity=available<0||paceRatio>1.15?'1':'.7';
@@ -1977,7 +1965,7 @@ function updateDash(){
 function updateWealthCard(){
   const el=$('d-wealth-card');
   if(!el)return;
-  if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null};
+  if(!S.wealth)S.wealth={accounts:[],holdings:[]};
   const w=S.wealth;
   const tot=getTotalWealth();
   const hasWealth=tot.total>0||(w.accounts?.length||0)>0||(w.holdings?.length||0)>0;
@@ -2382,11 +2370,12 @@ function updateHealthScore(m,spent,budget){
   const sc=score>=80?'var(--g)':score>=60?'var(--w)':'var(--r)';
   const interp=score>=80?'Uitstekend':score>=60?'Goed bezig':score>=40?'Let op':'Actie nodig';
   const subtleC=score>=80?'rgba(22,163,74,.55)':score>=60?'rgba(217,119,6,.55)':'rgba(220,38,38,.55)';
-  // Hero ring
-  const sv=$('d-score-v');if(sv){sv.textContent=score;sv.style.color=subtleC;}
+  // Hero ring — zonder één uitgave in de lopende maand is een score van 100 betekenisloos: toon dan een lege ring
+  const noSpendYet=isCurMonth(m)&&spent<=0;
+  const sv=$('d-score-v');if(sv){sv.textContent=noSpendYet?'—':score;sv.style.color=noSpendYet?'rgba(0,0,0,.25)':subtleC;}
   const ring2=document.getElementById('d-score-ring');
-  if(ring2){ring2.style.strokeDashoffset=107-(107*score/100);ring2.style.stroke=subtleC;}
-  const sl=$('d-score-lbl');if(sl){sl.textContent=interp;sl.style.color=subtleC;}
+  if(ring2){ring2.style.strokeDashoffset=noSpendYet?107:107-(107*score/100);ring2.style.stroke=noSpendYet?'rgba(0,0,0,.12)':subtleC;}
+  const sl=$('d-score-lbl');if(sl){sl.textContent=noSpendYet?'Nog geen uitgaven':interp;sl.style.color=noSpendYet?'rgba(0,0,0,.25)':subtleC;}
   if(bar){bar.style.width=score+'%';bar.style.background=sc;}
   if(el)el.style.color=sc;
   if(tip)tip.textContent=score>=80?'Uitstekend budgetbeheer':score>=60?'Goed bezig, let op enkele posten':score>=40?'Overweeg aanpassingen':'Actie nodig';
@@ -2856,7 +2845,7 @@ function openConfirmModal(title,body,confirmLabel,onConfirm,danger=true){
 // Huidige maand: buffer = inkomen - vast - gereserveerd - maandbudget (wat gepland wordt gespaard)
 // Vorige maanden: werkelijk = inkomen - vast - gereserveerd - werkelijk_uitgegeven
 function getSaved(m){
-  const income=getMonthlyIncome();
+  const income=getMonthlyIncome(m);
   const fixed=getFixedCosts(m);
   const spent=getMonthSpent(m);
   const budget=getMonthBudget();
@@ -2896,7 +2885,7 @@ function checkFreshStart(m){
 
   const underBudget=budget>0&&prevSpent<=budget;
   const title=underBudget
-    ?`Goed gedaan in ${prevMonthName}!`
+    ?`Goed gedaan in ${prevMonthName.toLowerCase()}!`
     :`Nieuwe maand, nieuwe kans!`;
   const body=underBudget
     ?`Je bleef ${fmt(budget-prevSpent)} onder je budget. Zo verder!`
@@ -3321,7 +3310,7 @@ return{dayOfMonth,daysInMonth,pctElapsed,isCurrentMonth:isCur,daysLeft};
 function renderVermogenTab(){renderWealth();}
 
 function renderWealth(){
-  if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null};
+  if(!S.wealth)S.wealth={accounts:[],holdings:[]};
   const w=S.wealth;
   const tot=getTotalWealth();
   // Bepaal doelelement: tab-pane (analytics) of legacy screen
@@ -3329,7 +3318,6 @@ function renderWealth(){
   if(!target)return;
   if($('wealth-total'))$('wealth-total').textContent=fmt(Math.round(tot.total));
 
-  const lastSync=w.lastSync?new Date(w.lastSync).toLocaleString('nl-BE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'nooit';
   const hasWealth=tot.total>0||(w.accounts?.length||0)>0||(w.holdings?.length||0)>0;
 
   // ── BUFFER-RELATIE: het slimme verband met je cashflow ──────────────────
@@ -3345,8 +3333,10 @@ function renderWealth(){
   const bufferYears=monthlyBuffer>0&&accessibleWealth>0?(accessibleWealth/(monthlyBuffer*12)):null;
 
   // Holding rendement
+  // Rendement enkel over beleggingen mét aankoopprijs en zonder blokkering: fondsen zonder kostprijs (P&L = 0)
+  // en geblokkeerd pensioensparen zouden het percentage kunstmatig drukken en botsen met de bucket "Belegd".
   let totalPnL=0,totalCost=0;
-  (w.holdings||[]).forEach(h=>{totalPnL+=getHoldingPnLEur(h);totalCost+=getHoldingCostEur(h);});
+  (w.holdings||[]).forEach(h=>{if(h.kind==='fund'||isBlocked(h))return;const c=getHoldingCostEur(h);if(c<=0)return;totalPnL+=getHoldingValueEur(h)-c;totalCost+=c;});
   const pnlPct=totalCost>0?(totalPnL/totalCost*100):0;
   const pnlColor=totalPnL>0?'var(--g)':totalPnL<0?'var(--r)':'var(--n3)';
 
@@ -3402,7 +3392,7 @@ function renderWealth(){
           const investValue=totalCost+totalPnL; // actuele marktwaarde van beleggingen met aankoopprijs
           return `
           <div class="wp-stat ${totalPnL>=0?'profit-pos':'profit-neg'}">
-            <div class="wp-stat-label">Beleggingen nu waard</div>
+            <div class="wp-stat-label">Aandelen &amp; ETF's nu waard</div>
             <div class="wp-stat-amt" style="color:var(--n0)">${fmt(Math.round(investValue))}</div>
             <div class="wp-stat-sub"><span style="color:${totalPnL>=0?'#16a34a':'#dc2626'};font-weight:700">${totalPnL>=0?'+':''}${fmt(Math.round(totalPnL))} (${totalPnL>=0?'+':''}${fmtPct(pnlPct,1)})</span> sinds aankoop</div>
           </div>
@@ -3487,9 +3477,8 @@ function renderWealth(){
                   </div>`;
                 } else {
                   const h=x.item;
-                  const cur=h.currency||'USD';
-                  const sym=cur==='EUR'?'€':'$';
-                  const value=getHoldingValue(h);       // native (USD/EUR), voor hoofdbedrag display
+                  const sym='€';
+                  const value=getHoldingValue(h);       // EUR
                   const valueEur=getHoldingValueEur(h); // EUR-equivalent
                   const costEur=getHoldingCostEur(h);   // werkelijke EUR-kost (= wat de bank afhield)
                   const pnlEur=valueEur-costEur;        // P&L in EUR — consistent met kost-eenheid
@@ -3510,6 +3499,7 @@ function renderWealth(){
                     // Quantity met max 4 decimalen, geen onnodige nullen
                     const qtyDisp=Number((h.quantity||0).toFixed(4)).toString().replace('.',',');
                     metaParts.push(`<span style="font-family:var(--mono)">${qtyDisp} × ${sym}${h.lastPrice?fmtNum(h.lastPrice,2):'—'}</span>`);
+                    if(h.lastUpdate)metaParts.push(`koers van ${new Date(h.lastUpdate).toLocaleDateString('nl-BE',{day:'numeric',month:'short'})}`);
                   }
                   // Toon aantal aankopen als meer dan één lot
                   const lotCount=Array.isArray(h.lots)?h.lots.length:0;
@@ -3517,7 +3507,7 @@ function renderWealth(){
                   if(h.availability==='gereserveerd'&&h.purpose)metaParts.push(esc(h.purpose));
                   else if(isBlk&&t)metaParts.push(`vrij in ${t.years>0?t.years+'j ':''}${t.months>0||t.years===0?t.months+'m':''}`);
                   if(h.availability==='geblokkeerd'&&h.yearlyContribution>0)metaParts.push(`+${fmt(h.yearlyContribution)}/jaar${h.contributionUntilYear?' tot '+h.contributionUntilYear:''}`);
-                  const displaySym=isFund?'€':sym;
+                  const displaySym='€';
                   return `<div class="wp-row" onclick="openHoldingModal('${h.id}')">
                     <div style="flex:1;min-width:0">
                       <div class="wp-row-title">${esc(h.name||h.ticker||'?')}</div>
@@ -3526,7 +3516,6 @@ function renderWealth(){
                     <div style="text-align:right;flex-shrink:0">
                       <div class="wp-row-amount">${displaySym}${Math.round(taxPct>0?valueNet:value).toLocaleString('nl-BE')}</div>
                       ${taxPct>0?`<div class="wp-row-amount-sub" style="color:var(--n3)">bruto ${displaySym}${Math.round(value).toLocaleString('nl-BE')} · ${taxPct}% heffing</div>`:''}
-                      ${!isFund&&cur!=='EUR'&&valueEur>0?`<div class="wp-row-amount-sub">≈ ${fmt(Math.round(taxPct>0?valueEurNet:valueEur))}</div>`:''}
                       ${!isFund&&!isBlk&&costEur>0?`<div class="wp-row-amount-sub" style="color:${pnlColor2};font-weight:700">${pnlEur>=0?'+':''}${fmt(Math.round(pnlEur))} (${pnlEur>=0?'+':''}${fmtPct(pnlPctEur,1)})</div>`:''}
                     </div>
                   </div>`;
@@ -3537,67 +3526,17 @@ function renderWealth(){
         }).join('');
       })()}
       ${(w.holdings||[]).length>0?`
-        <button onclick="refreshAllPrices()" style="width:100%;padding:11px;margin-top:14px;border:1px solid var(--l1);background:transparent;border-radius:var(--r6);font-size:12px;font-weight:600;color:var(--n1);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          Koersen vernieuwen
-        </button>
-        <div style="font-size:10px;color:var(--n3);text-align:center;margin-top:8px;font-family:var(--mono)">
-          Laatste sync: ${lastSync}${S.wealth.usdEurRate?` · 1$ = ${fmtNum(S.wealth.usdEurRate,4)}€`:''}
-        </div>
+        <div style="font-size:10px;color:var(--n3);text-align:center;margin-top:10px;line-height:1.5">Koersen vul je zelf in bij elke belegging. Er wordt niets opgehaald.</div>
       `:''}
-    </div>
-
-    <!-- API KEY -->
-    <div class="wp-section" style="padding-top:18px;border-top:1px solid var(--l0)">
-      <div class="wp-label">
-        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Alpha Vantage API key
-      </div>
-      ${(S.wealth?.apiKey||'').trim()
-        ?`<div style="display:flex;gap:8px;align-items:center;background:var(--s0);border:1px solid var(--l0);border-radius:var(--r6);padding:10px 12px">
-            <div style="flex:1;font-family:var(--mono);font-size:12px;color:var(--n2)">${'•'.repeat(8)}${esc((S.wealth.apiKey||'').slice(-4))}</div>
-            <button onclick="changeApiKey()" style="background:none;border:none;color:var(--a);font-size:11px;font-weight:700;cursor:pointer;padding:2px 4px">Wijzigen</button>
-            <button onclick="clearApiKey()" style="background:none;border:none;color:var(--r);font-size:11px;font-weight:700;cursor:pointer;padding:2px 4px">Wissen</button>
-          </div>`
-        :`<div style="display:flex;gap:6px">
-            <input type="text" class="field-input" id="api-key-input" placeholder="Plak je gratis API key" autocomplete="off" style="font-family:var(--mono);flex:1">
-            <button onclick="saveApiKey()" class="btn btn-primary" style="padding:0 14px;font-size:12px">Opslaan</button>
-          </div>
-          <div class="wp-hint">Gratis aan te vragen op <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener" style="color:var(--a)">alphavantage.co</a>. 25 aanvragen per dag in de gratis tier.</div>`}
     </div>
 
     <!-- PRIVACY -->
     <div class="wp-section" style="background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:var(--r6);padding:11px 12px">
-      <div style="font-size:10px;line-height:1.55;color:var(--n2)"><strong style="color:var(--n1)">Privacy:</strong> koersen worden opgehaald via Alpha Vantage. Bij elke refresh ziet Alpha Vantage je IP-adres en welke tickers je opvraagt, gekoppeld aan je API key. Koersen worden lokaal bewaard tot je manueel vernieuwt. De API key staat alleen in je browser — niet in de export.</div>
+      <div style="font-size:10px;line-height:1.55;color:var(--n2)"><strong style="color:var(--n1)">Privacy:</strong> je vermogen blijft volledig op dit toestel. De app maakt geen enkele netwerkverbinding voor koersen of wisselkoersen; alle bedragen zijn in euro en vul je zelf in.</div>
     </div>
   `;
 }
 
-// API key beheer — nooit loggen of in toasts tonen
-function saveApiKey(){
-  const inp=$('api-key-input');
-  const v=(inp?.value||'').trim();
-  if(!/^[A-Z0-9]{8,32}$/.test(v)){showToast('Ongeldige sleutel (alleen letters en cijfers, 8-32 tekens)',3000);return;}
-  if(!S.wealth)S.wealth={accounts:[],holdings:[],lastSync:null,apiKey:'',usdEurRate:null,usdEurUpdated:null};
-  S.wealth.apiKey=v;
-  save();
-  renderWealth();
-  showToast('✓ API key bewaard',1800);
-}
-function changeApiKey(){
-  if(!S.wealth)return;
-  S.wealth.apiKey='';
-  save();
-  renderWealth();
-}
-function clearApiKey(){
-  if(!confirm('API key wissen? Refresh van koersen werkt dan niet meer.'))return;
-  if(!S.wealth)return;
-  S.wealth.apiKey='';
-  save();
-  renderWealth();
-  showToast('✓ Wijgewist',1500);
-}
 
 // ═══ MEERJARENBEGROTING ════════════════════════════════════════════════════
 // Eenvoudig model: een event heeft een naam, jaar (of jaarbereik), en bedrag/jaar.
@@ -4446,7 +4385,7 @@ function openEventModal(eventId){
   const enabled=e.enabled!==false;
   const modal=$('m-new');
   $('m-new-body').innerHTML=`
-    <div style="text-align:center;padding:4px 0 16px"><div style="font-size:15px;font-weight:700;color:var(--n0)">${isEdit?'Gebeurtenis aanpassen':'Nieuwe gebeurtenis'}</div></div>
+    ${(()=>{const t=$('m-new-title');if(t)t.textContent=isEdit?'Gebeurtenis aanpassen':'Nieuwe gebeurtenis';return '';})()}
     <div style="display:flex;flex-direction:column;gap:14px">
       <div>
         <label class="wp-input-label">Naam</label>
@@ -4564,7 +4503,7 @@ function openAccountModal(accountId){
   const av=a.availability||'vrij';
   const modal=$('m-new');
   $('m-new-body').innerHTML=`
-    <div style="text-align:center;padding:4px 0 16px"><div style="font-size:15px;font-weight:700;color:var(--n0)">${isEdit?'Spaarrekening aanpassen':'Nieuwe spaarrekening'}</div></div>
+    ${(()=>{const t=$('m-new-title');if(t)t.textContent=isEdit?'Spaarrekening aanpassen':'Nieuwe spaarrekening';return '';})()}
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
@@ -4665,12 +4604,12 @@ function openAccountModal(accountId){
 
 function openHoldingModal(holdingId){
   const isEdit=!!holdingId;
-  const h=isEdit?(S.wealth.holdings||[]).find(x=>x.id===holdingId):{id:genId(),name:'',ticker:'',quantity:0,avgPrice:0,lastPrice:0,url:'',kind:'stock',availability:'belegd'};
+  const h=isEdit?(S.wealth.holdings||[]).find(x=>x.id===holdingId):{id:genId(),name:'',ticker:'',quantity:0,avgPrice:0,lastPrice:0,lastUpdate:null,url:'',kind:'stock',availability:'belegd'};
   if(isEdit&&!h)return;
   const kind=h.kind||'stock';
   const modal=$('m-new');
   $('m-new-body').innerHTML=`
-    <div style="text-align:center;padding:4px 0 16px"><div style="font-size:15px;font-weight:700;color:var(--n0)">${isEdit?'Belegging aanpassen':'Nieuwe belegging'}</div></div>
+    ${(()=>{const t=$('m-new-title');if(t)t.textContent=isEdit?'Belegging aanpassen':'Nieuwe belegging';return '';})()}
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
         <label class="wp-input-label">Type</label>
@@ -4688,16 +4627,8 @@ function openHoldingModal(holdingId){
       <div id="h-stock-fields" style="${kind==='fund'?'display:none':''};display:${kind==='fund'?'none':'flex'};flex-direction:column;gap:12px">
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Ticker</label>
-          <input type="text" class="field-input" id="h-ticker" value="${esc(h.ticker||'')}" placeholder="bv. AAPL, ABI.BR, EPA:AIR" autocomplete="off" style="font-family:var(--mono);text-transform:uppercase">
-          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Formaten: <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">AAPL</code> (US, USD), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ABI.BR</code> of <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">EBR:ABI</code> (Brussel, EUR), <code style="font-family:var(--mono);background:rgba(0,0,0,.05);padding:1px 4px;border-radius:3px">ASML.AS</code> (Amsterdam, EUR). De munt wordt automatisch bepaald.</div>
-        </div>
-        <div>
-          <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Munt</label>
-          <select class="field-input" id="h-currency" style="width:100%">
-            <option value="USD" ${(h.currency||'USD')==='USD'?'selected':''}>USD ($)</option>
-            <option value="EUR" ${h.currency==='EUR'?'selected':''}>EUR (€)</option>
-          </select>
-          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">De munt van de beurs waar het aandeel noteert. Je betaalt zelf altijd in euro.</div>
+          <input type="text" class="field-input" id="h-ticker" value="${esc(h.ticker||'')}" placeholder="optioneel, bv. IWDA" autocomplete="off" style="font-family:var(--mono);text-transform:uppercase">
+          <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">Enkel als label om de belegging te herkennen. Er wordt niets mee opgehaald.</div>
         </div>
 
         <!-- AANKOPEN: meerdere lots mogelijk -->
@@ -4714,8 +4645,9 @@ function openHoldingModal(holdingId){
           <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Per aankoop: het aantal aandelen dat je kocht en het totale EUR-bedrag dat de bank van je rekening haalde (inclusief beurstaks, fees en wisselkost). Koop je later bij? Klik "Aankoop bijtellen". Komma's mogen.</div>
         </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers ${h.lastPrice?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)">— '+fmt(h.lastPrice,2).replace('€','')+(h.currency==='EUR'?' €':' $')+'</span>':''}</label>
-        <div class="field-money" data-cur="${h.currency||'USD'}" style="margin:0" id="h-last-wrap"><input type="text" class="field-input" id="h-last" value="${inputDec(h.lastPrice)}" inputmode="decimal" placeholder="manueel of refresh" autocomplete="off"></div>
+        <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Huidige koers per stuk (€)${h.lastUpdate?'<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--n3)"> — ingevuld op '+new Date(h.lastUpdate).toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'})+'</span>':''}</label>
+        <div class="field-money" data-cur="EUR" style="margin:0" id="h-last-wrap"><input type="text" class="field-input" id="h-last" value="${inputDec(h.lastPrice)}" inputmode="decimal" placeholder="bv. 96,50" autocomplete="off"></div>
+        <div style="font-size:10px;color:var(--n3);margin-top:4px;line-height:1.4">In euro. Noteert het aandeel in een andere munt, reken dan zelf om. Open de link hieronder om de koers na te kijken.</div>
       </div>
       <div>
         <label style="font-size:10px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">URL naar live koers (optioneel)</label>
@@ -4779,12 +4711,8 @@ function openHoldingModal(holdingId){
         <div style="font-size:10px;color:var(--n3);margin-top:6px;line-height:1.4">Voor BE-pensioensparen typisch <strong>30%</strong> bij vroege opname (vóór 60) en <strong>8%</strong> bij normale opname op vrijgavedatum. Het netto-bedrag verschijnt overal waar je vermogen wordt getoond.</div>
       </div>
     </div>
-    <!-- Refresh + link knoppen: alleen bij Aandeel/ETF -->
+    <!-- Link naar koerspagina: alleen bij Aandeel/ETF -->
     <div id="h-stock-actions" style="display:${kind==='fund'?'none':'flex'};gap:8px;margin-top:14px">
-      <button id="h-refresh" style="flex:1;padding:10px;border:1px solid var(--l1);background:transparent;color:var(--n1);border-radius:var(--r6);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        <span id="h-refresh-label">Koers ophalen</span>
-      </button>
       <button id="h-link" style="flex:1;padding:10px;border:1px solid var(--l1);background:transparent;color:${h.url?'var(--n1)':'var(--n4)'};border-radius:var(--r6);font-size:11px;font-weight:600;cursor:${h.url?'pointer':'not-allowed'};display:flex;align-items:center;justify-content:center;gap:6px" ${h.url?'':'disabled'}>
         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
         Open link
@@ -4803,14 +4731,6 @@ function openHoldingModal(holdingId){
       window.open(safeUrl,'_blank','noopener,noreferrer');
     };
   }
-  // Synchroniseer muntsymbool op alle bedrag-velden met de gekozen currency
-  const syncCurrencySymbols=()=>{
-    const cur=$('h-currency').value||'USD';
-    ['h-avg-wrap','h-total-wrap','h-last-wrap'].forEach(id=>{
-      const el=$(id);if(el)el.setAttribute('data-cur',cur);
-    });
-  };
-  $('h-currency')&&$('h-currency').addEventListener('change',syncCurrencySymbols);
   // Kind-toggle: aandeel/etf ↔ fonds
   let currentKind=kind;
   modal.querySelectorAll('.ev-seg-btn[data-kind-toggle]').forEach(b=>{
@@ -4828,16 +4748,6 @@ function openHoldingModal(holdingId){
     const v=$('h-availability').value;
     $('h-purpose-wrap').style.display=v==='gereserveerd'?'block':'none';
     $('h-unblock-wrap').style.display=v==='geblokkeerd'?'block':'none';
-  });
-  // Bij ticker-wijziging: auto-detecteer munt en sync symbolen (alleen bij stock)
-  if($('h-ticker'))$('h-ticker').addEventListener('input',()=>{
-    const t=($('h-ticker').value||'').trim();
-    if(!t)return;
-    const detected=detectCurrency(t);
-    if($('h-currency').value!==detected){
-      $('h-currency').value=detected;
-      syncCurrencySymbols();
-    }
   });
   // === LOTS BEHEER === Meerdere aankopen mogelijk per holding.
   // Elke lot = {qty: aantal aandelen, costEur: totaal EUR betaald aan de bank}.
@@ -4927,7 +4837,6 @@ function openHoldingModal(holdingId){
     const isFund=currentKind==='fund';
     const ticker=isFund?'':($('h-ticker')?$('h-ticker').value||'':'').trim();
     if(!name){showToast('⚠ Naam is verplicht',2000);return;}
-    if(!isFund&&!ticker){showToast('⚠ Ticker is verplicht voor aandeel/ETF',2200);return;}
     // Lees lots uit DOM; filter lege rijen (qty=0 én cost=0)
     const rawLots=isFund?[]:readLotsFromDom().filter(l=>l.qty>0||l.costEur>0);
     if(!isFund&&rawLots.length===0){showToast('⚠ Voeg minstens één aankoop toe',2200);return;}
@@ -4949,11 +4858,11 @@ function openHoldingModal(holdingId){
       name,
       ticker:ticker.toUpperCase(),
       quantity:qty,
-      currency:isFund?'EUR':($('h-currency')?.value||'USD'),
       avgPrice:avg,
       totalCostEur,
       lots,
       lastPrice:isFund?0:(calc($('h-last')?.value)||parseDec($('h-last')?.value)),
+      lastUpdate:h.lastUpdate||null,
       manualValue:isFund?manualValue:0,
       url:isFund?'':safeExternalUrl(($('h-url')?.value||'').trim()),
       availability,
@@ -4963,9 +4872,10 @@ function openHoldingModal(holdingId){
       yearlyContribution,
       contributionUntilYear:contribUntil,
       earlyWithdrawalTax,
-      normalWithdrawalTax,
-      lastUpdate:h.lastUpdate||null
+      normalWithdrawalTax
     };
+    // Koers gewijzigd of voor het eerst ingevuld → datum bijhouden zodat verouderde koersen zichtbaar zijn
+    if(!isFund&&data.lastPrice>0&&(data.lastPrice!==(h.lastPrice||0)||!data.lastUpdate))data.lastUpdate=Date.now();
     if(!S.wealth.holdings)S.wealth.holdings=[];
     if(isEdit){
       const idx=S.wealth.holdings.findIndex(x=>x.id===h.id);
@@ -4977,30 +4887,6 @@ function openHoldingModal(holdingId){
     modal.classList.remove('open');
     renderWealth();
     showToast('✓ Opgeslagen',1500);
-  };
-  // Refresh-knop werkt voor zowel nieuwe als bestaande holdings (via Alpha Vantage)
-  $('h-refresh').onclick=async()=>{
-    const t=($('h-ticker').value||'').trim();
-    if(!t){showToast('Geef eerst een ticker in',2200);$('h-ticker').focus();return;}
-    if(!(S.wealth?.apiKey||'').trim()){showToast('Stel eerst je Alpha Vantage API key in',3000);return;}
-    const btn=$('h-refresh'),lbl=$('h-refresh-label');
-    btn.disabled=true;lbl.textContent='Bezig…';
-    try{
-      const r=await fetchAlphaVantagePrice(t);
-      // Detecteer munt uit ticker en sync de dropdown — Alpha Vantage geeft koers in lokale munt
-      const detected=detectCurrency(t);
-      $('h-currency').value=detected;
-      syncCurrencySymbols();
-      $('h-last').value=r.price;
-      const sym=detected==='EUR'?'€':'$';
-      lbl.textContent=`${sym}${r.price} (${r.date})`;
-      btn.style.color='var(--g)';
-      setTimeout(()=>{lbl.textContent='Koers ophalen';btn.style.color='';btn.disabled=false;},2800);
-    }catch(e){
-      lbl.textContent=e.message;
-      btn.style.color='var(--r)';
-      setTimeout(()=>{lbl.textContent='Koers ophalen';btn.style.color='';btn.disabled=false;},4000);
-    }
   };
   if(isEdit){
     $('h-delete').onclick=()=>{
@@ -5016,47 +4902,6 @@ function openHoldingModal(holdingId){
   modal.classList.add('open');
 }
 
-async function refreshAllPrices(){
-  const holdings=(S.wealth?.holdings||[]).filter(h=>h.ticker);
-  if(holdings.length===0)return;
-  if(!(S.wealth?.apiKey||'').trim()){showToast('Stel eerst je Alpha Vantage API key in',3000);return;}
-  let ok=0,fail=0,rateOk=false,rateLimit=false;
-  // Stel limiet expliciet — vermijd snel opgebruiken bij grote portefeuilles
-  const needsUsd=holdings.some(h=>(h.currency||'USD')==='USD');
-  const totalCalls=holdings.length+(needsUsd?1:0);
-  showToast(`Koersen ophalen (${totalCalls} calls)…`,2200);
-  // 1) Wisselkoers eerst, indien USD-holdings aanwezig
-  if(needsUsd){
-    try{
-      const r=await fetchUsdEurRate();
-      S.wealth.usdEurRate=r.rate;
-      S.wealth.usdEurUpdated=Date.now();
-      rateOk=true;
-    }catch(e){
-      if(e.message.includes('Rate limit'))rateLimit=true;
-    }
-  }
-  // 2) Per holding de koers + currency-detectie uit ticker
-  for(const h of holdings){
-    if(rateLimit)break;
-    try{
-      const r=await fetchAlphaVantagePrice(h.ticker);
-      h.lastPrice=r.price;
-      h.currency=detectCurrency(h.ticker);  // sync munt met wat Alpha Vantage levert
-      h.lastUpdate=Date.now();
-      ok++;
-    }catch(e){
-      fail++;
-      if(e.message.includes('Rate limit')){rateLimit=true;break;}
-    }
-  }
-  S.wealth.lastSync=Date.now();
-  save();
-  renderWealth();
-  if(rateLimit)showToast(`Alpha Vantage rate limit bereikt (25/dag). ${ok} opgehaald.`,4500);
-  else if(ok>0)showToast(`✓ ${ok} koers${ok!==1?'en':''} bijgewerkt${fail?`, ${fail} mislukt`:''}${rateOk?', wisselkoers ververst':''}`,3000);
-  else showToast(`Geen koersen opgehaald (${fail} mislukt)`,3500);
-}
 
 function updateAnalytics(){
   const now=new Date();
@@ -6430,7 +6275,7 @@ function updateYearSignals(y,data,budget,totalSpent,avg,monthsFilled,bestI,worst
       // Geen seizoenseffect — vertel het
       signals.push({type:'info',icon:'activity',
         title:'Geen sterk seizoenspatroon',
-        body:`Rustigste maand: <strong>${MONTHS[bestI]}</strong> (${fmtPos(Math.round(data[bestI]))}), drukste: <strong>${MONTHS[worstI]}</strong> (${fmtNeg(Math.round(data[worstI]))}). Redelijk gelijkmatig over het jaar.`});
+        body:`Rustigste maand: <strong>${MONTHS[bestI].toLowerCase()}</strong> (${fmtPos(Math.round(data[bestI]))}), drukste: <strong>${MONTHS[worstI].toLowerCase()}</strong> (${fmtNeg(Math.round(data[worstI]))}). Redelijk gelijkmatig over het jaar.`});
     }
   }
 
@@ -6531,6 +6376,13 @@ function renderFcSignals(){
   const getMonthName=(p)=>MONTHS_S[new Date().getMonth()].toLowerCase();
 
   if(!pace.isCurrentMonth){el.innerHTML='';return;}
+  // Te vroeg voor statistiek: op dag 1–2 of zonder één uitgave is elke σ-uitspraak ruis.
+  if(pace.dayOfMonth<3||spent<=0){
+    const early={title:'Nog te vroeg in de maand voor een prognose',
+      body:spent<=0?'Zodra je je eerste uitgave invoert, verschijnt hier een prognose op basis van je tempo en je historiek.':'Vanaf dag 3 is er genoeg tempo-informatie voor een betrouwbare prognose.'};
+    el.innerHTML=dismissedAlerts.has('fc:'+early.title)?'':alertHtml(early,'info','activity','fc:',renderFcSignals);
+    return;
+  }
 
   // ── 0a. KANS OP OVERSCHRIJDING (statistisch onderbouwd) ─────────────────
   if(fc&&fc.pOverBudget!=null&&budget>0&&pace.pctElapsed>0.10){
@@ -6566,7 +6418,7 @@ function renderFcSignals(){
   }
 
   // ── 1. PROGNOSE VS HISTORISCH PATROON (niet vs budget — dat staat al in de balk) ──
-  if(fc&&histStats.n>=3){
+  if(fc&&histStats.n>=3&&pace.pctElapsed>0.10){
     const z=zScore(fc.point,histStats.mean,histStats.std);
     if(z>1.4){
       // Zoek welke categorie bovengemiddeld bijdraagt
@@ -6924,7 +6776,7 @@ function renderStatsSection(){
   // ── 1. Z-score ─────────────────────────────────────────────────────────
   let zVal=null,zLabel='Afwijking vs. gemiddelde',zBasis='';
   if(stats.n>=3){
-    if(isCurrentMonth&&fc&&fc.point>0){
+    if(isCurrentMonth&&fc&&fc.point>0&&pace.pctElapsed>=0.10&&curSpent>0){
       zVal=zScore(fc.point,stats.mean,stats.std);
       zLabel='Verwachte afwijking';
       zBasis='op basis van prognose '+fmt(fc.point);
@@ -7059,7 +6911,7 @@ function renderStatsSection(){
     <div class="fc-stat-grid">
       ${statCard('Gem. p/maand', stats.n>0?fmt(Math.round(stats.mean)):'—', 'over '+stats.n+' maanden', 'var(--n3)')}
       ${(()=>{
-        if(!fc||fc.pOverBudget===null)return statCard('Budget succes', successRate!==null?successRate+'%':'—', srText, srColor);
+        if(!fc||fc.pOverBudget===null||pace.pctElapsed<0.10||curSpent<=0)return statCard('Budget succes', successRate!==null?successRate+'%':'—', srText, srColor);
         const pIn=Math.round((1-fc.pOverBudget)*100);
         const c=pIn>=70?'var(--g)':pIn>=40?'var(--w)':'var(--r)';
         const sub=fc.uncertainty>0?'± '+fmt(fc.uncertainty)+' onzekerheid':'op huidig tempo';
@@ -7515,9 +7367,9 @@ function buildUitgegevenDetail(m){
       </div>
       ${pacePct!==null?`<div style="position:absolute;top:-3px;bottom:-3px;left:${pacePct}%;width:2px;background:rgba(0,0,0,.25);border-radius:1px;transform:translateX(-50%)"></div>`:''}
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--n3)">
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--n3);position:relative">
       <span>€0</span>
-      ${pacePct!==null?`<span style="position:absolute;left:${pacePct}%;transform:translateX(-50%);font-weight:700;color:rgba(0,0,0,.35)">nu</span>`:''}
+      ${pacePct!==null&&pacePct>12&&pacePct<88?`<span style="position:absolute;left:${pacePct}%;transform:translateX(-50%);font-weight:700;color:rgba(0,0,0,.35)">nu</span>`:''}
       <span>${fmt(budget)}</span>
     </div>`:''}
     <!-- Stat pills -->
@@ -7814,6 +7666,8 @@ function buildHealthDetail(m){
   else if(savePct<5){components.push({lbl:'Laag spaartarief',val:0,sub:savePct+'% gespaard (doel: 20%)',color:'var(--r)'});}
 
   const finalScore=Math.max(0,Math.min(100,scoreBase));
+  const scoreCapped=scoreBase>100;
+  const noSpendYet=isCurMonth(m)&&spent<=0;
   const scoreColor=finalScore>=80?'var(--g)':finalScore>=60?'var(--w)':'var(--r)';
   const scoreText=finalScore>=80?'Uitstekend':finalScore>=60?'Goed bezig':finalScore>=40?'Let op':'Actie nodig';
 
@@ -7920,15 +7774,15 @@ function buildHealthDetail(m){
         <circle cx="48" cy="48" r="40" stroke="${scoreColor}" stroke-width="8"
           stroke-linecap="round"
           stroke-dasharray="${2*Math.PI*40}"
-          stroke-dashoffset="${2*Math.PI*40*(1-finalScore/100)}"
+          stroke-dashoffset="${noSpendYet?2*Math.PI*40:2*Math.PI*40*(1-finalScore/100)}"
           style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)"/>
       </svg>
       <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
-        <div style="font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-1px;line-height:1;color:${scoreColor}">${finalScore}</div>
+        <div style="font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-1px;line-height:1;color:${noSpendYet?'var(--n3)':scoreColor}">${noSpendYet?'—':finalScore}</div>
         <div style="font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--n3)">/100</div>
       </div>
     </div>
-    <div style="font-size:14px;font-weight:700;color:${scoreColor}">${scoreText}</div>
+    <div style="font-size:14px;font-weight:700;color:${noSpendYet?'var(--n3)':scoreColor}">${noSpendYet?'Nog geen uitgaven':scoreText}</div>
   </div>
 
   <!-- SCORE OPBOUW -->
@@ -7950,9 +7804,10 @@ function buildHealthDetail(m){
       <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${c.color};flex-shrink:0">${c.val>0?'+':''}${c.val}</div>
     </div>`).join('')}
     <div class="dm-row" style="border-top:2px solid var(--l1);margin-top:4px;padding-top:10px">
-      <div class="dm-row-name" style="font-weight:700;color:var(--n0)">Eindscore</div>
+      <div class="dm-row-name" style="font-weight:700;color:var(--n0)">Eindscore${scoreCapped?'<div style="font-size:9px;font-weight:500;color:var(--n3);margin-top:1px">berekend '+scoreBase+', afgetopt op 100</div>':''}</div>
       <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:${scoreColor}">${finalScore}/100</div>
     </div>
+    ${noSpendYet?'<div style="font-size:10px;color:var(--n3);line-height:1.5;margin-top:8px">Nog geen uitgaven deze maand. De score start op 100 en beweegt pas mee zodra je iets invoert.</div>':''}
   </div>
 
   <!-- INZICHTEN -->
@@ -7984,8 +7839,8 @@ function bindGroups(){$$('.group-head').forEach(h=>h.addEventListener('click',()
 function calcFixed(){let total=0;wData.fixedGroups.forEach(g=>{let gt=0;g.items.forEach(i=>{if(!i.enabled)return;const a=i.amount||0;if(i.period==='m')gt+=a;else if(i.period==='q')gt+=a/3;else gt+=a/12});const el=document.querySelector(`[data-gt="${g.id}"]`);if(el)el.textContent=fmt(gt)+'/mnd';total+=gt});if($('wf-total'))$('wf-total').textContent=fmt(total);if($('wf-free')){const f=getWizIncome()-total;$('wf-free').textContent=fmt(f);$('wf-free').style.color=f>=0?'var(--emerald-400)':'var(--rose-400)'}}
 function getWizIncome(){return wData.income.monthly+(wData.income.maaltijdcheques||0)+((wData.income.endYear?.amount||0)/12)+((wData.income.vacation?.amount||0)/12)+((wData.income.refund?.amount||0)/12)+(wData.income.otherMonthly||0)+((wData.income.otherYearly?.amount||0)/12)}
 function getWizFixed(){let t=0;wData.fixedGroups.forEach(g=>g.items.forEach(i=>{if(!i.enabled)return;if(i.period==='m')t+=i.amount||0;else if(i.period==='q')t+=(i.amount||0)/3;else t+=(i.amount||0)/12}));return t}
-function openNewCatModal(type){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nc-name" placeholder="Bijv. Hobby's"></div><div class="field"><div class="field-label">Icoon</div><div class="icon-grid" id="nc-icons">${Object.keys(IC).slice(0,21).map(n=>`<button class="icon-opt" data-ic="${n}">${ic(n)}</button>`).join('')}</div></div><div class="field"><div class="field-label">Kleur</div><div class="color-dots">${COLORS.map(c=>`<button class="color-dot" data-col="${c.n}" style="background:${c.c}"></button>`).join('')}</div></div>${type==='monthly'?`<div class="field"><div class="field-label">Type</div><div class="cost-type-select"><button class="cost-type-opt semi on" data-ct="semi"><span class="cost-type-pill semi" style="pointer-events:none">Semi-vast</span></button><button class="cost-type-opt variable" data-ct="variable"><span class="cost-type-pill variable" style="pointer-events:none">Variabel</span></button></div></div>`:''}<div class="field"><div class="field-label">${type==='reserve'?'Jaarbedrag':'Maandbudget'}</div><div class="field-money"><input type="text" class="field-input" id="nc-budget" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nc-save">Toevoegen</button>`;enableCalc($('nc-budget'));let sIcon='folder',sColor='emerald',sCostType='semi';$$('#nc-icons .icon-opt').forEach(o=>o.addEventListener('click',()=>{$$('#nc-icons .icon-opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');sIcon=o.dataset.ic}));$$('.color-dot').forEach(d=>d.addEventListener('click',()=>{$$('.color-dot').forEach(x=>x.classList.remove('on'));d.classList.add('on');sColor=d.dataset.col}));$$('.cost-type-opt').forEach(b=>b.addEventListener('click',()=>{$$('.cost-type-opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');sCostType=b.dataset.ct}));$('nc-save').onclick=()=>{const name=$('nc-name').value.trim();const budget=calc($('nc-budget').value)||parseDec($('nc-budget').value);if(name){wData.categories.push({id:genId(),name,icon:sIcon,color:sColor,budget,costType:sCostType});renderWizard(3);modal.classList.remove('open')}};modal.classList.add('open')}
-function openAddFixedItemModal(){const modal=$('m-new');$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nf-name" placeholder="Bijv. Internet"></div><div class="field"><div class="field-label">Categorie</div><select class="field-input" id="nf-cat">${wData.fixedGroups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></div><div class="field"><div class="field-label">Bedrag</div><div class="field-money"><input type="text" class="field-input" id="nf-amount" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nf-save">Toevoegen</button>`;enableCalc($('nf-amount'));$('nf-save').onclick=()=>{const name=$('nf-name').value.trim();if(name){const g=wData.fixedGroups.find(x=>x.id===$('nf-cat').value);if(g){g.items.push({id:genId(),name,amount:calc($('nf-amount').value)||parseDec($('nf-amount').value),period:'m',enabled:false});renderWizard(2);modal.classList.remove('open')}}};modal.classList.add('open')}
+function openNewCatModal(type){const modal=$('m-new');{const t=$('m-new-title');if(t)t.textContent='Nieuwe categorie';}$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nc-name" placeholder="Bijv. Hobby's"></div><div class="field"><div class="field-label">Icoon</div><div class="icon-grid" id="nc-icons">${Object.keys(IC).slice(0,21).map(n=>`<button class="icon-opt" data-ic="${n}">${ic(n)}</button>`).join('')}</div></div><div class="field"><div class="field-label">Kleur</div><div class="color-dots">${COLORS.map(c=>`<button class="color-dot" data-col="${c.n}" style="background:${c.c}"></button>`).join('')}</div></div>${type==='monthly'?`<div class="field"><div class="field-label">Type</div><div class="cost-type-select"><button class="cost-type-opt semi on" data-ct="semi"><span class="cost-type-pill semi" style="pointer-events:none">Semi-vast</span></button><button class="cost-type-opt variable" data-ct="variable"><span class="cost-type-pill variable" style="pointer-events:none">Variabel</span></button></div></div>`:''}<div class="field"><div class="field-label">${type==='reserve'?'Jaarbedrag':'Maandbudget'}</div><div class="field-money"><input type="text" class="field-input" id="nc-budget" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nc-save">Toevoegen</button>`;enableCalc($('nc-budget'));let sIcon='folder',sColor='emerald',sCostType='semi';$$('#nc-icons .icon-opt').forEach(o=>o.addEventListener('click',()=>{$$('#nc-icons .icon-opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');sIcon=o.dataset.ic}));$$('.color-dot').forEach(d=>d.addEventListener('click',()=>{$$('.color-dot').forEach(x=>x.classList.remove('on'));d.classList.add('on');sColor=d.dataset.col}));$$('.cost-type-opt').forEach(b=>b.addEventListener('click',()=>{$$('.cost-type-opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');sCostType=b.dataset.ct}));$('nc-save').onclick=()=>{const name=$('nc-name').value.trim();const budget=calc($('nc-budget').value)||parseDec($('nc-budget').value);if(name){wData.categories.push({id:genId(),name,icon:sIcon,color:sColor,budget,costType:sCostType});renderWizard(3);modal.classList.remove('open')}};modal.classList.add('open')}
+function openAddFixedItemModal(){const modal=$('m-new');{const t=$('m-new-title');if(t)t.textContent='Vaste kost toevoegen';};$('m-new-body').innerHTML=`<div class="field"><div class="field-label">Naam</div><input type="text" class="field-input" id="nf-name" placeholder="Bijv. Internet"></div><div class="field"><div class="field-label">Categorie</div><select class="field-input" id="nf-cat">${wData.fixedGroups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></div><div class="field"><div class="field-label">Bedrag</div><div class="field-money"><input type="text" class="field-input" id="nf-amount" placeholder="0" inputmode="decimal"></div></div><button class="btn btn-primary btn-block mt-4" id="nf-save">Toevoegen</button>`;enableCalc($('nf-amount'));$('nf-save').onclick=()=>{const name=$('nf-name').value.trim();if(name){const g=wData.fixedGroups.find(x=>x.id===$('nf-cat').value);if(g){g.items.push({id:genId(),name,amount:calc($('nf-amount').value)||parseDec($('nf-amount').value),period:'m',enabled:false});renderWizard(2);modal.classList.remove('open')}}};modal.classList.add('open')}
 function renderCatSetup(c){
   const clr=col(c.color);
   const isSemi=c.costType==='semi';
@@ -8055,7 +7910,7 @@ case 3:{
   </div>`;
   body.innerHTML=`<h1 class="wizard-title">Maandbudgetten</h1><p class="wizard-sub">Wijs een maandlimiet toe aan elke categorie. Wat je niet toewijst, blijft over als buffer.</p><div id="cats-list">${emptyHTML}${semiHTML}${varHTML}</div><button class="add-row" id="add-cat">${ic('plus')} Categorie toevoegen</button>
   <div class="summary" style="${hasCats?'':'opacity:.4;pointer-events:none'}">
-    <div class="summary-row"><span class="summary-label">Beschikbaar na vaste kosten en reserveringen</span><span class="summary-value">${fmt(avail)}</span></div>
+    <div class="summary-row"><span class="summary-label">Beschikbaar na vaste kosten</span><span class="summary-value">${fmt(avail)}</span></div>
     <div class="summary-row"><span class="summary-label">Toegewezen aan categorieën</span><span class="summary-value" id="wc-total">€0</span></div>
     <div class="summary-row total"><span class="summary-label">Overblijft als buffer / spaargeld</span><span class="summary-value" id="wc-buffer">€0</span></div>
   </div>`;
@@ -8148,7 +8003,7 @@ function csvDownload(filename,rows){
 }
 
 function exportXLSXDetail(){
-  const txs=(S.transactions||[]).sort((a,b)=>b.ts-a.ts);
+  const txs=(S.transactions||[]).slice().sort((a,b)=>b.ts-a.ts);
   if(!txs.length){showToast('Geen transacties om te exporteren');return;}
   const cats=S.categories;
   function fmtDate(ts){
@@ -8203,13 +8058,11 @@ function exportXLSX(){
   showToast('✓ CSV gedownload');
 }
 function exportBackup(){
-  // API key wordt uit de export geweerd voor veiligheid
   const safe=JSON.parse(JSON.stringify(S));
-  if(safe.wealth)safe.wealth.apiKey='';
   const blob=new Blob([JSON.stringify(safe,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`buddy-budget-backup-${new Date().toISOString().split('T')[0]}.json`;a.click()
 }
-async function importJSON(file){try{if(file.size>10*1024*1024){showToast('⚠ Bestand te groot (max 10MB)',3000);return;}const text=await file.text();const data=JSON.parse(text);if(!data||typeof data!=='object'||!Array.isArray(data.categories)){showToast('⚠ Ongeldig backup-bestand',3000);return;}if(data.categories.length>1000||data.transactions&&data.transactions.length>100000){showToast('⚠ Backup bevat verdacht veel items',3500);return;}if(!confirm('Huidige data overschrijven met deze backup?'))return;const oldKey=S.wealth?.apiKey||'';Object.assign(S,data);if(!S.monthlyData||typeof S.monthlyData!=='object')S.monthlyData={};if(!Array.isArray(S.transactions))S.transactions=[];if(S.wealth&&!S.wealth.apiKey&&oldKey)S.wealth.apiKey=oldKey;save();location.reload();}catch(e){showToast('⚠ Fout bij importeren: '+e.message,4000);}}
+async function importJSON(file){try{if(file.size>10*1024*1024){showToast('⚠ Bestand te groot (max 10MB)',3000);return;}const text=await file.text();const data=JSON.parse(text);if(!data||typeof data!=='object'||!Array.isArray(data.categories)){showToast('⚠ Ongeldig backup-bestand',3000);return;}if(data.categories.length>1000||data.transactions&&data.transactions.length>100000){showToast('⚠ Backup bevat verdacht veel items',3500);return;}if(!confirm('Huidige data overschrijven met deze backup?'))return;Object.assign(S,data);if(!S.monthlyData||typeof S.monthlyData!=='object')S.monthlyData={};if(!Array.isArray(S.transactions))S.transactions=[];save();location.reload();}catch(e){showToast('⚠ Fout bij importeren: '+e.message,4000);}}
 
 
 // === INIT ===
@@ -8288,7 +8141,9 @@ $('d-del-month').onclick=()=>{
     'Dit verwijdert alle uitgaven van '+mLabel+' ('+fmt(totaal)+' over '+cats.filter(c=>getCatSpent(c.id,mKey)>0).length+' categorieën). Dit kan niet ongedaan worden.',
     'Maand wissen',
     ()=>{
+      // Beide representaties samen wissen, anders tonen detail en CSV de uitgaven nog.
       delete S.monthlyData[mKey];
+      S.transactions=(S.transactions||[]).filter(t=>t.month!==mKey);
       save();
       updateDash();
       showToast(mLabel+' gewist');
