@@ -629,6 +629,10 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dm-row-val{font-family:var(--mono);font-size:13px;font-weight:700}
 /* Schakelaar "vat bijhouden" per vaste kost */
 .vat-toggle{width:32px;height:18px;flex-shrink:0;border-radius:100px;border:1px solid var(--l1);background:var(--s2);cursor:pointer;padding:0;position:relative;transition:background .15s,border-color .15s}
+/* Aanraakvlak van 44px zonder het pilletje groter te maken */
+.vat-toggle::after{content:'';position:absolute;inset:-13px -8px}
+.fp-del{background:none;border:none;color:var(--n3);cursor:pointer;padding:0;display:flex;flex-shrink:0;position:relative}
+.fp-del::after{content:'';position:absolute;inset:-14px -10px}
 .vat-toggle span{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--n3);transition:transform .15s,background .15s}
 .vat-toggle.on{background:var(--a-dim);border-color:var(--a)}
 .vat-toggle.on span{transform:translateX(14px);background:var(--a)}
@@ -1323,7 +1327,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.061</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.062</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -3030,10 +3034,13 @@ function renderQuickEntryFixed(m){
           <div style="width:26px;height:26px;border-radius:var(--r4);background:${clr.bg};color:${clr.c};display:flex;align-items:center;justify-content:center;flex-shrink:0">${ic(group.icon||'folder')}</div>
           <div style="flex:1;min-width:0;overflow:hidden">
             <div style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">${esc(item.name)}</div>
-            <div style="font-size:11.5px;color:var(--n3);line-height:1.2;margin-top:1px">${fmt(pot.used)} van ${fmt(pot.capacity)} · ${esc(pot.win.label)}</div>
-            <div style="height:3px;border-radius:2px;background:var(--s2);margin-top:4px;overflow:hidden"><div style="height:100%;width:${Math.min(100,Math.round(pot.pct*100))}%;background:${barC};border-radius:2px"></div></div>
+            <div id="qfs-${item.id}" style="font-size:11.5px;color:var(--n3);line-height:1.2;margin-top:1px">${fmt(pot.used)} van ${fmt(pot.capacity)} · ${esc(pot.win.label)}</div>
+            <div style="position:relative;height:4px;border-radius:2px;background:var(--s2);margin-top:5px;overflow:hidden">
+              <div style="position:absolute;inset:0 auto 0 0;width:${Math.min(100,Math.round(pot.pct*100))}%;background:${barC};border-radius:2px"></div>
+              <div id="qfb-${item.id}" style="position:absolute;inset:0 auto 0 ${Math.min(100,Math.round(pot.pct*100))}%;width:0;background:var(--a);border-radius:2px;transition:width .18s ease"></div>
+            </div>
           </div>
-          <input type="text" class="qf-amount-input qe-amount-input" id="qfa-${item.id}" data-qfid="${item.id}" placeholder="0" inputmode="decimal" autocomplete="off">
+          <input type="text" class="qf-amount-input qe-amount-input" id="qfa-${item.id}" data-qfid="${item.id}" data-cap="${pot.capacity}" data-used="${pot.used}" placeholder="0" inputmode="decimal" autocomplete="off">
         </div>
         <div class="qe-row-expand" id="qfe-${item.id}">
           <input type="text" class="qe-detail-input" id="qfd-${item.id}" placeholder="Omschrijving (optioneel)" autocomplete="off" maxlength="60">
@@ -3047,15 +3054,29 @@ function renderQuickEntryFixed(m){
     enableCalc(inp);
     inp.addEventListener('input',()=>{
       const v=calc(inp.value)||parseDec(inp.value);
-      const ex=document.getElementById('qfe-'+inp.dataset.qfid);
+      const id=inp.dataset.qfid;
+      const ex=document.getElementById('qfe-'+id);
       if(ex){ex.classList.toggle('open',v!==0);inp.classList.toggle('has-value',v!==0);}
+      // Het vat vult mee terwijl je typt: je ziet meteen wat deze betaling ermee doet.
+      const cap=parseFloat(inp.dataset.cap)||0,used=parseFloat(inp.dataset.used)||0;
+      const sub=document.getElementById('qfs-'+id),grow=document.getElementById('qfb-'+id);
+      const nieuw=used+v;
+      if(grow)grow.style.width=(v>0&&cap>0?Math.min(100-Math.min(100,used/cap*100),(v/cap*100)):0)+'%';
+      if(sub){
+        if(v>0&&cap>0){
+          const over=nieuw>cap;
+          sub.innerHTML=`wordt <strong style="color:${over?'var(--r)':'var(--n1)'}">${fmt(nieuw)}</strong> van ${fmt(cap)}${over?` · <span style="color:var(--r)">${fmt(nieuw-cap)} te veel</span>`:''}`;
+        } else {
+          sub.textContent=fmt(used)+' van '+fmt(cap)+' · '+(getFixedPot(id,m)?.win.label||'');
+        }
+      }
     });
     inp.addEventListener('focus',()=>{if(inp.value==='0')inp.value='';});
   });
   const btn=$('qf-save');
   if(btn)btn.onclick=()=>{
     if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
-    let added=0;
+    let added=0,laatste=null;
     $$('.qf-amount-input').forEach(inp=>{
       const fixedId=inp.dataset.qfid;
       const add=calc(inp.value)||parseDec(inp.value);
@@ -3063,13 +3084,30 @@ function renderQuickEntryFixed(m){
       const d=document.getElementById('qfd-'+fixedId);
       const f=getFixedItem(fixedId);
       // Omschrijving is optioneel: bij een vaste kost is de naam zelf al de omschrijving.
-      addFixedPayment(fixedId,m,add,(d?.value||'').trim()||f?.item.name||'');
-      added+=add;
+      // Lege omschrijving blijft leeg: de naam van de kost staat er al boven.
+      addFixedPayment(fixedId,m,add,(d?.value||'').trim());
+      added+=add;laatste=fixedId;
     });
     if(added<=0)return;
     $('m-add').classList.remove('open');
     viewMonth=new Date(qeMonth);updateDash();
-    showToast('✓ '+fmt(added)+' afgeboekt op vaste kosten');
+    // Het dashboard verandert bewust niet, dus toon het gevulde vat: anders lijkt er niets gebeurd.
+    const pot=laatste?getFixedPot(laatste,m):null;
+    if(pot)showToast(pot.over
+      ?`${pot.item.name}: ${fmt(-pot.left)} over de voorziening`
+      :`${pot.item.name}: ${fmt(pot.used)} van ${fmt(pot.capacity)} · nog ${fmt(pot.left)}`,3200);
+    else showToast('✓ '+fmt(added)+' afgeboekt',2600);
+    setTimeout(()=>{
+      openMetricDetail('vast');
+      if(!laatste)return;
+      // Naar het vat scrollen dat je zonet vulde: anders open je bovenaan en zie je het niet.
+      requestAnimationFrame(()=>{
+        const el=document.getElementById('vat-'+laatste);
+        if(!el)return;
+        el.scrollIntoView({block:'center',behavior:'smooth'});
+        el.animate([{background:'var(--a-dim)'},{background:'transparent'}],{duration:1400,easing:'ease-out'});
+      });
+    },260);
   };
 }
 
@@ -7690,7 +7728,7 @@ function buildVastDetail(){
     const barC=pot.over?'var(--r)':pot.pct>=0.9?'var(--w)':'var(--g)';
     const accruedPct=pot.capacity>0?Math.min(100,pot.accrued/pot.capacity*100):0;
     const usedPct=pot.capacity>0?Math.min(100,pot.pct*100):0;
-    return`<div style="padding:9px 0;border-bottom:1px solid var(--l0)">
+    return`<div id="vat-${item.id}" style="padding:9px 0;border-bottom:1px solid var(--l0);scroll-margin-top:12px">
       <div style="display:flex;align-items:baseline;gap:10px">
         <div class="dm-row-name" style="font-size:12.5px;flex:1;min-width:0">${esc(item.name)}</div>
         <div style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:${pot.used>0?barC:'var(--n3)'};flex-shrink:0">${fmt(pot.used)} <span style="font-weight:500;color:var(--n3)">/ ${fmt(pot.capacity)}</span></div>
@@ -7701,15 +7739,16 @@ function buildVastDetail(){
         ${pot.capacity>0&&pot.win.months>1?`<div title="opzij gezet tot nu" style="position:absolute;top:-2px;bottom:-2px;left:${accruedPct}%;width:2px;background:rgba(0,0,0,.3);border-radius:1px;transform:translateX(-50%)"></div>`:''}
       </div>
       <div style="display:flex;justify-content:space-between;gap:10px;font-size:10.5px;color:var(--n3)">
-        <span>${periodLbl(item.period)} · ${esc(pot.win.label)}${item.track?'':' · vat uit, maar er staat nog een betaling op'}</span>
-        <span>${pot.over?`<span style="color:var(--r);font-weight:700">${fmt(-pot.left)} over de voorziening</span>`:`${fmt(pot.left)} nog voorzien`}</span>
+        <span>${periodLbl(item.period)} · ${esc(pot.win.label)}</span>
+        <span style="flex-shrink:0">${pot.over?`<span style="color:var(--r);font-weight:700">${fmt(-pot.left)} over de voorziening</span>`:`${fmt(pot.left)} nog voorzien`}</span>
       </div>
+      ${item.track?'':'<div style="font-size:10px;color:var(--n3);margin-top:3px;font-style:italic">Vat staat uit — blijft zichtbaar zolang er een betaling op staat.</div>'}
       ${pot.payments.length?`<div style="margin-top:7px;display:flex;flex-direction:column;gap:4px">
         ${pot.payments.map(pay=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--n2)">
-          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pay.detail&&pay.detail!==item.name?esc(pay.detail):'<span style="color:var(--n3)">betaling</span>'}</span>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pay.detail&&pay.detail!==item.name?esc(pay.detail):''}</span>
           <span style="font-family:var(--mono);color:var(--n3);flex-shrink:0">${MONTHS_S[parseInt(pay.month.slice(5,7))-1].toLowerCase()}</span>
           <span style="font-family:var(--mono);font-weight:700;color:var(--n1);flex-shrink:0">${fmt(pay.amount)}</span>
-          <button onclick="removeFixedPayment('${pay.id}')" aria-label="Betaling verwijderen" style="background:none;border:none;color:var(--n3);cursor:pointer;padding:2px;display:flex;flex-shrink:0">
+          <button onclick="removeFixedPayment('${pay.id}')" aria-label="Betaling verwijderen" class="fp-del">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>`).join('')}
