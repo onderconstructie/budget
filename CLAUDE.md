@@ -18,6 +18,7 @@ Dit is een privé-budgetapp. **Vóór elke commit, elk document, elke screenshot
 - Wijzigingen aan het datamodel moeten achterwaarts compatibel zijn met bestaande opgeslagen data; migreer in `hydrateState()` en bewaak dat een migratie maar één keer loopt (schema-vlag).
 - De versleutelde opslag gebruikt blob-formaat v2 (header met iteratiegetal); oude blobs blijven leesbaar. Verander het formaat nooit zonder migratiepad en test.
 - `S.transactions` en `S.monthlyData` zijn twee representaties van dezelfde uitgaven en moeten samen gewijzigd worden.
+- `S.fixedPayments` staat daar los van: betalingen afgeboekt op een vaste kost. Ze vullen het "vat" van die kost over zijn eigen periode (maand, kwartaal of kalenderjaar) en mogen nooit meetellen in `getMonthSpent()` of in de maandbudgetten — dat geld is al voorzien via de vaste kosten. Bewust één enkele lijst zonder maandtotalen-spiegel.
 
 ## Conventies
 

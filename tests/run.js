@@ -56,6 +56,49 @@ test('score: geen score zonder data, wel voor afgesloten maand, delen tellen op'
   eq(r.curReady, false, 'lopende maand zonder uitgaven'); eq(r.pastReady, true);
   eq(r.sum, r.score); eq(r.maxSum, 100); ok(r.score >= 0 && r.score <= 100);
 });
+test('vaten: betaling op een vaste kost vult het vat en raakt de maandbudgetten niet', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const m = mkd(new Date());
+    const voor = { spent: getMonthSpent(m), budget: getMonthBudget(), saved: getSaved(m) };
+    const pot0 = getFixedPot('auto_verz', m);
+    addFixedPayment('auto_verz', m, 300, 'Restant');
+    const pot1 = getFixedPot('auto_verz', m);
+    const na = { spent: getMonthSpent(m), budget: getMonthBudget(), saved: getSaved(m) };
+    return { voor, na, gebruikt0: pot0.used, gebruikt1: pot1.used, capaciteit: pot1.capacity, over: pot1.over, venster: pot1.win.label };
+  });
+  eq(r.voor, r.na, 'maandcijfers mogen niet wijzigen');
+  eq(r.gebruikt1 - r.gebruikt0, 300, 'vat moet met 300 vullen');
+  eq(r.capaciteit, 540, 'jaarvat = het jaarbedrag van de vaste kost');
+  eq(r.venster, String(new Date().getFullYear()), 'jaarvat loopt over het kalenderjaar');
+  ok(r.over === true, '300 + 300 > 540 moet als overschrijding gelden');
+});
+test('vaten: venster volgt de periode (maand, kwartaal, jaar)', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const y = new Date().getFullYear();
+    const w = p => fixedPotWindow(p, y + '-05');
+    const kwartaal = getFixedPot('water', y + '-05');
+    const buiten = getFixedPot('water', y + '-11');   // ander kwartaal: eigen vat
+    return {
+      jaar: w('y'), kw: w('q'), maand: w('m'),
+      kwGebruikt: kwartaal.used, buitenGebruikt: buiten.used,
+    };
+  });
+  eq(r.jaar.from.slice(5), '01'); eq(r.jaar.to.slice(5), '12'); eq(r.jaar.months, 12);
+  eq(r.kw.from.slice(5), '04'); eq(r.kw.to.slice(5), '06'); eq(r.kw.months, 3);
+  eq(r.maand.from, r.maand.to); eq(r.maand.months, 1);
+  ok(r.kwGebruikt !== r.buitenGebruikt || r.kwGebruikt === 0, 'kwartaalvaten staan los van elkaar');
+});
+test('vaten: verwijderen leegt het vat weer', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const m = mkd(new Date());
+    addFixedPayment('gas', m, 75, 'Test');
+    const na = getFixedPot('gas', m).used;
+    const id = S.fixedPayments.find(p => p.fixedId === 'gas').id;
+    deleteFixedPayment(id);
+    return { na, terug: getFixedPot('gas', m).used };
+  });
+  eq(r.na, 75); eq(r.terug, 0);
+});
 test('prognose: te vroeg in de maand → één rustige melding, geen σ-signalen', async ({ page }) => {
   await page.click('.nav-btn[data-s=analytics]'); await page.click('.an-tab[data-tab=prognose]');
   const txt = await page.evaluate(() => document.getElementById('fc-signals').textContent);

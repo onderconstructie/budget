@@ -1318,7 +1318,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.059</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.060</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -1457,7 +1457,7 @@ async function decryptVault(b64,passphrase){
   catch(e){return dec(salt,iv,ct,VAULT_ITER_LEGACY);}
 }
 let _vaultSalt=null;
-let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[]},plan:{events:[],horizon:15,returnRate:5,inflation:2,volatility:15},alertState:{dismissed:{},lastActivity:0},init:false};
+let S={income:{monthly:0,maaltijdcheques:0,endYear:{amount:0,month:11},vacation:{amount:0,month:4},refund:{amount:0,month:0},otherMonthly:0,otherYearly:{amount:0,month:0},oneTime:{amount:0,month:new Date().getMonth()}},fixedGroups:[],transactions:[],fixedPayments:[],categories:[],monthlyData:{},reserveBalances:{},savingsTarget:20,wealth:{accounts:[],holdings:[]},plan:{events:[],horizon:15,returnRate:5,inflation:2,volatility:15},alertState:{dismissed:{},lastActivity:0},init:false};
 let charts={},wStep=1,wData={},viewMonth=new Date();
 const $=id=>document.getElementById(id),$$=sel=>document.querySelectorAll(sel),genId=()=>Math.random().toString(36).substr(2,9);
 
@@ -1625,6 +1625,7 @@ function save(){
 function hydrateState(p){
   S={...S,...p};
   if(!S.monthlyData)S.monthlyData={};
+  if(!Array.isArray(S.fixedPayments))S.fixedPayments=[];  // betalingen afgeboekt op een vaste kost
   if(!S.wealth)S.wealth={accounts:[],holdings:[]};
   if(!Array.isArray(S.wealth.accounts))S.wealth.accounts=[];
   if(!Array.isArray(S.wealth.holdings))S.wealth.holdings=[];
@@ -1734,6 +1735,69 @@ function getFixedCosts(mk){
   if(snap!=null)return snap;
   // Geen snapshot: val terug op live (maand zonder data of vóór feature)
   return _calcFixedCosts(S.fixedGroups);
+}
+
+// === VATEN VOOR VASTE KOSTEN ===
+// Elke ingeschakelde vaste kost heeft een "vat": het bedrag dat je ervoor voorziet,
+// over het venster van zijn eigen periode (maand, kwartaal of kalenderjaar).
+// Een echte betaling boek je op dat vat af; ze telt NIET mee in de maandbudgetten,
+// want het geld was al gereserveerd via de vaste kosten.
+// Bewust één enkele lijst (geen tweede maandtotalen-tabel zoals bij categorieën):
+// het gaat om enkele betalingen per jaar, en zo kunnen de twee niet uit elkaar lopen.
+function getFixedItem(fixedId){
+  for(const g of S.fixedGroups||[]){
+    const it=(g.items||[]).find(x=>x.id===fixedId);
+    if(it)return{group:g,item:it};
+  }
+  return null;
+}
+function getFixedItems(onlyEnabled=true){
+  const out=[];
+  (S.fixedGroups||[]).forEach(g=>(g.items||[]).forEach(it=>{
+    if(!onlyEnabled||it.enabled===true)out.push({group:g,item:it});
+  }));
+  return out;
+}
+// Venster van het vat waarin maand mk valt: jaar bij 'y', kwartaal bij 'q', de maand zelf bij 'm'.
+function fixedPotWindow(period,mk){
+  const y=parseInt(mk.slice(0,4)),m=parseInt(mk.slice(5,7));
+  if(period==='y')return{from:_monthKey(y,1),to:_monthKey(y,12),label:String(y),months:12,elapsed:m};
+  if(period==='q'){
+    const q=Math.floor((m-1)/3),first=q*3+1;
+    return{from:_monthKey(y,first),to:_monthKey(y,first+2),label:'kwartaal '+(q+1)+' '+y,months:3,elapsed:m-first+1};
+  }
+  return{from:mk,to:mk,label:MONTHS[m-1].toLowerCase()+' '+y,months:1,elapsed:1};
+}
+function getFixedPayments(fixedId,win){
+  return (S.fixedPayments||[])
+    .filter(p=>p.fixedId===fixedId&&(!win||(p.month>=win.from&&p.month<=win.to)))
+    .sort((a,b)=>b.ts-a.ts);
+}
+// Stand van het vat voor de maand mk. `opgebouwd` = wat je op dit punt van het venster
+// via je vaste kosten al opzij hebt gezet; daarmee zie je of een betaling voorloopt of niet.
+function getFixedPot(fixedId,mk){
+  const f=getFixedItem(fixedId);
+  if(!f)return null;
+  const win=fixedPotWindow(f.item.period||'m',mk||mkd());
+  const capacity=f.item.amount||0;
+  const payments=getFixedPayments(fixedId,win);
+  const used=payments.reduce((t,p)=>t+(p.amount||0),0);
+  const elapsed=Math.min(win.months,Math.max(1,win.elapsed));
+  return{group:f.group,item:f.item,win,capacity,used,payments,
+    left:capacity-used,
+    pct:capacity>0?used/capacity:0,
+    accrued:capacity*elapsed/win.months,
+    over:capacity>0&&used>capacity};
+}
+function addFixedPayment(fixedId,month,amount,detail){
+  if(!Array.isArray(S.fixedPayments))S.fixedPayments=[];
+  S.fixedPayments.push({id:genId(),fixedId,month,amount,detail:(detail||'').trim(),ts:Date.now()});
+  markActivity();
+  save();
+}
+function deleteFixedPayment(id){
+  S.fixedPayments=(S.fixedPayments||[]).filter(p=>p.id!==id);
+  save();
 }
 
 function _snapshotFixedIfNeeded(){
@@ -2772,17 +2836,19 @@ function renderCatDetail(){
 }
 
 // === QUICK ENTRY (FAB) ===
-let qeMonth=new Date();
-function openQuickEntry(month,focusCatId){qeMonth=month||new Date(viewMonth);renderQuickEntry(focusCatId);$('m-add').classList.add('open')}
+let qeMode='cat';let qeMonth=new Date();
+function openQuickEntry(month,focusCatId,mode){_sceMode=false;qeMode=mode||'cat';qeMonth=month||new Date(viewMonth);renderQuickEntry(focusCatId);$('m-add').classList.add('open')}
 function renderQuickEntry(focusCatId){
   const m=mkd(qeMonth);
   const cats=S.categories.filter(c=>c.type==='monthly');
   const now=new Date();
   $('m-add-title').textContent=MONTHS[qeMonth.getMonth()]+' '+qeMonth.getFullYear();
   $('m-add-next').disabled=qeMonth.getMonth()===now.getMonth()&&qeMonth.getFullYear()===now.getFullYear();
+  if(qeMode==='fixed'){renderQuickEntryFixed(m);return;}
 
   // Bouw het formulier
   $('m-add-body').innerHTML=`
+    ${qeModeSwitch()}
     <div id="qe-list" style="margin-bottom:16px;padding:0 24px">
     ${cats.map(cat=>{
       const clr=col(cat.color);
@@ -2815,6 +2881,7 @@ function renderQuickEntry(focusCatId){
     </div>
     `;
   $('m-add-footer').innerHTML=`<button class="btn btn-primary btn-block" id="qe-save">Toevoegen</button>`;
+  qeWireModeSwitch();
 
   // ── Bedrag-input handlers ──────────────────────────────────────────────
   // Pending auto-focus naar omschrijving-input (gedebouncet zodat het typen niet wordt gestoord).
@@ -2905,6 +2972,81 @@ function renderQuickEntry(focusCatId){
     const t=document.getElementById('qa-'+focusCatId);
     if(t){setTimeout(()=>{t.focus();t.scrollIntoView({block:'center',behavior:'smooth'});},150);}
   }
+}
+
+// Schakelaar boven de invoerlijst: gewone uitgave of afboeking op een vaste kost.
+function qeModeSwitch(){
+  if(!getFixedItems().length)return '';
+  return `<div class="ev-segment" style="margin:0 24px 14px">
+    <button type="button" class="ev-seg-btn ${qeMode==='cat'?'active':''}" data-qemode="cat">Categorie</button>
+    <button type="button" class="ev-seg-btn ${qeMode==='fixed'?'active':''}" data-qemode="fixed">Vaste kost</button>
+  </div>`;
+}
+function qeWireModeSwitch(){
+  $$('#m-add-body .ev-seg-btn[data-qemode]').forEach(b=>{
+    b.onclick=()=>{if(qeMode===b.dataset.qemode)return;qeMode=b.dataset.qemode;_sceMode=false;renderQuickEntry();};
+  });
+}
+
+// Invoerlijst voor vaste kosten: elke rij toont hoe vol het vat van die kost staat.
+function renderQuickEntryFixed(m){
+  const items=getFixedItems();
+  $('m-add-body').innerHTML=`
+    ${qeModeSwitch()}
+    <div style="padding:0 24px 12px;font-size:11.5px;color:var(--n2);line-height:1.5">
+      Een betaling die hier hoort, telt niet mee in je maandbudgetten: dat geld is al voorzien via je vaste kosten. Ze vult het vat van die kost.
+    </div>
+    <div id="qe-list" style="margin-bottom:16px;padding:0 24px">
+    ${items.length?items.map(({group,item})=>{
+      const pot=getFixedPot(item.id,m);
+      const clr=col(group.color||'slate');
+      const barC=pot.over?'var(--r)':pot.pct>=0.9?'var(--w)':'var(--g)';
+      return`<div class="qe-row" id="qfrow-${item.id}">
+        <div class="qe-row-top">
+          <div style="width:26px;height:26px;border-radius:var(--r4);background:${clr.bg};color:${clr.c};display:flex;align-items:center;justify-content:center;flex-shrink:0">${ic(group.icon||'folder')}</div>
+          <div style="flex:1;min-width:0;overflow:hidden">
+            <div style="font-size:13px;font-weight:600;color:var(--n0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">${esc(item.name)}</div>
+            <div style="font-size:11.5px;color:var(--n3);line-height:1.2;margin-top:1px">${fmt(pot.used)} van ${fmt(pot.capacity)} · ${esc(pot.win.label)}</div>
+            <div style="height:3px;border-radius:2px;background:var(--s2);margin-top:4px;overflow:hidden"><div style="height:100%;width:${Math.min(100,Math.round(pot.pct*100))}%;background:${barC};border-radius:2px"></div></div>
+          </div>
+          <input type="text" class="qf-amount-input qe-amount-input" id="qfa-${item.id}" data-qfid="${item.id}" placeholder="0" inputmode="decimal" autocomplete="off">
+        </div>
+        <div class="qe-row-expand" id="qfe-${item.id}">
+          <input type="text" class="qe-detail-input" id="qfd-${item.id}" placeholder="Omschrijving (optioneel)" autocomplete="off" maxlength="60">
+        </div>
+      </div>`;
+    }).join(''):`<div style="padding:24px 0;text-align:center;font-size:12.5px;color:var(--n3);line-height:1.6">Nog geen vaste kosten ingeschakeld.<br>Zet ze aan via Instellen → Vaste kosten aanpassen.</div>`}
+    </div>`;
+  $('m-add-footer').innerHTML=items.length?`<button class="btn btn-primary btn-block" id="qf-save">Afboeken</button>`:'';
+  qeWireModeSwitch();
+  $$('.qf-amount-input').forEach(inp=>{
+    enableCalc(inp);
+    inp.addEventListener('input',()=>{
+      const v=calc(inp.value)||parseDec(inp.value);
+      const ex=document.getElementById('qfe-'+inp.dataset.qfid);
+      if(ex){ex.classList.toggle('open',v!==0);inp.classList.toggle('has-value',v!==0);}
+    });
+    inp.addEventListener('focus',()=>{if(inp.value==='0')inp.value='';});
+  });
+  const btn=$('qf-save');
+  if(btn)btn.onclick=()=>{
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+    let added=0;
+    $$('.qf-amount-input').forEach(inp=>{
+      const fixedId=inp.dataset.qfid;
+      const add=calc(inp.value)||parseDec(inp.value);
+      if(add===0)return;
+      const d=document.getElementById('qfd-'+fixedId);
+      const f=getFixedItem(fixedId);
+      // Omschrijving is optioneel: bij een vaste kost is de naam zelf al de omschrijving.
+      addFixedPayment(fixedId,m,add,(d?.value||'').trim()||f?.item.name||'');
+      added+=add;
+    });
+    if(added<=0)return;
+    $('m-add').classList.remove('open');
+    viewMonth=new Date(qeMonth);updateDash();
+    showToast('✓ '+fmt(added)+' afgeboekt op vaste kosten');
+  };
 }
 
 function _qeUpdateTotals(m){
@@ -3054,7 +3196,7 @@ let _sceMode = false; // true = single-cat modus in m-add modal
 function openSingleCatEntry(catId){
   const cat=S.categories.find(c=>c.id===catId);
   if(!cat)return;
-  _sceMode=true;
+  _sceMode=true;qeMode='cat';
   qeMonth=new Date(viewMonth);
   const m=mkd(qeMonth);
   const clr=col(cat.color);
@@ -7505,41 +7647,94 @@ function buildUitgegevenDetail(m){
 function buildVastDetail(){
   const groups=S.fixedGroups||[];
   const totalFixed=getFixedCosts();
+  const m=mkd();
+  const perMonth=it=>it.period==='y'?it.amount/12:it.period==='q'?it.amount/3:it.amount;
+  const periodLbl=p=>p==='y'?'per jaar':p==='q'?'per kwartaal':'per maand';
+
+  // Vaten die over hun voorziening gaan: dat is het signaal dat je raming te laag staat.
+  const overruns=getFixedItems().map(({item})=>getFixedPot(item.id,m)).filter(p=>p&&p.over);
+
+  function itemRow(group,item){
+    const pot=getFixedPot(item.id,m);
+    const barC=pot.over?'var(--r)':pot.pct>=0.9?'var(--w)':'var(--g)';
+    const accruedPct=pot.capacity>0?Math.min(100,pot.accrued/pot.capacity*100):0;
+    const usedPct=pot.capacity>0?Math.min(100,pot.pct*100):0;
+    return`<div style="padding:9px 0;border-bottom:1px solid var(--l0)">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+        <div class="dm-row-name" style="font-size:12.5px">${esc(item.name)}</div>
+        <div style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:${pot.used>0?barC:'var(--n3)'};flex-shrink:0">${fmt(pot.used)} <span style="font-weight:500;color:var(--n3)">/ ${fmt(pot.capacity)}</span></div>
+      </div>
+      <div style="position:relative;height:5px;border-radius:3px;background:var(--s2);margin:6px 0 4px;overflow:visible">
+        <div style="height:100%;width:${usedPct}%;background:${barC};border-radius:3px"></div>
+        ${pot.capacity>0&&pot.win.months>1?`<div title="opzij gezet tot nu" style="position:absolute;top:-2px;bottom:-2px;left:${accruedPct}%;width:2px;background:rgba(0,0,0,.3);border-radius:1px;transform:translateX(-50%)"></div>`:''}
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:10px;font-size:10.5px;color:var(--n3)">
+        <span>${periodLbl(item.period)} · ${esc(pot.win.label)}</span>
+        <span>${pot.over?`<span style="color:var(--r);font-weight:700">${fmt(-pot.left)} over de voorziening</span>`:`${fmt(pot.left)} nog voorzien`}</span>
+      </div>
+      ${pot.payments.length?`<div style="margin-top:7px;display:flex;flex-direction:column;gap:4px">
+        ${pot.payments.map(pay=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--n2)">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pay.detail&&pay.detail!==item.name?esc(pay.detail):'<span style="color:var(--n3)">betaling</span>'}</span>
+          <span style="font-family:var(--mono);color:var(--n3);flex-shrink:0">${MONTHS_S[parseInt(pay.month.slice(5,7))-1].toLowerCase()}</span>
+          <span style="font-family:var(--mono);font-weight:700;color:var(--n1);flex-shrink:0">${fmt(pay.amount)}</span>
+          <button onclick="removeFixedPayment('${pay.id}')" aria-label="Betaling verwijderen" style="background:none;border:none;color:var(--n3);cursor:pointer;padding:2px;display:flex;flex-shrink:0">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`;
+  }
+
   function groupSection(g){
-    const gTotal=g.items.filter(it=>it.enabled===true).reduce((s,it)=>{
-      const monthly=it.period==='y'?it.amount/12:it.period==='q'?it.amount/3:it.period==='m'?it.amount:it.amount;
-      return s+monthly;
-    },0);
+    const items=(g.items||[]).filter(it=>it.enabled===true
+      ||getFixedPayments(it.id,fixedPotWindow(it.period||'m',m)).length>0);
+    if(!items.length)return '';
+    const gTotal=items.reduce((t,it)=>t+perMonth(it),0);
     const clr=col(g.color||'slate');
     return`
     <div class="dm-section">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div class="dm-row-icon" style="background:${clr.bg};color:${clr.c}">${ic(g.icon||'folder')}</div>
         <div style="flex:1;font-size:12px;font-weight:700">${esc(g.name)}</div>
-        <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#38bdf8">${fmt(Math.round(gTotal))}<span style="font-size:9.5px;color:var(--text-muted);font-weight:600">/m</span></div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:#38bdf8">${fmt(Math.round(gTotal))}<span style="font-size:9.5px;color:var(--n3);font-weight:600">/m</span></div>
       </div>
-      ${g.items.filter(it=>it.enabled===true).map(it=>{
-        const monthly=it.period==='y'?it.amount/12:it.period==='q'?it.amount/3:it.period==='m'?it.amount:it.amount;
-        const periodLbl=it.period==='y'?'jaarlijks':it.period==='q'?'per kwartaal':'maandelijks';
-        return`<div class="dm-row">
-          <div><div class="dm-row-name" style="font-size:12.5px">${esc(it.name)}</div><div class="dm-row-sub">${periodLbl}${it.period!=='m'?' · '+fmt(it.amount)+'/periode':''}</div></div>
-          <div style="text-align:right">
-            <div class="dm-row-val" style="color:#38bdf8">${fmt(Math.round(monthly))}</div>
-            <div style="font-size:9.5px;color:var(--text-muted);font-weight:600">/m</div>
-          </div>
-        </div>`;
-      }).join('')}
+      ${items.map(it=>itemRow(g,it)).join('')}
     </div>`;
   }
 
-
   return`
   <div class="dm-section">
-    <div style="display:flex;gap:16px">
-      <div><div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#38bdf8">${fmt(Math.round(totalFixed))}</div><div style="font-size:9.5px;color:var(--text-muted);font-weight:600;margin-top:2px">vaste kosten/m</div></div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#38bdf8">${fmt(Math.round(totalFixed))}</div>
+        <div style="font-size:9.5px;color:var(--n3);font-weight:600;margin-top:2px">vaste kosten/m</div>
+      </div>
+      <button onclick="closeDetailModal();openQuickEntry(null,null,'fixed')" class="wp-add-btn" style="flex-shrink:0">+ Betaling afboeken</button>
+    </div>
+    <div style="font-size:10.5px;color:var(--n3);line-height:1.5;margin-top:9px">
+      Elke vaste kost heeft een vat ter grootte van het bedrag dat je ervoor voorziet, over zijn eigen periode. Boek je een betaling af, dan vult dat vat en blijven je maandbudgetten ongemoeid. Het streepje op de balk toont wat je op dit punt van de periode al opzij hebt gezet.
     </div>
   </div>
+  ${overruns.length?`<div class="dm-section">
+    <div class="alert danger" style="margin:0">
+      <div class="alert-icon">${ic('alert')}</div>
+      <div class="alert-content">
+        <div class="alert-title">${overruns.length===1?'Eén vat is te klein':overruns.length+' vaten zijn te klein'}</div>
+        <div class="alert-text">${overruns.map(p=>`<strong>${esc(p.item.name)}</strong> ${fmtNeg(-p.left)} over de voorziening van ${fmt(p.capacity)}`).join('; ')}. Overweeg het bedrag bij je vaste kosten aan te passen naar wat je werkelijk betaalt.</div>
+      </div>
+    </div>
+  </div>`:''}
   ${groups.map(groupSection).join('')}`;
+}
+
+function removeFixedPayment(id){
+  const pay=(S.fixedPayments||[]).find(p=>p.id===id);
+  if(!pay)return;
+  const f=getFixedItem(pay.fixedId);
+  openConfirmModal('Betaling verwijderen',
+    `${fmt(pay.amount)}${pay.detail?' — '+esc(pay.detail):''} wordt van het vat van ${esc(f?.item.name||'deze vaste kost')} gehaald.`,
+    'Verwijderen',
+    ()=>{deleteFixedPayment(id);openMetricDetail('vast');showToast('✓ Verwijderd',1500);});
 }
 
 // ── GESPAARD ─────────────────────────────────────────
@@ -8083,8 +8278,9 @@ function csvDownload(filename,rows){
 }
 
 function exportXLSXDetail(){
-  const txs=(S.transactions||[]).slice().sort((a,b)=>b.ts-a.ts);
-  if(!txs.length){showToast('Geen transacties om te exporteren');return;}
+  const txs=(S.transactions||[]).slice();
+  const fixed=(S.fixedPayments||[]).slice();
+  if(!txs.length&&!fixed.length){showToast('Geen transacties om te exporteren');return;}
   const cats=S.categories;
   function fmtDate(ts){
     if(!ts)return'';
@@ -8093,19 +8289,19 @@ function exportXLSXDetail(){
       String(d.getDate()).padStart(2,'0')+' '+
       String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
   }
-  const header=['Tijdstip','Jaar','Maand','Categorie','Omschrijving','Bedrag (€)'];
-  const rows=txs.map(tx=>{
-    const cat=cats.find(c=>c.id===tx.catId);
-    const month=tx.month||'';
-    return[
-      fmtDate(tx.ts),
-      month?month.substring(0,4):'',
-      month,
-      cat?cat.name:'?',
-      tx.detail||'',
-      tx.amount||0,
-    ];
-  });
+  const header=['Tijdstip','Jaar','Maand','Soort','Categorie','Omschrijving','Bedrag (€)'];
+  const rows=[
+    ...txs.map(tx=>{
+      const cat=cats.find(c=>c.id===tx.catId);
+      const month=tx.month||'';
+      return[fmtDate(tx.ts),month?month.substring(0,4):'',month,'Categorie',cat?cat.name:'?',tx.detail||'',tx.amount||0];
+    }),
+    ...fixed.map(p=>{
+      const f=getFixedItem(p.fixedId);
+      const month=p.month||'';
+      return[fmtDate(p.ts),month?month.substring(0,4):'',month,'Vaste kost',f?f.item.name:'?',p.detail||'',p.amount||0];
+    }),
+  ].sort((a,b)=>String(b[0]).localeCompare(String(a[0])));
   csvDownload(`buddy-budget-transacties-${new Date().toISOString().split('T')[0]}.csv`,[header,...rows]);
   showToast('✓ CSV gedownload');
 }

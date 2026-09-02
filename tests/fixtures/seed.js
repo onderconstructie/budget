@@ -32,9 +32,15 @@ function build(now = new Date()) {
     { id: 'abonnementen', name: 'Abonnementen', icon: 'tv', color: 'orange', items: [{ id: 'internet', name: 'Internet', amount: 45, period: 'm', enabled: true }, { id: 'gsm', name: 'GSM', amount: 15, period: 'm', enabled: true }] },
     { id: 'verzekering', name: 'Verzekering', icon: 'shield', color: 'sky', items: [{ id: 'auto_verz', name: 'Auto', amount: 540, period: 'y', enabled: true }] },
   ];
+  // Twee betalingen afgeboekt op vaste kosten: één op een jaarvat, één op een kwartaalvat
+  const y = now.getFullYear();
+  const fixedPayments = [
+    { id: 'fp1', fixedId: 'auto_verz', month: mk(y, Math.max(1, now.getMonth())), amount: 300, detail: 'Jaarpremie', ts: Date.now() - 86400000 },
+    { id: 'fp2', fixedId: 'water', month: mk(y, now.getMonth() + 1), amount: 40, detail: 'Kwartaalfactuur', ts: Date.now() },
+  ];
   return {
     income: { monthly: 2450, maaltijdcheques: 140, endYear: { amount: 1800, month: 11 }, vacation: { amount: 1600, month: 4 }, refund: { amount: 0, month: 0 }, otherMonthly: 0, otherYearly: { amount: 0, month: 0 }, oneTime: { amount: 0, month: now.getMonth() } },
-    fixedGroups, transactions, categories: cats, monthlyData, reserveBalances: {}, savingsTarget: 20,
+    fixedGroups, transactions, fixedPayments, categories: cats, monthlyData, reserveBalances: {}, savingsTarget: 20,
     wealth: {
       accounts: [
         { id: 'a1', name: 'Spaarrekening', institution: 'Bank A', balance: 7200, interest: 1.5, availability: 'vrij', purpose: '', unblockDate: '' },
