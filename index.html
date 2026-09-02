@@ -627,6 +627,11 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .dm-row-name{font-size:12px;font-weight:600;color:var(--n1)}
 .dm-row-sub{font-size:10.5px;color:var(--n3);font-weight:500}
 .dm-row-val{font-family:var(--mono);font-size:13px;font-weight:700}
+/* Schakelaar "vat bijhouden" per vaste kost */
+.vat-toggle{width:32px;height:18px;flex-shrink:0;border-radius:100px;border:1px solid var(--l1);background:var(--s2);cursor:pointer;padding:0;position:relative;transition:background .15s,border-color .15s}
+.vat-toggle span{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--n3);transition:transform .15s,background .15s}
+.vat-toggle.on{background:var(--a-dim);border-color:var(--a)}
+.vat-toggle.on span{transform:translateX(14px);background:var(--a)}
 .dm-bar-wrap{height:4px;background:rgba(0,0,0,.06);border-radius:2px;overflow:hidden;margin-top:5px}
 .dm-bar-fill{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 .dm-sparkline{display:flex;gap:3px;align-items:flex-end;height:36px;margin-top:6px}
@@ -1318,7 +1323,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.060</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.061</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -1757,6 +1762,25 @@ function getFixedItems(onlyEnabled=true){
     if(!onlyEnabled||it.enabled===true)out.push({group:g,item:it});
   }));
   return out;
+}
+// Alleen kosten waarvoor je zelf betalingen afboekt (reizen, onderhoud, studie…).
+// Domiciliëringen zoals huur, gas of internet gaan vanzelf van je rekening: die
+// hebben geen vat nodig en horen niet in de afboeklijst. `track` staat standaard uit.
+function getTrackedFixedItems(){
+  return getFixedItems().filter(({item})=>item.track===true);
+}
+// Ook een uitgezette post met betalingen in dit venster blijft een vat houden,
+// anders lijkt eerder afgeboekt geld verdwenen.
+function hasPot(item,mk){
+  return item.track===true
+    ||getFixedPayments(item.id,fixedPotWindow(item.period||'m',mk||mkd())).length>0;
+}
+function toggleFixedTrack(fixedId){
+  const f=getFixedItem(fixedId);
+  if(!f)return;
+  f.item.track=!f.item.track;
+  save();
+  openMetricDetail('vast');
 }
 // Venster van het vat waarin maand mk valt: jaar bij 'y', kwartaal bij 'q', de maand zelf bij 'm'.
 function fixedPotWindow(period,mk){
@@ -2976,7 +3000,7 @@ function renderQuickEntry(focusCatId){
 
 // Schakelaar boven de invoerlijst: gewone uitgave of afboeking op een vaste kost.
 function qeModeSwitch(){
-  if(!getFixedItems().length)return '';
+  if(!getTrackedFixedItems().length)return '';
   return `<div class="ev-segment" style="margin:0 24px 14px">
     <button type="button" class="ev-seg-btn ${qeMode==='cat'?'active':''}" data-qemode="cat">Categorie</button>
     <button type="button" class="ev-seg-btn ${qeMode==='fixed'?'active':''}" data-qemode="fixed">Vaste kost</button>
@@ -2990,7 +3014,7 @@ function qeWireModeSwitch(){
 
 // Invoerlijst voor vaste kosten: elke rij toont hoe vol het vat van die kost staat.
 function renderQuickEntryFixed(m){
-  const items=getFixedItems();
+  const items=getTrackedFixedItems();
   $('m-add-body').innerHTML=`
     ${qeModeSwitch()}
     <div style="padding:0 24px 12px;font-size:11.5px;color:var(--n2);line-height:1.5">
@@ -3015,7 +3039,7 @@ function renderQuickEntryFixed(m){
           <input type="text" class="qe-detail-input" id="qfd-${item.id}" placeholder="Omschrijving (optioneel)" autocomplete="off" maxlength="60">
         </div>
       </div>`;
-    }).join(''):`<div style="padding:24px 0;text-align:center;font-size:12.5px;color:var(--n3);line-height:1.6">Nog geen vaste kosten ingeschakeld.<br>Zet ze aan via Instellen → Vaste kosten aanpassen.</div>`}
+    }).join(''):`<div style="padding:24px 0;text-align:center;font-size:12.5px;color:var(--n3);line-height:1.6">Nog geen enkele vaste kost heeft een vat.<br>Zet er een aan bij <strong style="color:var(--n2)">Vast</strong> op je startscherm — bedoeld voor posten die je zelf betaalt, zoals reizen of onderhoud.</div>`}
     </div>`;
   $('m-add-footer').innerHTML=items.length?`<button class="btn btn-primary btn-block" id="qf-save">Afboeken</button>`:'';
   qeWireModeSwitch();
@@ -7652,24 +7676,32 @@ function buildVastDetail(){
   const periodLbl=p=>p==='y'?'per jaar':p==='q'?'per kwartaal':'per maand';
 
   // Vaten die over hun voorziening gaan: dat is het signaal dat je raming te laag staat.
-  const overruns=getFixedItems().map(({item})=>getFixedPot(item.id,m)).filter(p=>p&&p.over);
+  const overruns=getFixedItems().filter(({item})=>hasPot(item,m)).map(({item})=>getFixedPot(item.id,m)).filter(p=>p&&p.over);
 
   function itemRow(group,item){
+    const trackBtn=`<button onclick="toggleFixedTrack('${item.id}')" class="vat-toggle${item.track?' on':''}" role="switch" aria-checked="${item.track?'true':'false'}" aria-label="Vat bijhouden voor ${esc(item.name)}"><span></span></button>`;
+    // Geen vat: gewone regel. Dit is een domiciliëring die vanzelf van je rekening gaat.
+    if(!hasPot(item,m))return`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--l0)">
+      <div class="dm-row-name" style="font-size:12.5px;flex:1;min-width:0">${esc(item.name)}</div>
+      <div style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--n2);flex-shrink:0">${fmt(item.amount)}<span style="font-size:9.5px;color:var(--n3);font-weight:600">${item.period==='y'?'/j':item.period==='q'?'/kw':'/m'}</span></div>
+      ${trackBtn}
+    </div>`;
     const pot=getFixedPot(item.id,m);
     const barC=pot.over?'var(--r)':pot.pct>=0.9?'var(--w)':'var(--g)';
     const accruedPct=pot.capacity>0?Math.min(100,pot.accrued/pot.capacity*100):0;
     const usedPct=pot.capacity>0?Math.min(100,pot.pct*100):0;
     return`<div style="padding:9px 0;border-bottom:1px solid var(--l0)">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
-        <div class="dm-row-name" style="font-size:12.5px">${esc(item.name)}</div>
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <div class="dm-row-name" style="font-size:12.5px;flex:1;min-width:0">${esc(item.name)}</div>
         <div style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:${pot.used>0?barC:'var(--n3)'};flex-shrink:0">${fmt(pot.used)} <span style="font-weight:500;color:var(--n3)">/ ${fmt(pot.capacity)}</span></div>
+        ${trackBtn}
       </div>
       <div style="position:relative;height:5px;border-radius:3px;background:var(--s2);margin:6px 0 4px;overflow:visible">
         <div style="height:100%;width:${usedPct}%;background:${barC};border-radius:3px"></div>
         ${pot.capacity>0&&pot.win.months>1?`<div title="opzij gezet tot nu" style="position:absolute;top:-2px;bottom:-2px;left:${accruedPct}%;width:2px;background:rgba(0,0,0,.3);border-radius:1px;transform:translateX(-50%)"></div>`:''}
       </div>
       <div style="display:flex;justify-content:space-between;gap:10px;font-size:10.5px;color:var(--n3)">
-        <span>${periodLbl(item.period)} · ${esc(pot.win.label)}</span>
+        <span>${periodLbl(item.period)} · ${esc(pot.win.label)}${item.track?'':' · vat uit, maar er staat nog een betaling op'}</span>
         <span>${pot.over?`<span style="color:var(--r);font-weight:700">${fmt(-pot.left)} over de voorziening</span>`:`${fmt(pot.left)} nog voorzien`}</span>
       </div>
       ${pot.payments.length?`<div style="margin-top:7px;display:flex;flex-direction:column;gap:4px">
@@ -7709,10 +7741,10 @@ function buildVastDetail(){
         <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#38bdf8">${fmt(Math.round(totalFixed))}</div>
         <div style="font-size:9.5px;color:var(--n3);font-weight:600;margin-top:2px">vaste kosten/m</div>
       </div>
-      <button onclick="closeDetailModal();openQuickEntry(null,null,'fixed')" class="wp-add-btn" style="flex-shrink:0">+ Betaling afboeken</button>
+      ${getTrackedFixedItems().length?`<button onclick="closeDetailModal();openQuickEntry(null,null,'fixed')" class="wp-add-btn" style="flex-shrink:0">+ Betaling afboeken</button>`:''}
     </div>
     <div style="font-size:10.5px;color:var(--n3);line-height:1.5;margin-top:9px">
-      Elke vaste kost heeft een vat ter grootte van het bedrag dat je ervoor voorziet, over zijn eigen periode. Boek je een betaling af, dan vult dat vat en blijven je maandbudgetten ongemoeid. Het streepje op de balk toont wat je op dit punt van de periode al opzij hebt gezet.
+      Zet het schakelaartje aan bij een kost die je zelf betaalt en die niet elke maand hetzelfde is — reizen, onderhoud, studie. Die krijgt dan een vat ter grootte van je voorziening, over zijn eigen periode. Betalingen die je erop afboekt vullen het vat en laten je maandbudgetten ongemoeid. Domiciliëringen laat je uit staan.
     </div>
   </div>
   ${overruns.length?`<div class="dm-section">

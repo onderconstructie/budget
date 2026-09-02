@@ -72,6 +72,30 @@ test('vaten: betaling op een vaste kost vult het vat en raakt de maandbudgetten 
   eq(r.venster, String(new Date().getFullYear()), 'jaarvat loopt over het kalenderjaar');
   ok(r.over === true, '300 + 300 > 540 moet als overschrijding gelden');
 });
+test('vaten: alleen gemarkeerde kosten staan in de afboeklijst', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const namen = getTrackedFixedItems().map(x => x.item.name).sort();
+    const alle = getFixedItems().length;
+    const m = mkd(new Date());
+    // Huur is een domiciliëring zonder vat; water staat uit maar heeft wel een betaling
+    const huur = getFixedItem('huur').item, water = getFixedItem('water').item;
+    return { namen, alle, huurPot: hasPot(huur, m), waterTrack: water.track === true, waterPot: hasPot(water, m) };
+  });
+  eq(r.namen, ['Auto', 'Onderhoud', 'Reizen'], 'enkel posten met track: true');
+  ok(r.alle > r.namen.length, 'er zijn meer vaste kosten dan vaten');
+  eq(r.huurPot, false, 'domiciliëring krijgt geen vat');
+  eq(r.waterTrack, false); eq(r.waterPot, true, 'uitgezet vat met betalingen blijft zichtbaar');
+});
+test('vaten: schakelaar zet een vat aan en uit', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const voor = getTrackedFixedItems().length;
+    toggleFixedTrack('gas');
+    const aan = getTrackedFixedItems().length;
+    toggleFixedTrack('gas');
+    return { voor, aan, terug: getTrackedFixedItems().length, opgeslagen: JSON.parse(localStorage.getItem('buddy-budget-v5')).fixedGroups.flatMap(g => g.items).find(i => i.id === 'gas').track };
+  });
+  eq(r.aan, r.voor + 1); eq(r.terug, r.voor); eq(r.opgeslagen, false, 'stand wordt bewaard');
+});
 test('vaten: venster volgt de periode (maand, kwartaal, jaar)', async ({ page }) => {
   const r = await page.evaluate(() => {
     const y = new Date().getFullYear();

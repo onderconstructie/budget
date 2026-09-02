@@ -30,7 +30,12 @@ function build(now = new Date()) {
     { id: 'wonen', name: 'Wonen', icon: 'home', color: 'emerald', items: [{ id: 'huur', name: 'Hypotheek/Huur', amount: 850, period: 'm', enabled: true }] },
     { id: 'nuts', name: 'Nuts', icon: 'zap', color: 'amber', items: [{ id: 'gas', name: 'Gas', amount: 60, period: 'm', enabled: true }, { id: 'elektriciteit', name: 'Elektriciteit', amount: 80, period: 'm', enabled: true }, { id: 'water', name: 'Water', amount: 90, period: 'q', enabled: true }] },
     { id: 'abonnementen', name: 'Abonnementen', icon: 'tv', color: 'orange', items: [{ id: 'internet', name: 'Internet', amount: 45, period: 'm', enabled: true }, { id: 'gsm', name: 'GSM', amount: 15, period: 'm', enabled: true }] },
-    { id: 'verzekering', name: 'Verzekering', icon: 'shield', color: 'sky', items: [{ id: 'auto_verz', name: 'Auto', amount: 540, period: 'y', enabled: true }] },
+    { id: 'verzekering', name: 'Verzekering', icon: 'shield', color: 'sky', items: [{ id: 'auto_verz', name: 'Auto', amount: 540, period: 'y', enabled: true, track: true }] },
+    // Posten die je zelf onregelmatig betaalt: die krijgen een vat (track: true).
+    { id: 'extra', name: 'Extra', icon: 'plane', color: 'sky', items: [
+      { id: 'reizen_e', name: 'Reizen', amount: 1200, period: 'y', enabled: true, track: true },
+      { id: 'onderhoud_e', name: 'Onderhoud', amount: 600, period: 'y', enabled: true, track: true },
+    ] },
   ];
   // Twee betalingen afgeboekt op vaste kosten: één op een jaarvat, één op een kwartaalvat
   const y = now.getFullYear();
