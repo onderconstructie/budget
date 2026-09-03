@@ -1331,7 +1331,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.066</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.067</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -6066,25 +6066,21 @@ function _syncEvoChips(){
     const cat=S.categories.find(c=>c.id===id);
     const clr=col(cat?.color||'slate');
     const icon=chip.querySelector('.evo-chip-icon');
-    const name=chip.querySelector('.evo-chip-name');
     if(!evoActiveCat){
       chip.classList.remove('active','dimmed');
       chip.style.background='var(--s1)';
       chip.style.borderColor='var(--l1)';
       if(icon){icon.style.background=clr.bg;icon.style.color=clr.c;}
-      if(name)name.style.color='var(--n2)';
     } else if(id===evoActiveCat){
       chip.classList.add('active');chip.classList.remove('dimmed');
       chip.style.background=clr.bg;
       chip.style.borderColor=clr.c;
       if(icon){icon.style.background=clr.c;icon.style.color='#fff';}
-      if(name)name.style.color=clr.c;
     } else {
       chip.classList.add('dimmed');chip.classList.remove('active');
       chip.style.background='var(--s1)';
       chip.style.borderColor='var(--l0)';
       if(icon){icon.style.background=clr.bg;icon.style.color=clr.c;}
-      if(name)name.style.color='var(--n3)';
     }
   });
 }
