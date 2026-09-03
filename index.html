@@ -758,14 +758,15 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .ldr-dev{font-size:10.5px;font-weight:700}
 
 /* ── Categorie-chips onder trends-grafiek ── */
-.evo-chip{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px 7px;border-radius:var(--r8);border:1.5px solid var(--l1);background:var(--s1);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;width:100%}
+/* Categorieknoppen onder de grafieken: één rij, alleen iconen. De naam zit in het
+   toegankelijkheidslabel; het icoon draagt de kleur van de lijn in de grafiek. */
+.chip-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.chip-row::-webkit-scrollbar{display:none}
+.evo-chip{display:flex;align-items:center;justify-content:center;padding:7px;border-radius:var(--r8);border:1.5px solid var(--l1);background:var(--s1);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;flex:1 1 0;min-width:46px;max-width:76px}
 .evo-chip:active{transform:scale(.93)}
 .evo-chip-icon{width:32px;height:32px;border-radius:var(--r6);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s}
 .evo-chip-icon svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
-.evo-chip-name{font-size:11px;font-weight:600;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;transition:color .15s}
 .evo-chip.active{border-width:1.5px}
-/* Kleurstip = lijnkleur in de grafiek: chips zijn ook de legende */
-.evo-chip-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle;position:relative;top:-1px}
 .evo-chip.dimmed{opacity:.25;border-color:var(--l0)}
 /* Jaar-tab chips: zelfde vorm als trends */
 #an-trends .chart-wrap{min-height:130px;margin-top:4px}
@@ -983,7 +984,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
    namen in rijen) in IBM Plex Mono. Lopende zinnen (meldingen, hints, uitleg)
    blijven in de sans: monospace op 10–11 px in alinea's leest slecht.
 ───────────────────────────────────────────────────────── */
-.dh-hero-eyebrow,.dh-score-lbl,.dh-label,.set-title,.wp-hero-label,.wp-stat-label,.an-stat-l,.an-section-lbl,.dm-section-title,.field-label,.wp-input-label,.cost-type-pill,.nav-btn span,.an-tab,.btn,.field-input,.dh-nav-label,.set-row span,.alert-title,.ev-seg-btn,.wp-add-btn,.fab-label,.evo-chip-name,.wp-row-title,.wp-group-title,.sub-name,.sub-name-input,.group-name,.cat-name,.summary-label,.summary-value,.sub-period,.calc-btn,.vlt-field-input,.vlt-primary,.header-sub,.cat-setup-name-input,.modal-title,.wizard-title,.dm-row-name,.wp-row-type-pill,input,select,button{font-family:var(--mono)}
+.dh-hero-eyebrow,.dh-score-lbl,.dh-label,.set-title,.wp-hero-label,.wp-stat-label,.an-stat-l,.an-section-lbl,.dm-section-title,.field-label,.wp-input-label,.cost-type-pill,.nav-btn span,.an-tab,.btn,.field-input,.dh-nav-label,.set-row span,.alert-title,.ev-seg-btn,.wp-add-btn,.fab-label,.wp-row-title,.wp-group-title,.sub-name,.sub-name-input,.group-name,.cat-name,.summary-label,.summary-value,.sub-period,.calc-btn,.vlt-field-input,.vlt-primary,.header-sub,.cat-setup-name-input,.modal-title,.wizard-title,.dm-row-name,.wp-row-type-pill,input,select,button{font-family:var(--mono)}
 .set-row-sub,.alert-text,.set-note,.wizard-sub,.wp-hint,.wp-stat-sub,.modal-title-sub{font-family:var(--sans)}
 .nav-btn span{font-size:11.5px;letter-spacing:0}
 .an-stat-l{font-size:10.5px;letter-spacing:.3px}
@@ -1198,7 +1199,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
       </div>
       <div style="padding:0 16px 0">
         <div class="chart-wrap" style="height:240px"><canvas id="chart-evo"></canvas></div>
-        <div id="evo-cat-chips" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px"></div>
+        <div id="evo-cat-chips" class="chip-row" style="margin-top:12px"></div>
       </div>
 
       <!-- Verdeling per winkel/doel over maanden -->
@@ -1238,7 +1239,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
           </div>
         </div>
         <div class="yr-legend" style="justify-content:center;margin-top:6px"></div>
-        <div id="yr-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px"></div>
+        <div id="yr-cats" class="chip-row" style="margin-top:10px"></div>
       </div>
 
       <!-- PER JAAR view: meerdere jaren naast elkaar met YTD-vergelijking en categorie-tabel -->
@@ -1330,7 +1331,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.065</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.066</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -4230,7 +4231,7 @@ function renderYearOverviewBody(){
     <div style="font-size:11.5px;color:var(--n3);text-align:center;margin-bottom:10px">Som van variabele categorieën (zelfde scope als Per-maand). Vaste kosten en jaarlijkse reserveringen tellen niet mee. ${curYear} is nog niet afgelopen (${monthNames[curMonth-1]}).</div>
 
     <!-- Categorie-chips: gedeeld met de Per-maand view, klikken filtert ook deze bar chart -->
-    <div id="yr-year-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-bottom:14px"></div>
+    <div id="yr-year-cats" class="chip-row" style="margin-bottom:14px"></div>
   `;
 
   setTimeout(()=>{
@@ -4244,12 +4245,11 @@ function renderYearOverviewBody(){
         const isActive=yrActiveCats.has(cat.id);
         const isDimmed=!!(yrActiveCats.size>0&&!isActive);
         const chipClass='evo-chip yr-chip'+(isActive?' active':'')+(isDimmed?' dimmed':'');
-        return `<button class="${chipClass}" data-yrcid="${cat.id}" onclick="setYrCat('${cat.id}')"
+        return `<button class="${chipClass}" data-yrcid="${cat.id}" onclick="setYrCat('${cat.id}')" title="${esc(cat.name)}" aria-label="${esc(cat.name)}"
           style="background:${isActive?clr.bg:'var(--s1)'};border-color:${isActive?clr.c:'var(--l1)'}">
           <div class="evo-chip-icon" style="background:${isActive?clr.c:clr.bg};color:${isActive?'#fff':clr.c}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
           </div>
-          <span class="evo-chip-name" style="color:${isActive?clr.c:'var(--n2)'}">${esc(cat.name)}</span>
         </button>`;
       }).join('');
     }
@@ -6050,11 +6050,11 @@ function renderEvoCatChips(){
   if(!cats.length){el.innerHTML='';return;}
   el.innerHTML=cats.map(cat=>{
     const clr=col(cat.color);
-    return `<button class="evo-chip" data-ecid="${cat.id}" onclick="setEvoCat('${cat.id}')">
+    // Alleen het icoon: het draagt de kleur van de lijn in de grafiek en is dus de legende.
+    return `<button class="evo-chip" data-ecid="${cat.id}" onclick="setEvoCat('${cat.id}')" title="${esc(cat.name)}" aria-label="${esc(cat.name)}">
       <div class="evo-chip-icon" style="background:${clr.bg};color:${clr.c}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
       </div>
-      <span class="evo-chip-name" style="color:var(--n2)"><span class="evo-chip-dot" style="background:${clr.c}"></span>${esc(cat.name)}</span>
     </button>`;
   }).join('');
   _syncEvoChips();
@@ -6656,12 +6656,11 @@ function updateYearCats(y){
     const isActive=yrActiveCats.has(cat.id);
     const isDimmed=!!(yrActiveCats.size>0&&!isActive);
     const chipClass='evo-chip yr-chip'+(isActive?' active':'')+(isDimmed?' dimmed':'');
-    return `<button class="${chipClass}" data-yrcid="${cat.id}" onclick="setYrCat('${cat.id}')"
+    return `<button class="${chipClass}" data-yrcid="${cat.id}" onclick="setYrCat('${cat.id}')" title="${esc(cat.name)}" aria-label="${esc(cat.name)}"
       style="background:${isActive?clr.bg:'var(--s1)'};border-color:${isActive?clr.c:'var(--l1)'}">
       <div class="evo-chip-icon" style="background:${isActive?clr.c:clr.bg};color:${isActive?'#fff':clr.c}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[cat.icon]||IC.folder}</svg>
       </div>
-      <span class="evo-chip-name" style="color:${isActive?clr.c:'var(--n2)'}">${esc(cat.name)}</span>
     </button>`;
   }).join('');
 }
