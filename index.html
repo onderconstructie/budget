@@ -207,7 +207,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .cost-type-pill svg{width:8px;height:8px;stroke:currentColor;stroke-width:2.5}
 /* Legacy compat */
 .cost-type-select{display:flex;gap:7px}
-.cost-type-opt{background:none;border:none;padding:0;cursor:pointer;opacity:.35;transition:opacity .15s}
+.cost-type-opt{background:none;border:none;padding:0;cursor:pointer;opacity:.35;transition:opacity .15s;position:relative}
+.cost-type-opt::after{content:'';position:absolute;inset:-12px -6px}
 .cost-type-opt.on{opacity:1}
 
 .cat-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--l0);cursor:pointer;transition:opacity .12s,background .15s;position:relative}
@@ -401,6 +402,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
    BUTTONS
 ───────────────────────────────────────────────────────── */
 .btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border-radius:var(--r6);font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .15s;letter-spacing:-.1px}
+.btn svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;flex-shrink:0}
 .btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
 .btn-primary{background:linear-gradient(140deg,#e91e8c,#b5116b);color:#fff;box-shadow:0 3px 14px rgba(236,72,153,.24)}
 .btn-primary:active{transform:scale(.97);box-shadow:none}
@@ -934,7 +936,8 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 .fresh-start-icon{width:32px;height:32px;border-radius:var(--r6);background:rgba(233,30,140,.1);color:var(--a);display:flex;align-items:center;justify-content:center;flex-shrink:0}.fresh-start-icon svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none}
 .fresh-start-title{font-size:12px;font-weight:700;color:var(--n0);margin-bottom:2px}
 .fresh-start-body{font-size:12.5px;color:var(--n2);line-height:1.45}
-.fresh-start-close{background:none;border:none;color:var(--n3);font-size:18px;cursor:pointer;padding:0 0 0 6px;line-height:1;flex-shrink:0;align-self:flex-start;margin-top:-1px}
+.fresh-start-close{background:none;border:none;color:var(--n3);font-size:18px;cursor:pointer;padding:0 0 0 6px;line-height:1;flex-shrink:0;align-self:flex-start;margin-top:-1px;position:relative}
+.fresh-start-close::after{content:'';position:absolute;inset:-13px -12px}
 
 /* ── Info toggle (prognose tab uitleg) ── */
 .fc-info-btn{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--n3);background:none;color:var(--n3);font-size:10.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:all .15s;flex-shrink:0;font-family:var(--sans)}
@@ -1195,7 +1198,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
       </div>
       <div style="padding:0 16px 0">
         <div class="chart-wrap" style="height:240px"><canvas id="chart-evo"></canvas></div>
-        <div id="evo-cat-chips" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:12px"></div>
+        <div id="evo-cat-chips" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px"></div>
       </div>
 
       <!-- Verdeling per winkel/doel over maanden -->
@@ -1235,7 +1238,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
           </div>
         </div>
         <div class="yr-legend" style="justify-content:center;margin-top:6px"></div>
-        <div id="yr-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-top:10px"></div>
+        <div id="yr-cats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px"></div>
       </div>
 
       <!-- PER JAAR view: meerdere jaren naast elkaar met YTD-vergelijking en categorie-tabel -->
@@ -1327,7 +1330,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.062</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.063</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -1382,7 +1385,7 @@ else{
     update(){}destroy(){}resize(){}setActiveElements(){}
   };
 }
-const IC={briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',pie:'<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',heart:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',building:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',car:'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-3-5H9L6 10l-2.5 1.1C2.7 11.3 2 12.1 2 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',plane:'<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>',tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',trending:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',cart:'<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>',users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',tv:'<rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/>',coffee:'<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',check:'<polyline points="20 6 9 17 4 12"/>',chevDown:'<polyline points="6 9 12 15 18 9"/>',alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',credit:'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>',piggy:'<path d="M19 11a7 7 0 0 1-7 7A7 7 0 0 1 5 11V9a2 2 0 0 1 4 0v2a3 3 0 0 0 6 0V9a2 2 0 0 1 4 0v2z"/><path d="M12 18v3"/><path d="M8 21h8"/>',scale:'<path d="M12 3v18"/><path d="M3 9l4-3 4 3"/><path d="M17 9l4-3"/><path d="M5 18a4 4 0 0 1-4-4h8a4 4 0 0 1-4 4z"/><path d="M19 18a4 4 0 0 1-4-4h8a4 4 0 0 1-4 4z"/>',percent:'<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>'};
+const IC={briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',pie:'<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',heart:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',building:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',car:'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-3-5H9L6 10l-2.5 1.1C2.7 11.3 2 12.1 2 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',plane:'<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>',tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',trending:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',cart:'<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>',users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',tv:'<rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/>',coffee:'<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',check:'<polyline points="20 6 9 17 4 12"/>',chevDown:'<polyline points="6 9 12 15 18 9"/>',alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',credit:'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>',piggy:'<path d="M19 11a7 7 0 0 1-7 7A7 7 0 0 1 5 11V9a2 2 0 0 1 4 0v2a3 3 0 0 0 6 0V9a2 2 0 0 1 4 0v2z"/><path d="M12 18v3"/><path d="M8 21h8"/>',scale:'<path d="M12 3v18"/><path d="M3 9l4-3 4 3"/><path d="M17 9l4-3"/><path d="M5 18a4 4 0 0 1-4-4h8a4 4 0 0 1-4 4z"/><path d="M19 18a4 4 0 0 1-4-4h8a4 4 0 0 1-4 4z"/>',percent:'<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',arrowLeft:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>'};
 const ic=(n,c='')=>`<svg class="${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[n]||IC.folder}</svg>`;
 const COLORS=[{n:'emerald',c:'#10b981',bg:'rgba(16,185,129,0.15)'},{n:'sky',c:'#0ea5e9',bg:'rgba(14,165,233,0.15)'},{n:'amber',c:'#f59e0b',bg:'rgba(245,158,11,0.15)'},{n:'rose',c:'#f43f5e',bg:'rgba(244,63,94,0.15)'},{n:'violet',c:'#8b5cf6',bg:'rgba(139,92,246,0.15)'},{n:'cyan',c:'#06b6d4',bg:'rgba(6,182,212,0.15)'},{n:'orange',c:'#f97316',bg:'rgba(249,115,22,0.15)'},{n:'pink',c:'#ec4899',bg:'rgba(236,72,153,0.15)'},{n:'lime',c:'#84cc16',bg:'rgba(132,204,22,0.15)'},{n:'slate',c:'#64748b',bg:'rgba(100,116,139,0.15)'}];
 const col=n=>COLORS.find(c=>c.n===n)||COLORS[0];
@@ -2602,7 +2605,7 @@ function renderCatEdit(){
   const isOver=budget>0&&spent>budget;
   const isWarn=budget>0&&!isOver&&spent>budget*.85;
   const statusC=isOver?'var(--r)':isWarn?'var(--w)':spent>0?'var(--g)':'var(--n3)';
-  const delta=budget>0?(isOver?`<span style="color:var(--r)">+${fmt(spent-budget)} over budget</span>`:`<span style="color:var(--g)">−${fmt(budget-spent)} nog over</span>`):'';
+  const delta=budget>0?(isOver?`<span style="color:var(--r)">+${fmt(spent-budget)} over budget</span>`:`<span style="color:var(--g)">${fmt(budget-spent)} nog over</span>`):'';
 
   $('m-cat-body').innerHTML=`
 
@@ -2693,7 +2696,7 @@ function renderCatEdit(){
   `;
 
   // Eén knop in sticky footer — zelfde patroon als FAB-modal
-  $('m-cat-footer').innerHTML=`<div style="display:flex;gap:8px"><button class="btn btn-ghost" id="ce-back" style="font-size:13px;padding:12px 14px">${ic('arrow-left')}</button><button class="btn btn-primary btn-block" id="ce-save" style="padding:14px;font-size:14px">Opslaan</button></div>`;
+  $('m-cat-footer').innerHTML=`<div style="display:flex;gap:8px"><button class="btn btn-ghost" id="ce-back" style="font-size:13px;padding:12px 14px">${ic('arrowLeft')}</button><button class="btn btn-primary btn-block" id="ce-save" style="padding:14px;font-size:14px">Opslaan</button></div>`;
 
   // Back naar detail
   const ceBackBtn=$('ce-back');if(ceBackBtn)ceBackBtn.onclick=()=>{_catModalMode='detail';renderCatDetail()};
@@ -4321,7 +4324,7 @@ function renderYearOverviewBody(){
           }
         },
         scales:{
-          x:{stacked:hasFilter,grid:{display:false},ticks:{font:{family:'var(--mono)',size:11},color:'#64748b'}},
+          x:{stacked:hasFilter,grid:{display:false},ticks:{maxRotation:0,autoSkip:true,autoSkipPadding:6,font:{family:'var(--mono)',size:11},color:'#64748b'}},
           y:{
             stacked:hasFilter,beginAtZero:true,
             grid:{color:'rgba(0,0,0,.06)'},
@@ -4658,7 +4661,7 @@ function drawPlanChart(series){
           grid:{color:'rgba(0,0,0,.04)'}
         },
         x:{
-          ticks:{
+          ticks:{autoSkip:true,autoSkipPadding:6,
             font:{size:10},color:'#737373',maxRotation:0,
             callback:function(val,idx){return idx%stepX===0?labels[idx]:''}
           },
@@ -5987,7 +5990,7 @@ function updateYearChart(y){
       },
       scales:{
         x:{stacked:hasSelection,grid:{display:false},border:{display:false},
-          ticks:{color:'rgba(0,0,0,.30)',font:{size:9,weight:'600'},padding:4}},
+          ticks:{maxRotation:0,autoSkip:true,autoSkipPadding:6,color:'rgba(0,0,0,.30)',font:{size:9,weight:'600'},padding:4}},
         y:{stacked:hasSelection,min:0,max:yMax,grid:{color:'rgba(0,0,0,.04)',drawTicks:false},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:9},padding:8,callback:v=>fmt(v),maxTicksLimit:5}}
       }
@@ -6347,7 +6350,7 @@ function updateEvoChart(y){
       },
       interaction:{mode:'index',intersect:false},
       scales:{
-        x:{grid:{display:false},ticks:{color:'rgba(0,0,0,.4)',font:{size:9}}},
+        x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,autoSkipPadding:6,color:'rgba(0,0,0,.4)',font:{size:9}}},
         y:{
           min:0,
           max:_evoYMax,
@@ -6525,7 +6528,7 @@ function updateEvoBreakdown(){
       },
       scales:{
         x:{stacked:true,grid:{display:false},border:{display:false},
-          ticks:{color:'rgba(0,0,0,.30)',font:{size:9,weight:'600'}}},
+          ticks:{maxRotation:0,autoSkip:true,autoSkipPadding:6,color:'rgba(0,0,0,.30)',font:{size:9,weight:'600'}}},
         y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,.04)'},border:{display:false},
           ticks:{color:'rgba(0,0,0,.30)',font:{size:9},callback:v=>fmt(v),stepSize:20}}
       }
