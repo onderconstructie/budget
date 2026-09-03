@@ -1330,7 +1330,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.063</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.065</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -3469,11 +3469,15 @@ function calcMonthEndForecast(){
   const stats=calcStats(histSpent);
   const hasHistory=stats.n>=3;
 
-  // 3. Adaptieve weging: vroeg in maand meer historisch, laat in maand meer naïef
-  const histWeight=hasHistory?Math.max(0.20,0.55*(1-pctElapsed)):0;
-  const point=hasHistory
+  // 3. Adaptieve weging: vroeg in de maand meer historisch anker, laat in de maand meer
+  //    het werkelijke tempo. Geen ondergrens meer op het historische gewicht: aan het einde
+  //    van de maand weet je het antwoord al en voegt de historiek niets meer toe.
+  const histWeight=hasHistory?0.55*(1-pctElapsed):0;
+  const blend=hasHistory
     ?(1-histWeight)*naiveProjection+histWeight*stats.mean
     :naiveProjection;
+  // Wat al uitgegeven is, kan niet meer verdwijnen: de prognose ligt daar nooit onder.
+  const point=Math.max(spent,blend);
 
   // 4. Onzekerheid: krimpt naarmate de maand vordert
   // Vroeg: volledige historische std. Laat: gereduceerd naar nog-te-bestedingen.
@@ -3964,17 +3968,21 @@ function projectWealth(){
 
   // Monte Carlo
   const N=500;
-  const allLiquid=[],allInvest=[],allBlocked=[];
+  const allLiquid=[],allInvest=[],allBlocked=[],allDebt=[];
   for(let n=0;n<N;n++){
     let cashFree=startCashFree;
     const cashLinked={...startCashLinked};
     let cashReservedOther=startCashReservedOther;
     let invest=startInvest;
     let blocked=startBlocked;
+    // Ongedekt tekort: wat een gebeurtenis kost bovenop alles wat je hebt.
+    // Bewust géén marktrendement — een tekort is geen negatieve portefeuille.
+    let debt=0;
     const totalCash=()=>cashFree+cashReservedOther+Object.values(cashLinked).reduce((s,v)=>s+v,0);
     const liquidPath=[totalCash()]; // cash only (zonder invest)
     const investPath=[invest];
     const blockedPath=[blocked];
+    const debtPath=[0];
     for(let y=1;y<=horizon;y++){
       const year=startYear+y;
       // 1. Rendement op invest en blocked (cash krijgt geen rendement)
@@ -3990,8 +3998,10 @@ function projectWealth(){
         if(c.unblockYear>0&&year>=c.unblockYear)cashFree+=amt;
         else blocked+=amt;
       });
-      // 2. Buffer-aangroei (loonindexatie meebewegend met inflatie) → naar cashFree
-      cashFree+=yearlyBuffer*Math.pow(1+infl,y);
+      // 2. Buffer-aangroei (loonindexatie meebewegend met inflatie) → eerst het tekort aflossen
+      let bufferIn=yearlyBuffer*Math.pow(1+infl,y);
+      if(debt>0){const af=Math.min(debt,bufferIn);debt-=af;bufferIn-=af;}
+      cashFree+=bufferIn;
       // 3. Per event: spendeer in volgorde linked → free → other-reserved → invest
       const evts=activeEventsByYear[year]||[];
       for(const e of evts){
@@ -4017,10 +4027,13 @@ function projectWealth(){
             cashReservedOther-=take;
             remaining-=take;
           }
-          // d) beleggingen verkopen
-          if(remaining>0){
-            invest-=remaining;
+          // d) beleggingen verkopen, tot ze op zijn
+          if(remaining>0&&invest>0){
+            const take=Math.min(remaining,invest);
+            invest-=take;remaining-=take;
           }
+          // e) wat je dan nog tekortkomt is niet gedekt door dit plan
+          if(remaining>0)debt+=remaining;
         } else if(eAmountInflated<0){
           // Extra inkomst → naar cashFree
           cashFree+=-eAmountInflated;
@@ -4045,13 +4058,17 @@ function projectWealth(){
         });
         if(blocked<0)blocked=0;
       }
+      // Alles wat dit jaar binnenkwam kan het tekort verder aflossen
+      if(debt>0&&cashFree>0){const af=Math.min(debt,cashFree);debt-=af;cashFree-=af;}
       liquidPath.push(totalCash());
       investPath.push(invest);
       blockedPath.push(blocked);
+      debtPath.push(debt);
     }
     allLiquid.push(liquidPath);
     allInvest.push(investPath);
     allBlocked.push(blockedPath);
+    allDebt.push(debtPath);
   }
 
   // Bereken percentielen per jaar
@@ -4070,13 +4087,15 @@ function projectWealth(){
     const investYr=allInvest.map(p=>p[y]);
     const blockedYr=allBlocked.map(p=>p[y]);
     // Totaal vermogen per pad: liquid + invest + blocked (correlatie correct meegenomen, niet som van medianen)
-    const totalYr=allLiquid.map((p,n)=>p[y]+allInvest[n][y]+allBlocked[n][y]);
+    const totalYr=allLiquid.map((p,n)=>p[y]+allInvest[n][y]+allBlocked[n][y]-allDebt[n][y]);
     const p10=percentile(liquidYr,0.10);
     const p50=percentile(liquidYr,0.50);
     const p90=percentile(liquidYr,0.90);
     const invest10=percentile(investYr,0.10);
     const invest50=percentile(investYr,0.50);
     const invest90=percentile(investYr,0.90);
+    const debtYr=allDebt.map(p=>p[y]);
+    const debt50=percentile(debtYr,0.50);
     const blocked10=percentile(blockedYr,0.10);
     const blocked50=percentile(blockedYr,0.50);
     const blocked90=percentile(blockedYr,0.90);
@@ -4090,7 +4109,7 @@ function projectWealth(){
       return year>=eStart&&year<=eEnd&&y>0;
     });
     const eventTotal=((activeEventsByYear[year]||[]).reduce((s,e)=>s+(e.amount||0),0))*Math.pow(1+infl,y);
-    series.push({year,p10,p50,p90,invest:invest50,invest10,invest90,blocked:blocked50,blocked10,blocked90,totalP10,totalP50,totalP90,total:totalP50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1+infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
+    series.push({year,p10,p50,p90,invest:invest50,invest10,invest90,blocked:blocked50,blocked10,blocked90,debt:debt50,totalP10,totalP50,totalP90,total:totalP50,buffer:y===0?yearlyBuffer:yearlyBuffer*Math.pow(1+infl,y),events,eventTotal,monthlyBuffer,yearlyBuffer,unblockedAmount:0});
   }
   series._meta={startCash,startInvest,startBlocked,blockedItems,unblockItemsByYear,startYear};
   return series;
@@ -4354,6 +4373,10 @@ function renderPlanTab(){
   const monthlyBuffer=series[0].monthlyBuffer||0;
   const yearlyBuffer=series[0].yearlyBuffer||0;
 
+  // Ongedekt plan: een gebeurtenis kost meer dan alles wat je tegen dan hebt.
+  // Zonder deze melding zou de grafiek zonder uitleg onder nul duiken.
+  const eersteTekort=series.find(s2=>(s2.debt||0)>0.5);
+  const grootsteTekort=series.reduce((mx,s2)=>Math.max(mx,s2.debt||0),0);
   // Risico-jaar: P10 (slecht scenario) onder 6 maanden buffer
   const riskThreshold=monthlyBuffer*6;
   const riskYear=series.find(s=>s.p10<riskThreshold&&monthlyBuffer>0);
@@ -4477,6 +4500,9 @@ function renderPlanTab(){
       </div>
     </div>
 
+    ${eersteTekort?`
+      <div class="alert danger wp-section" style="margin-bottom:18px"><div class="alert-icon">${ic('alert')}</div><div class="alert-content"><div class="alert-title">Dit plan is niet gedekt</div><div class="alert-text">In <strong>${eersteTekort.year}</strong> komt er ${fmtNeg(Math.round(eersteTekort.debt))} tekort: de geplande uitgave is groter dan alles wat je tegen dan hebt, beleggingen inbegrepen.${grootsteTekort>eersteTekort.debt+1?` Het loopt op tot ${fmtNeg(Math.round(grootsteTekort))}.`:''} Latere buffer lost dit af; tot dan telt het tekort af van je vermogen. Spreid de uitgave, verlaag ze, of plan ze later.</div></div></div>
+    `:''}
     ${riskYear?`
       <div class="alert ${riskYear===medianRiskYear?'danger':'warning'} wp-section" style="margin-bottom:18px"><div class="alert-icon">${ic('zap')}</div><div class="alert-content"><div class="alert-title">${riskYear===medianRiskYear?`Krap moment verwacht in ${riskYear.year}`:`Risico op krap moment in ${riskYear.year}`}</div><div class="alert-text">${riskYear===medianRiskYear?`Mediaan-scenario zakt onder ${fmtN(Math.round(riskThreshold))} (≈ 6 maanden buffer).`:`In een slecht scenario (P10) zakt toegankelijk vermogen onder ${fmtN(Math.round(riskThreshold))}.`} Plan eventueel buffer-versterking of spreid grote uitgaven.</div></div></div>
     `:''}

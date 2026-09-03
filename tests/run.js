@@ -137,6 +137,95 @@ test('plan: projectie is deterministisch en de band groeit met de schommeling', 
   });
   ok(r.same, 'twee runs verschillen'); ok(r.wide > r.narrow * 2, 'band schaalt niet met volatiliteit');
 });
+test('prognose: nooit lager dan wat al uitgegeven is, en het anker dooft uit', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const m = mkd(new Date()), cats = S.categories.filter(c => c.type === 'monthly');
+    const echt = calcPace, fouten = [], gewichten = [];
+    const hist = calcStats(getMonthHistory(12).map(h => h.spent)).mean;
+    for (const d of [1, 3, 7, 14, 21, 28, 30]) {
+      window.calcPace = () => ({ dayOfMonth: d, daysInMonth: 30, pctElapsed: d / 30, isCurrentMonth: true, daysLeft: 31 - d });
+      for (const f of [0.2, 0.9, 1.5, 2.2, 4]) {
+        const besteed = hist * f * (d / 30);
+        S.monthlyData[m] = {}; cats.forEach(c => { S.monthlyData[m][c.id] = besteed * (c.budget / getMonthBudget()); });
+        _invalidateCaches();
+        const fc = calcMonthEndForecast(); if (!fc) continue;
+        const echtBesteed = getMonthSpent(m);
+        if (fc.point < echtBesteed - 0.5) fouten.push(`dag ${d}, tempo ${f}: prognose ${Math.round(fc.point)} < besteed ${Math.round(echtBesteed)}`);
+        if (fc.p10 < echtBesteed - 0.5) fouten.push(`dag ${d}, tempo ${f}: p10 onder besteed`);
+        if (fc.p90 < fc.point - 0.5) fouten.push(`dag ${d}, tempo ${f}: p90 onder punt`);
+        if (d === 30) gewichten.push(Math.round(fc.point) === Math.round(Math.max(echtBesteed, echtBesteed)) || fc.point >= echtBesteed - 0.5);
+      }
+    }
+    // Op de laatste dag mag de historiek de prognose niet meer sturen
+    window.calcPace = () => ({ dayOfMonth: 30, daysInMonth: 30, pctElapsed: 1, isCurrentMonth: true, daysLeft: 1 });
+    S.monthlyData[m] = {}; cats.forEach(c => { S.monthlyData[m][c.id] = hist * 1.5 * (c.budget / getMonthBudget()); });
+    _invalidateCaches();
+    const slot = calcMonthEndForecast();
+    const besteedSlot = getMonthSpent(m);
+    window.calcPace = echt; _invalidateCaches();
+    return { fouten, ankerUit: Math.abs(slot.point - besteedSlot) < 0.5, hist: Math.round(hist), slot: Math.round(slot.point), besteedSlot: Math.round(besteedSlot) };
+  });
+  eq(r.fouten, [], 'prognose-invarianten geschonden');
+  ok(r.ankerUit, `op de laatste dag moet de prognose gelijk zijn aan het bestede (${r.slot} vs ${r.besteedSlot}, historisch ${r.hist})`);
+});
+test('plan: een ongedekte uitgave wordt een tekort, geen negatieve portefeuille', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const y = new Date().getFullYear();
+    S.plan.events = [{ id: 'x', name: 'Enorm', startYear: y + 1, endYear: y + 1, amount: 500000, enabled: true }];
+    S.plan.horizon = 10; _invalidateCaches();
+    const ser = projectWealth();
+    const w = getTotalWealth();
+    return {
+      belegdMin: Math.min(...ser.map(s => s.invest)),
+      geblokkeerdMin: Math.min(...ser.map(s => s.blocked)),
+      tekortNa: Math.round(ser[1].debt),
+      tekortEind: Math.round(ser[10].debt),
+      // totaal moet exact cash + belegd + geblokkeerd − tekort zijn
+      klopt: Math.abs((ser[1].p50 + ser[1].invest + ser[1].blocked - ser[1].debt) - ser[1].totalP50) < Math.max(50, Math.abs(ser[1].totalP50) * 0.05),
+      start: Math.round(ser[0].totalP50), nu: Math.round(w.total),
+    };
+  });
+  ok(r.belegdMin >= -0.01, 'beleggingen mogen nooit negatief worden: ' + r.belegdMin);
+  ok(r.geblokkeerdMin >= -0.01, 'geblokkeerd mag nooit negatief worden');
+  ok(r.tekortNa > 0, 'een onbetaalbare uitgave moet een tekort opleveren');
+  ok(r.tekortEind < r.tekortNa, 'de buffer moet het tekort afbouwen: ' + r.tekortNa + ' → ' + r.tekortEind);
+  ok(r.klopt, 'totaal ≠ cash + belegd + geblokkeerd − tekort');
+  ok(Math.abs(r.start - r.nu) <= Math.max(1, r.nu * 0.001), 'jaar 0 moet het huidige vermogen zijn');
+});
+test('rekenkern: statistiek komt overeen met bekende waarden', async ({ page }) => {
+  const r = await page.evaluate(() => ({
+    cdf: [normCdf(0), normCdf(1), normCdf(1.96), normCdf(-1)].map(v => +v.toFixed(6)),
+    reg: (l => [+l.slope.toFixed(6), +l.intercept.toFixed(6), +l.r2.toFixed(6)])(linReg([1, 3, 5, 7, 9])),
+    st: (t => [t.mean, +t.std.toFixed(6)])(calcStats([2, 4, 4, 4, 5, 5, 7, 9])),
+    z: [zScore(110, 100, 5), zScore(100, 100, 0)],
+  }));
+  eq(r.cdf, [0.5, 0.841345, 0.975002, 0.158655], 'normale CDF');
+  eq(r.reg, [2, 1, 1], 'lineaire regressie op y=2x+1');
+  eq(r.st, [5, +Math.sqrt(32 / 7).toFixed(6)], 'gemiddelde en steekproef-standaardafwijking');
+  eq(r.z, [2, 0], 'z-score, met nul-deling afgevangen');
+});
+test('rekenkern: identiteiten kloppen op de seed', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const m = mkd(new Date()), y = new Date().getFullYear();
+    const cats = S.categories.filter(c => c.type === 'monthly');
+    const w = getTotalWealth();
+    let jaar = 0; for (let i = 1; i <= 12; i++) jaar += getMonthSpent(y + '-' + String(i).padStart(2, '0'));
+    const vast = S.fixedGroups.flatMap(g => g.items).filter(i => i.enabled)
+      .reduce((s, i) => s + (i.period === 'y' ? i.amount / 12 : i.period === 'q' ? i.amount / 3 : i.amount), 0);
+    return {
+      maandVsCats: [getMonthSpent(m), cats.reduce((s, c) => s + getCatSpent(c.id, m), 0)],
+      emmers: [+(w.vrij + w.gereserveerd + w.belegd + w.geblokkeerd).toFixed(2), +w.total.toFixed(2)],
+      jaar: [+getYearTotal(y).toFixed(2), +jaar.toFixed(2)],
+      ytdBinnenJaar: getYTDTotal(y, 12) <= getYearTotal(y) + 0.01,
+      vast: [+getFixedCosts().toFixed(2), +vast.toFixed(2)],
+    };
+  });
+  eq(r.maandVsCats[0], r.maandVsCats[1], 'maandtotaal ≠ som categorieën');
+  eq(r.emmers[0], r.emmers[1], 'vermogensemmers ≠ totaal');
+  eq(r.jaar[0], r.jaar[1], 'jaartotaal ≠ som van de maanden');
+  ok(r.ytdBinnenJaar, 'YTD groter dan jaartotaal');
+  eq(r.vast[0], r.vast[1], 'vaste kosten ≠ genormaliseerde som');
+});
 test('vault: v2-formaat met iteratiegetal, legacy-blob leesbaar, fout wachtwoord faalt', async ({ page }) => {
   const r = await page.evaluate(async () => {
     const data = { a: 1, lijst: [1, 2, 3] };
