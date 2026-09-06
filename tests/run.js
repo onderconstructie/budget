@@ -14,17 +14,66 @@ test('rekenbalk: parser zonder eval', async ({ page }) => {
   const got = await page.evaluate(cs => cs.map(([e]) => calc(e)), cases);
   eq(got, cases.map(c => c[1]));
 });
-test('migratie: USD-holding naar euro, eenmalig', async ({ page }) => {
-  const r = await page.evaluate(() => ({ schema: S.wealth.schema, lp: S.wealth.holdings[0].lastPrice, cur: S.wealth.holdings[0].currency, key: S.wealth.apiKey, eur: S.wealth.holdings[1].lastPrice }));
-  eq(r, { schema: 2, lp: 171, eur: 96.5 }, '190 USD × 0,90 = 171 EUR; sleutel weg');
-  const again = await page.evaluate(() => { hydrateState(JSON.parse(JSON.stringify(S))); return S.wealth.holdings[0].lastPrice; });
-  eq(again, 171, 'tweede hydrate mag niet opnieuw omrekenen');
+test('migratie: oude holdings naar één totaalbedrag, eenmalig', async ({ page }) => {
+  // Legacy USD-post: 190 USD × 0,90 = 171 EUR per stuk, 10 stuks → 1710 EUR totale waarde.
+  // De euro-post: 40 × 96,50 = 3860. Het ingelegde bedrag blijft staan, per-aandeel velden verdwijnen.
+  const r = await page.evaluate(() => {
+    const [a, b, c] = S.wealth.holdings;
+    return { schema: S.wealth.schema, a: a.manualValue, aIn: a.totalCostEur, b: b.manualValue, bIn: b.totalCostEur, c: c.manualValue,
+      rest: Object.keys(a).filter(k => ['kind', 'ticker', 'quantity', 'avgPrice', 'lastPrice', 'lots', 'totalCost', 'currency'].includes(k)), key: S.wealth.apiKey };
+  });
+  eq(r, { schema: 3, a: 1710, aIn: 1500, b: 3860, bIn: 3200, c: 9800, rest: [] }, 'aantal × koers → totaalbedrag; sleutel en per-aandeel velden weg');
+  const again = await page.evaluate(() => { hydrateState(JSON.parse(JSON.stringify(S))); return { schema: S.wealth.schema, a: S.wealth.holdings[0].manualValue }; });
+  eq(again, { schema: 3, a: 1710 }, 'tweede hydrate mag niets opnieuw omrekenen');
+});
+test('belegging: één totaalbedrag toevoegen en bijwerken', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const voor = getTotalWealth().belegd;
+    openHoldingModal();
+    document.getElementById('h-name').value = 'Portefeuille';
+    document.getElementById('h-value').value = '5000';
+    document.getElementById('h-invested').value = '4000';
+    document.getElementById('h-save').click();
+    const h = S.wealth.holdings.find(x => x.name === 'Portefeuille');
+    const naToevoegen = getTotalWealth().belegd;
+    // Bijwerken: nieuwe waarde, datum schuift mee
+    const eersteDatum = h.lastUpdate;
+    openHoldingModal(h.id);
+    document.getElementById('h-value').value = '5500';
+    document.getElementById('h-save').click();
+    const na = S.wealth.holdings.find(x => x.id === h.id);
+    return {
+      erbij: Math.round(naToevoegen - voor), waarde: na.manualValue, ingelegd: na.totalCostEur,
+      rendement: Math.round(getHoldingPnLEur(na)), datumGezet: eersteDatum > 0, geenVelden: 'quantity' in na || 'lastPrice' in na || 'ticker' in na,
+    };
+  });
+  eq(r, { erbij: 5000, waarde: 5500, ingelegd: 4000, rendement: 1500, datumGezet: true, geenVelden: false },
+    'één bedrag in, rendement = waarde − inleg');
+});
+test('belegging: waarde is verplicht, ongeldige link wordt geweigerd', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const n = S.wealth.holdings.length;
+    openHoldingModal();
+    document.getElementById('h-name').value = 'Leeg';
+    document.getElementById('h-value').value = '';
+    document.getElementById('h-save').click();
+    const naLeeg = S.wealth.holdings.length;
+    document.getElementById('h-value').value = '100';
+    document.getElementById('h-url').value = 'javascript:alert(1)';
+    document.getElementById('h-save').click();
+    const naLink = S.wealth.holdings.length;
+    document.getElementById('h-url').value = 'broker.example';
+    document.getElementById('h-save').click();
+    return { n, naLeeg, naLink, na: S.wealth.holdings.length, url: (S.wealth.holdings.find(h => h.name === 'Leeg') || {}).url };
+  });
+  eq({ leeg: r.naLeeg - r.n, link: r.naLink - r.n, ok: r.na - r.n, url: r.url },
+    { leeg: 0, link: 0, ok: 1, url: 'https://broker.example' }, 'geen waarde en geen http(s)-link → niet opgeslagen');
 });
 test('vermogen: buckets tellen op tot totaal, geblokkeerd netto na heffing', async ({ page }) => {
   const t = await page.evaluate(() => getTotalWealth());
   eq(Math.round(t.vrij + t.gereserveerd + t.belegd + t.geblokkeerd), Math.round(t.total));
   eq(Math.round(t.geblokkeerd), 6860, '9800 × (1 − 30%)');
-  eq(Math.round(t.belegd), Math.round(10 * 171 + 40 * 96.5));
+  eq(Math.round(t.belegd), 1710 + 3860, 'som van de twee totaalbedragen');
 });
 test('gespaard: afgesloten maand gebruikt inkomen-snapshot', async ({ page }) => {
   const r = await page.evaluate(() => {

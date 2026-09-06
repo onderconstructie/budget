@@ -52,7 +52,8 @@ function build(now = new Date()) {
         { id: 'a2', name: 'Noodfonds', institution: 'Bank B', balance: 4000, interest: 2, availability: 'gereserveerd', purpose: 'onvoorziene kosten', unblockDate: '' },
       ],
       holdings: [
-        // Legacy USD-holding zoals opgeslagen vóór v2026.053: currency + lastPrice in USD, geen schema-vlag
+        // Bewust in het oude formaat opgeslagen (vóór v2026.053): currency + aantal × koers, geen schema-vlag.
+        // hydrateState() migreert dit naar één totaalbedrag per belegging; zo blijft dat pad getest.
         { id: 'h1', kind: 'stock', name: 'Tech aandeel', ticker: 'AAPL', quantity: 10, currency: 'USD', avgPrice: 150, totalCostEur: 1500, lots: [{ qty: 10, costEur: 1500 }], lastPrice: 190, manualValue: 0, url: '', availability: 'belegd', purpose: '', linkedEventId: '', unblockDate: '', yearlyContribution: 0, contributionUntilYear: 0, earlyWithdrawalTax: 0, normalWithdrawalTax: 0, lastUpdate: null },
         { id: 'h2', kind: 'stock', name: 'Wereld ETF', ticker: 'IWDA', quantity: 40, currency: 'EUR', avgPrice: 80, totalCostEur: 3200, lots: [{ qty: 40, costEur: 3200 }], lastPrice: 96.5, manualValue: 0, url: '', availability: 'belegd', purpose: '', linkedEventId: '', unblockDate: '', yearlyContribution: 0, contributionUntilYear: 0, earlyWithdrawalTax: 0, normalWithdrawalTax: 0, lastUpdate: null },
         { id: 'h3', kind: 'fund', name: 'Pensioensparen', ticker: '', quantity: 0, currency: 'EUR', avgPrice: 0, totalCostEur: 0, lots: [], lastPrice: 0, manualValue: 9800, url: '', availability: 'geblokkeerd', purpose: '', linkedEventId: '', unblockDate: String(now.getFullYear() + 14) + '-01-01', yearlyContribution: 1020, contributionUntilYear: now.getFullYear() + 14, earlyWithdrawalTax: 30, normalWithdrawalTax: 8, lastUpdate: null },
