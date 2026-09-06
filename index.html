@@ -1331,7 +1331,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.068</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.069</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -2676,7 +2676,7 @@ function renderCatEdit(){
       </div>
       <div style="width:96px">
         <div style="font-size:10.5px;color:var(--n3);margin-bottom:5px">Budget/mnd</div>
-        <div class="field-money"><input type="text" id="ce-budget" value="${cat.budget||''}" inputmode="decimal" placeholder="0" class="field-input" style="font-size:13px;padding:9px 10px 9px 22px"></div>
+        <div class="field-money"><input type="text" id="ce-budget" value="${inputDec(cat.budget)}" inputmode="decimal" placeholder="0" class="field-input" style="font-size:13px;padding:9px 10px 9px 22px"></div>
       </div>
     </div>
     <div style="margin-bottom:12px">
@@ -3222,12 +3222,12 @@ function openIncomeModal(){
   $('m-new-body').innerHTML=`
     <div class="field">
       <div class="field-label">Maandloon (netto)</div>
-      <div class="field-money"><input type="text" class="field-input" id="si-income" value="${S.income.monthly||''}" placeholder="0" inputmode="decimal" autofocus></div>
+      <div class="field-money"><input type="text" class="field-input" id="si-income" value="${inputDec(S.income.monthly)}" placeholder="0" inputmode="decimal" autofocus></div>
       <div class="field-hint"><span class="badge">TIP</span> Typ bijv. 2500+150 om te rekenen</div>
     </div>
     <div class="field">
       <div class="field-label">Maaltijdcheques & andere</div>
-      <div class="field-money"><input type="text" class="field-input" id="si-extra" value="${S.income.maaltijdcheques||''}" placeholder="0" inputmode="decimal"></div>
+      <div class="field-money"><input type="text" class="field-input" id="si-extra" value="${inputDec(S.income.maaltijdcheques)}" placeholder="0" inputmode="decimal"></div>
     </div>
     <button class="btn btn-primary btn-block mt-4" id="si-save">Opslaan</button>`;
   enableCalc($('si-income'));
@@ -4757,7 +4757,7 @@ function openEventModal(eventId){
       </div>
       <div>
         <label class="wp-input-label" id="ev-amount-lbl">${isRange?'Bedrag per jaar':'Bedrag'}</label>
-        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="ev-amount" value="${absAmount||''}" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="ev-amount" value="${inputDec(absAmount)}" inputmode="decimal" autocomplete="off" placeholder="0"></div>
         <div class="wp-hint">Bv. <code>8000</code> per jaar voor studies, <code>25000</code> eenmalig voor dak, <code>15000</code> per jaar als inkomstenwijziging bij pensioen.</div>
       </div>
       ${isEdit?`
@@ -4840,23 +4840,23 @@ function openAccountModal(accountId){
     ${(()=>{const t=$('m-new-title');if(t)t.textContent=isEdit?'Spaarrekening aanpassen':'Nieuwe spaarrekening';return '';})()}
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Naam</label>
+        <label class="wp-input-label">Naam</label>
         <input type="text" class="field-input" id="acc-name" value="${esc(a.name||'')}" placeholder="bv. Gewone spaarrekening" autocomplete="off">
       </div>
       <div>
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Instelling</label>
+        <label class="wp-input-label">Instelling</label>
         <input type="text" class="field-input" id="acc-inst" value="${esc(a.institution||'')}" placeholder="bv. KBC, Argenta..." autocomplete="off">
       </div>
       <div>
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Saldo</label>
-        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="acc-bal" value="${a.balance||''}" inputmode="decimal" autocomplete="off"></div>
+        <label class="wp-input-label">Saldo</label>
+        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="acc-bal" value="${inputDec(a.balance)}" inputmode="decimal" autocomplete="off"></div>
       </div>
       <div>
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Rente (% per jaar, optioneel)</label>
-        <input type="text" class="field-input" id="acc-int" value="${a.interest||''}" inputmode="decimal" placeholder="bv. 1.5" autocomplete="off">
+        <label class="wp-input-label">Rente (% per jaar, optioneel)</label>
+        <input type="text" class="field-input" id="acc-int" value="${inputDec(a.interest)}" inputmode="decimal" placeholder="bv. 1,5" autocomplete="off">
       </div>
       <div>
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Beschikbaarheid</label>
+        <label class="wp-input-label">Beschikbaarheid</label>
         <select class="field-input" id="acc-availability" style="width:100%">
           <option value="vrij" ${av==='vrij'?'selected':''}>Vrij — direct beschikbaar</option>
           <option value="gereserveerd" ${av==='gereserveerd'?'selected':''}>Gereserveerd — met een doel</option>
@@ -4866,10 +4866,10 @@ function openAccountModal(accountId){
         <div class="wp-hint">Gereserveerd is cash met een bestemming; belegd draagt marktrisico; geblokkeerd staat vast tot een datum.</div>
       </div>
       <div id="acc-purpose-wrap" style="display:${av==='gereserveerd'?'block':'none'}">
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Waarvoor gereserveerd?</label>
+        <label class="wp-input-label">Waarvoor gereserveerd?</label>
         <input type="text" class="field-input" id="acc-purpose" value="${esc(a.purpose||'')}" placeholder="bv. onderhoudsgeld kinderen, grote kosten" autocomplete="off">
         ${(S.plan?.events||[]).length>0?`
-          <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin:10px 0 5px">Koppel aan plan-event (optioneel)</label>
+          <label class="wp-input-label" style="margin:10px 0 6px">Koppel aan plan-event (optioneel)</label>
           <select class="field-input" id="acc-linked-event" style="width:100%">
             <option value="">— Geen koppeling —</option>
             ${(S.plan.events||[]).slice().sort((x,y)=>(x.startYear||0)-(y.startYear||0)).map(ev=>`<option value="${ev.id}" ${a.linkedEventId===ev.id?'selected':''}>${esc(ev.name)} (${ev.endYear&&ev.endYear!==ev.startYear?ev.startYear+'–'+ev.endYear:ev.startYear})</option>`).join('')}
@@ -4878,7 +4878,7 @@ function openAccountModal(accountId){
         `:''}
       </div>
       <div id="acc-unblock-wrap" style="display:${av==='geblokkeerd'?'block':'none'}">
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Vrij vanaf</label>
+        <label class="wp-input-label">Vrij vanaf</label>
         <input type="date" class="field-input" id="acc-unblock" value="${esc(a.unblockDate||'')}" autocomplete="off">
       </div>
     </div>
@@ -7115,15 +7115,15 @@ function openTxEditModal(txId){
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Bedrag</label>
-        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="tx-edit-amount" value="${tx.amount}" inputmode="decimal" autocomplete="off"></div>
+        <label class="wp-input-label">Bedrag</label>
+        <div class="field-money" style="margin:0"><input type="text" class="field-input" id="tx-edit-amount" value="${inputDec(tx.amount)}" inputmode="decimal" autocomplete="off"></div>
       </div>
       <div>
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Detail</label>
+        <label class="wp-input-label">Detail</label>
         <input type="text" class="field-input" id="tx-edit-detail" value="${esc(tx.detail||'')}" placeholder="bv. Colruyt" autocomplete="off">
       </div>
       <div>
-        <label style="font-size:11.5px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Categorie</label>
+        <label class="wp-input-label">Categorie</label>
         <select class="field-input" id="tx-edit-cat" style="width:100%">
           ${monthlyCats.map(c=>`<option value="${esc(c.id)}" ${c.id===tx.catId?'selected':''}>${esc(c.name)}</option>`).join('')}
         </select>
@@ -8032,7 +8032,7 @@ $$('.hist-item').forEach(item=>item.addEventListener('click',()=>{viewMonth=new 
 // === WIZARD ===
 function periodLabel(p){return p==='m'?'Per maand':p==='q'?'Per kwartaal':'Per jaar'}
 function renderGroup(g){const c=col(g.color);return`<div class="group open" data-gid="${g.id}"><div class="group-head"><div class="group-icon" style="background:${c.bg};color:${c.c}">${ic(g.icon)}</div><div class="group-name">${esc(g.name)}</div><div class="group-total" data-gt="${g.id}">€0/mnd</div><div class="group-arrow">${ic('chevDown')}</div></div><div class="group-body"><div class="group-items">${g.items.map(i=>`<div class="sub-item${i.enabled?'':' off'}"><div class="sub-check ${i.enabled?'on':''}" data-chk="${i.id}">${ic('check')}</div><div class="sub-info">${i.editable?`<input type="text" class="sub-name-input" data-nme="${i.id}" value="${esc(i.name)}" placeholder="Naam" ${i.enabled?'':'disabled'}>`:
-`<div class="sub-name">${esc(i.name)}</div>`}<div class="sub-period" data-plbl="${i.id}">${periodLabel(i.period)}</div></div><input type="text" class="sub-input" data-inp="${i.id}" value="${i.amount||''}" placeholder="0" inputmode="decimal" ${i.enabled?'':'disabled'}><div class="period-toggle"><button class="period-btn ${i.period==='m'?'on':''}" data-pid="${i.id}" data-p="m" ${i.enabled?'':'disabled'}>M</button><button class="period-btn ${i.period==='q'?'on':''}" data-pid="${i.id}" data-p="q" ${i.enabled?'':'disabled'}>K</button><button class="period-btn ${i.period==='y'?'on':''}" data-pid="${i.id}" data-p="y" ${i.enabled?'':'disabled'}>J</button></div></div>`).join('')}</div></div></div>`}
+`<div class="sub-name">${esc(i.name)}</div>`}<div class="sub-period" data-plbl="${i.id}">${periodLabel(i.period)}</div></div><input type="text" class="sub-input" data-inp="${i.id}" value="${inputDec(i.amount)}" placeholder="0" inputmode="decimal" ${i.enabled?'':'disabled'}><div class="period-toggle"><button class="period-btn ${i.period==='m'?'on':''}" data-pid="${i.id}" data-p="m" ${i.enabled?'':'disabled'}>M</button><button class="period-btn ${i.period==='q'?'on':''}" data-pid="${i.id}" data-p="q" ${i.enabled?'':'disabled'}>K</button><button class="period-btn ${i.period==='y'?'on':''}" data-pid="${i.id}" data-p="y" ${i.enabled?'':'disabled'}>J</button></div></div>`).join('')}</div></div></div>`}
 function bindGroups(){$$('.group-head').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));$$('.sub-check').forEach(chk=>{chk.addEventListener('click',e=>{e.stopPropagation();const iid=chk.dataset.chk;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item){item.enabled=!item.enabled;chk.classList.toggle('on',item.enabled);const row=chk.closest('.sub-item');row.classList.toggle('off',!item.enabled);row.querySelector('.sub-input').disabled=!item.enabled;row.querySelectorAll('.period-btn').forEach(b=>b.disabled=!item.enabled);const nmeInp=row.querySelector('.sub-name-input');if(nmeInp)nmeInp.disabled=!item.enabled}});calcFixed()})});$$('.sub-name-input').forEach(inp=>{inp.addEventListener('input',()=>{const iid=inp.dataset.nme;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item)item.name=inp.value||'Andere'})});inp.addEventListener('click',e=>e.stopPropagation())});$$('.sub-input').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const iid=inp.dataset.inp;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item)item.amount=calc(inp.value)||parseDec(inp.value)});calcFixed()})});$$('.period-btn').forEach(btn=>{btn.addEventListener('click',()=>{if(btn.disabled)return;const iid=btn.dataset.pid;wData.fixedGroups.forEach(g=>{const item=g.items.find(i=>i.id===iid);if(item){item.period=btn.dataset.p;btn.closest('.period-toggle').querySelectorAll('.period-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelector(`[data-plbl="${iid}"]`).textContent=periodLabel(btn.dataset.p)}});calcFixed()})})}
 function calcFixed(){let total=0;wData.fixedGroups.forEach(g=>{let gt=0;g.items.forEach(i=>{if(!i.enabled)return;const a=i.amount||0;if(i.period==='m')gt+=a;else if(i.period==='q')gt+=a/3;else gt+=a/12});const el=document.querySelector(`[data-gt="${g.id}"]`);if(el)el.textContent=fmt(gt)+'/mnd';total+=gt});if($('wf-total'))$('wf-total').textContent=fmt(total);if($('wf-free')){const f=getWizIncome()-total;$('wf-free').textContent=fmt(f);$('wf-free').style.color=f>=0?'var(--emerald-400)':'var(--rose-400)'}}
 function getWizIncome(){return wData.income.monthly+(wData.income.maaltijdcheques||0)+((wData.income.endYear?.amount||0)/12)+((wData.income.vacation?.amount||0)/12)+((wData.income.refund?.amount||0)/12)+(wData.income.otherMonthly||0)+((wData.income.otherYearly?.amount||0)/12)}
@@ -8050,7 +8050,7 @@ function renderCatSetup(c){
       <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
       <span>${isSemi?'semi':'var'}</span>
     </button>
-    <input type="text" class="cat-setup-input" data-cinp="${c.id}" value="${c.budget||''}" placeholder="0" inputmode="decimal">
+    <input type="text" class="cat-setup-input" data-cinp="${c.id}" value="${inputDec(c.budget)}" placeholder="0" inputmode="decimal">
     <button class="cat-setup-del" data-cdel="${c.id}">${ic('x')}</button>
   </div>`;
 }
@@ -8080,7 +8080,7 @@ function calcCats(){const t=wData.categories.reduce((s,c)=>s+(c.budget||0),0);co
 function handleWizardNext(){switch(wStep){case 1:wData.income.monthly=calc($('wi-monthly').value)||parseDec($('wi-monthly').value);wData.income.maaltijdcheques=calc($('wi-cheques').value)||parseDec($('wi-cheques').value);wData.income.endYear={amount:calc($('wi-ey').value)||parseDec($('wi-ey').value),month:parseInt($('wi-ey-m').value)};wData.income.vacation={amount:calc($('wi-vac').value)||parseDec($('wi-vac').value),month:parseInt($('wi-vac-m').value)};wData.income.refund={amount:calc($('wi-ref').value)||parseDec($('wi-ref').value),month:parseInt($('wi-ref-m').value)};wData.income.otherMonthly=calc($('wi-other-m').value)||parseDec($('wi-other-m').value);wData.income.otherYearly={amount:calc($('wi-other-y').value)||parseDec($('wi-other-y').value),month:parseInt($('wi-other-y-m').value)};wData.income.oneTime={amount:calc($('wi-once').value)||parseDec($('wi-once').value),month:parseInt($('wi-once-m').value)};break;case 4:S.income=wData.income;S.fixedGroups=wData.fixedGroups;S.categories=[...wData.categories.map(c=>({...c,type:'monthly'}))];S.init=true;markActivity();save();showScreen('dashboard');return}renderWizard(wStep+1)}
 function renderWizard(step){wStep=step;const total=4;$('w-dots').innerHTML=Array.from({length:total},(_,i)=>`<div class="wizard-dot ${i+1<step?'done':i+1===step?'now':''}"></div>`).join('');$('w-back').classList.toggle('hidden',step===1);$('w-next').textContent=step===total?'Afronden':'Volgende';const body=$('w-body');
 switch(step){
-case 1:body.innerHTML=`<div class="wizard-logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="7" ry="5.5"/><path d="M8.5 7.5 Q10 5 11.5 7.5"/><line x1="10.2" y1="7.5" x2="11.8" y2="7.5"/><ellipse cx="18.8" cy="13.5" rx="1.8" ry="1.5"/><circle cx="13.5" cy="11" r=".8" fill="white" stroke="none"/><line x1="8.5" y1="18.5" x2="8" y2="22"/><line x1="13.5" y1="18.5" x2="14" y2="22"/><path d="M4 13.5 Q1.5 11 2.5 9"/></svg></div><span class="wizard-logo-text">Buddy Budget</span></div><h1 class="wizard-title">Je inkomen</h1><p class="wizard-sub">Vul je netto inkomen in.</p><div class="section-title">Maandelijks</div><div class="field"><div class="field-label">Loon (netto)</div><div class="field-money"><input type="text" class="field-input" id="wi-monthly" value="${wData.income?.monthly||''}" placeholder="0" inputmode="decimal"></div><div class="field-hint"><span class="badge">TIP</span> Typ bijv. 2500+100</div></div><div class="field"><div class="field-label">Andere (bv. maaltijdcheques)</div><div class="field-money"><input type="text" class="field-input" id="wi-cheques" value="${wData.income?.maaltijdcheques||''}" placeholder="0" inputmode="decimal"></div></div><div class="field"><div class="field-label">Overige vaste inkomsten</div><div class="field-money"><input type="text" class="field-input" id="wi-other-m" value="${wData.income?.otherMonthly||''}" placeholder="0" inputmode="decimal"></div></div><div class="section-title">Jaarlijks</div><div class="income-row"><div class="income-header"><span class="income-label">Eindejaarstoelage</span><select class="income-month" id="wi-ey-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.endYear?.month??11)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-ey" value="${wData.income?.endYear?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Vakantiegeld</span><select class="income-month" id="wi-vac-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.vacation?.month??4)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-vac" value="${wData.income?.vacation?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Terugbetaling</span><select class="income-month" id="wi-ref-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.refund?.month??0)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-ref" value="${wData.income?.refund?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Andere</span><select class="income-month" id="wi-other-y-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.otherYearly?.month??0)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-other-y" value="${wData.income?.otherYearly?.amount||''}" placeholder="0" inputmode="decimal"></div></div><div class="section-title" style="margin-top:20px">Eenmalig</div><div class="field-hint" style="margin:-4px 0 10px">Eenmalige inkomst dit jaar (bijv. erfenis, verkoop, subsidie).</div><div class="income-row"><div class="income-header"><span class="income-label">Bedrag</span><select class="income-month" id="wi-once-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.oneTime?.month??new Date().getMonth())===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-once" value="${wData.income?.oneTime?.amount||''}" placeholder="0" inputmode="decimal"></div></div>`;$$('#w-body .field-input').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const v=calc($('wi-monthly')?.value)||parseDec($('wi-monthly')?.value);const btn=$('w-next');if(btn)btn.disabled=v<=0})});
+case 1:body.innerHTML=`<div class="wizard-logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="7" ry="5.5"/><path d="M8.5 7.5 Q10 5 11.5 7.5"/><line x1="10.2" y1="7.5" x2="11.8" y2="7.5"/><ellipse cx="18.8" cy="13.5" rx="1.8" ry="1.5"/><circle cx="13.5" cy="11" r=".8" fill="white" stroke="none"/><line x1="8.5" y1="18.5" x2="8" y2="22"/><line x1="13.5" y1="18.5" x2="14" y2="22"/><path d="M4 13.5 Q1.5 11 2.5 9"/></svg></div><span class="wizard-logo-text">Buddy Budget</span></div><h1 class="wizard-title">Je inkomen</h1><p class="wizard-sub">Vul je netto inkomen in.</p><div class="section-title">Maandelijks</div><div class="field"><div class="field-label">Loon (netto)</div><div class="field-money"><input type="text" class="field-input" id="wi-monthly" value="${inputDec(wData.income?.monthly)}" placeholder="0" inputmode="decimal"></div><div class="field-hint"><span class="badge">TIP</span> Typ bijv. 2500+100</div></div><div class="field"><div class="field-label">Andere (bv. maaltijdcheques)</div><div class="field-money"><input type="text" class="field-input" id="wi-cheques" value="${inputDec(wData.income?.maaltijdcheques)}" placeholder="0" inputmode="decimal"></div></div><div class="field"><div class="field-label">Overige vaste inkomsten</div><div class="field-money"><input type="text" class="field-input" id="wi-other-m" value="${inputDec(wData.income?.otherMonthly)}" placeholder="0" inputmode="decimal"></div></div><div class="section-title">Jaarlijks</div><div class="income-row"><div class="income-header"><span class="income-label">Eindejaarstoelage</span><select class="income-month" id="wi-ey-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.endYear?.month??11)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-ey" value="${inputDec(wData.income?.endYear?.amount)}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Vakantiegeld</span><select class="income-month" id="wi-vac-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.vacation?.month??4)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-vac" value="${inputDec(wData.income?.vacation?.amount)}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Terugbetaling</span><select class="income-month" id="wi-ref-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.refund?.month??0)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-ref" value="${inputDec(wData.income?.refund?.amount)}" placeholder="0" inputmode="decimal"></div></div><div class="income-row"><div class="income-header"><span class="income-label">Andere</span><select class="income-month" id="wi-other-y-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.otherYearly?.month??0)===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-other-y" value="${inputDec(wData.income?.otherYearly?.amount)}" placeholder="0" inputmode="decimal"></div></div><div class="section-title" style="margin-top:20px">Eenmalig</div><div class="field-hint" style="margin:-4px 0 10px">Eenmalige inkomst dit jaar (bijv. erfenis, verkoop, subsidie).</div><div class="income-row"><div class="income-header"><span class="income-label">Bedrag</span><select class="income-month" id="wi-once-m">${MONTHS.map((mo,i)=>`<option value="${i}" ${(wData.income?.oneTime?.month??new Date().getMonth())===i?'selected':''}>${mo}</option>`).join('')}</select></div><div class="field-money" style="margin:0"><input type="text" class="field-input" id="wi-once" value="${inputDec(wData.income?.oneTime?.amount)}" placeholder="0" inputmode="decimal"></div></div>`;$$('#w-body .field-input').forEach(inp=>{enableCalc(inp);inp.addEventListener('input',()=>{const v=calc($('wi-monthly')?.value)||parseDec($('wi-monthly')?.value);const btn=$('w-next');if(btn)btn.disabled=v<=0})});
 // Zet initieel op disabled als leeg
 {const v=parseDec($('wi-monthly')?.value);const btn=$('w-next');if(btn)btn.disabled=v<=0;}
 // Voeg privacy notice toe onderaan wizard

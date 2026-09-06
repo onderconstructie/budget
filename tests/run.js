@@ -26,6 +26,26 @@ test('migratie: oude holdings naar één totaalbedrag, eenmalig', async ({ page 
   const again = await page.evaluate(() => { hydrateState(JSON.parse(JSON.stringify(S))); return { schema: S.wealth.schema, a: S.wealth.holdings[0].manualValue }; });
   eq(again, { schema: 3, a: 1710 }, 'tweede hydrate mag niets opnieuw omrekenen');
 });
+test('invoervelden tonen de komma als decimaalteken', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    // Rekening met een rente van 1,5% en een saldo met centen
+    const a = S.wealth.accounts[0]; a.balance = 7200.5; a.interest = 1.5;
+    openAccountModal(a.id);
+    const saldo = document.getElementById('acc-bal').value, rente = document.getElementById('acc-int').value;
+    document.getElementById('acc-cancel').click();
+    // Transactie met centen
+    const tx = S.transactions.find(t => t.amount % 1 !== 0);
+    openTxEditModal(tx.id);
+    const bedrag = document.getElementById('tx-edit-amount').value;
+    // Terugschrijven met een komma moet hetzelfde bedrag opleveren
+    const heen = parseDec(bedrag);
+    document.querySelectorAll('.modal-bg.open').forEach(m => m.classList.remove('open'));
+    return { saldo, rente, punt: bedrag.includes('.'), komma: bedrag.includes(','), heen, orig: tx.amount };
+  });
+  eq({ saldo: r.saldo, rente: r.rente, punt: r.punt, komma: r.komma, rond: r.heen === r.orig },
+    { saldo: '7200,5', rente: '1,5', punt: false, komma: true, rond: true },
+    'geen punt in een bedragveld, en de waarde komt onveranderd terug');
+});
 test('belegging: één totaalbedrag toevoegen en bijwerken', async ({ page }) => {
   const r = await page.evaluate(() => {
     const voor = getTotalWealth().belegd;
