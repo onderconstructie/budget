@@ -1340,7 +1340,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.070</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.071</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -1850,7 +1850,7 @@ function _snapshotFixedIfNeeded(){
 }
 function getReserved(){return 0;} // reserveringen verwijderd
 let _budgetCache=null,_txIndex=null;
-function _invalidateCaches(){_incomeCache=null;_fixedCache=null;_budgetCache=null;_txIndex=null;_histCache={};}
+function _invalidateCaches(){_incomeCache=null;_fixedCache=null;_budgetCache=null;_txIndex=null;_histCache={};if(typeof _fcProfileCache!=="undefined")_fcProfileCache={};}
 function getMonthBudget(){
   if(_budgetCache!==null)return _budgetCache;
   return _budgetCache=S.categories.reduce((s,c)=>c.type==='monthly'?s+c.budget:s,0);
@@ -2405,14 +2405,15 @@ function updateDashTip(m,spent,budget){
 
     // 6. Eigen dagelijks tempo vs historisch op dit punt
     if(!tip&&hist.length>=3&&pace.pctElapsed>0.12){
-      const expectedNow=hist.slice(0,3).reduce((s,h)=>s+h.spent,0)/3*pace.pctElapsed;
+      // Vergelijk met je eigen ritme (deel van de maand dat je normaal al uitgaf), niet lineair
+      const expectedNow=hist.slice(0,3).reduce((s,h)=>s+h.spent,0)/3*_fcProfile().F(pace.pctElapsed);
       const diff=expectedNow>0?Math.round((spent-expectedNow)/expectedNow*100):0;
       if(diff<=-25){
         tip=`<strong>${Math.abs(diff)}% minder</strong> dan je eigen gemiddelde op dag ${pace.dayOfMonth}. ${isWeekend?'Weekend zonder grote uitgaven.':'Stille week.'}`;
         type='success';
       } else if(diff>=35&&pace.daysLeft>5){
-        const proj=Math.round(spent/pace.pctElapsed);
-        tip=`Op dag ${pace.dayOfMonth} zit je <strong>${diff}% boven</strong> je historisch gemiddelde. Prognose op huidig tempo: ${fmtNeg(proj)}.`;
+        const fcx=calcMonthEndForecast();const proj=fcx?fcx.point:Math.round(spent/pace.pctElapsed);
+        tip=`Op dag ${pace.dayOfMonth} zit je <strong>${diff}% boven</strong> wat je normaal tegen dan uitgeeft. Prognose: ${fmtNeg(proj)}.`;
         type='warn';
       }
     }
@@ -3454,9 +3455,142 @@ function getMonthHistory(n=12){
   return _histCache[key]=res;
 }
 
-// Maandeinde-prognose met betrouwbandbreedtes
-// Combineert: lineaire extrapolatie + historisch gemiddelde
-// Wegingen adaptief: vroeg in de maand meer historisch anker, laat meer naïef
+// ═══ PROGNOSE-MODEL (maandeinde) ════════════════════════════════════════
+// Idee: eindtotaal = wat al uitgegeven is + wat nog komt. Het "wat nog komt" is
+// (1 − F) × θ, met F het deel van een maand dat je normaal al uitgegeven hebt op
+// deze dag (jouw eigen ritme, geleerd uit je transacties) en θ het verwachte
+// maandniveau. θ combineert twee bronnen, gewogen naar hun betrouwbaarheid:
+//   • de historiek: robuust (uitschieters afgetopt) en recente maanden zwaarder;
+//   • deze maand: wat je al uitgaf ÷ F. Hoe verder in je eigen ritme, hoe zekerder.
+// De onzekerheid is log-normaal (uitgaven zijn scheef: één grote rekening is
+// waarschijnlijker dan plots niets uitgeven) en nooit onder wat al uitgegeven is.
+
+// Robuust, recentie-gewogen maandniveau uit een reeks [{v, age}] (age 1 = vorige maand).
+function _fcLevel(series){
+  const s=series.filter(x=>x.v>0);
+  const n=s.length;
+  if(!n)return null;
+  if(n===1)return{L:s[0].v,S:s[0].v*0.25,n:1,nEff:1};
+  const sorted=s.map(x=>x.v).sort((a,b)=>a-b);
+  const med=n%2?sorted[(n-1)/2]:(sorted[n/2-1]+sorted[n/2])/2;
+  const mad=[...sorted].map(v=>Math.abs(v-med)).sort((a,b)=>a-b);
+  const madv=n%2?mad[(n-1)/2]:(mad[n/2-1]+mad[n/2])/2;
+  const lim=3*1.4826*madv;
+  // Halveringstijd 6 maanden: vorige maand telt ~2× zwaarder dan een half jaar geleden
+  let sw=0,sw2=0,swx=0;
+  const pts=s.map(x=>{const v=lim>0?Math.min(med+lim,Math.max(med-lim,x.v)):x.v;const w=Math.pow(0.5,(x.age-1)/6);return{v,w};});
+  pts.forEach(p=>{sw+=p.w;sw2+=p.w*p.w;swx+=p.w*p.v;});
+  const L=swx/sw;
+  const nEff=sw*sw/sw2;
+  let ss=0;pts.forEach(p=>{ss+=p.w*(p.v-L)**2;});
+  let S=Math.sqrt(ss/sw*(nEff>1?nEff/(nEff-1):1));
+  S=Math.max(S,0.08*L);                       // geen enkele maand is perfect voorspelbaar
+  return{L,S,n,nEff};
+}
+
+// Jouw ritme binnen de maand: per afgesloten maand met volledige transacties het deel
+// dat op dag d al uitgegeven was. Geeft F(p) en de typische ruis op dat ritme (c).
+// Zonder (genoeg) transacties: lineair ritme F(p)=p, zoals een gelijkmatige uitgever.
+let _fcProfileCache={};
+function _fcProfile(){
+  const key=viewMonth.getFullYear()+'-'+viewMonth.getMonth();
+  if(_fcProfileCache.key===key&&_fcProfileCache.tx===(S.transactions||[]).length)return _fcProfileCache.v;
+  const monthlyIds=new Set(S.categories.filter(c=>c.type==='monthly').map(c=>c.id));
+  const months=[];
+  for(let i=1;i<=12;i++){
+    const d=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-i,1);
+    const mk=mkd(d),total=getMonthSpent(mk);
+    if(total<=0)continue;
+    const txs=getAllTransactions(mk).filter(t=>monthlyIds.has(t.catId)&&t.amount>0);
+    const txTot=txs.reduce((s,t)=>s+t.amount,0);
+    if(txTot<total*0.9||txs.length<3)continue;  // enkel maanden met (bijna) volledige transacties
+    const dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+    const byDay=new Array(dim+1).fill(0);
+    txs.forEach(t=>{const day=Math.min(dim,Math.max(1,new Date(t.ts).getDate()));byDay[day]+=t.amount;});
+    for(let k=1;k<=dim;k++)byDay[k]+=byDay[k-1];
+    months.push({dim,cum:byDay.map(v=>v/txTot),n:txs.length});
+  }
+  const at=(m,p)=>m.cum[Math.min(m.dim,Math.max(0,Math.round(p*m.dim)))];
+  const K=2; // krimp naar lineair: met weinig maanden vertrouw je het ritme nog niet helemaal
+  const F=p=>{
+    if(p>=1)return 1;
+    if(!months.length)return p;
+    const avg=months.reduce((s,m)=>s+at(m,p),0)/months.length;
+    return(months.length*avg+K*p)/(months.length+K);
+  };
+  // Ruis op het ritme: hoe sterk wijkt (besteed ÷ F) af van het echte totaal in vorige maanden?
+  let c=0.3;
+  if(months.length>=3){
+    let acc=0,cnt=0;
+    for(const p of[0.1,0.2,0.3,0.5,0.7,0.9]){
+      const f=F(p);
+      months.forEach(m=>{const r=Math.max(0.02,at(m,p))/f;acc+=Math.log(r)**2/((1-f)/f);cnt++;});
+    }
+    c=Math.min(1.5,Math.max(0.05,acc/cnt));
+  }
+  const nTx=months.length?months.reduce((a,m)=>a+m.n,0)/months.length:null;
+  const v={F,c,nTx,nMonths:months.length};
+  _fcProfileCache={key,tx:(S.transactions||[]).length,v};
+  return v;
+}
+
+// Inverse standaardnormale CDF (Acklam, rel. fout < 1,2e-9)
+function _probit(p){
+  const a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.3577518672690,-30.66479806614716,2.506628277459239];
+  const b=[-54.47609879822406,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572];
+  const c=[-0.007784894002430293,-0.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783];
+  const d=[0.007784695709041462,0.3224671290700398,2.445134137142996,3.754408661907416];
+  p=Math.min(1-1e-12,Math.max(1e-12,p));
+  if(p<0.02425){const q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  if(p>1-0.02425){const q=Math.sqrt(-2*Math.log(1-p));return-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  const q=p-0.5,r=q*q;
+  return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+}
+
+// Kern: gegeven besteed, ritme-fractie F, historisch niveau, ritmeruis c en het gewone aantal
+// aankopen per maand → verdeling van het eindtotaal. q(kans) geeft een percentiel, pOver(b) de
+// kans om boven b uit te komen. Twee delen: de kans dat er geen enkele aankoop meer bijkomt
+// (vooral laat in de maand reëel), en daarboven een log-normale verdeling.
+function _fcCore(spent,F,lvl,c,nTx){
+  F=Math.min(1,Math.max(0.02,F));
+  const flat={point:spent,mean:spent,q:()=>spent,pOver:b=>spent>b?1:0,theta:spent,sdRem:0};
+  if(F>=1)return flat;
+  const Lc=spent>0?spent/F:0;                 // niveau dat deze maand tot nu toe suggereert
+  let theta,varTheta;
+  if(lvl){
+    const vb=lvl.S**2*(1+1/lvl.nEff);         // spreiding tussen maanden (+ onzekerheid op het gemiddelde)
+    const scale=Math.max(lvl.L,Lc,1);
+    const vc=spent>0?c*(1-F)/F*scale**2:Infinity; // hoe betrouwbaar is besteed÷F op dit punt in je ritme
+    const w=isFinite(vc)?vb/(vb+vc):0;
+    theta=w*Lc+(1-w)*lvl.L;
+    varTheta=isFinite(vc)?vb*vc/(vb+vc):vb;
+  } else {
+    theta=Lc;
+    varTheta=(c*(1-F)/F+0.04)*Math.max(Lc,1)**2;
+  }
+  // Nog te verwachten: (1−F)·θ. Variantie: onzekerheid op θ + toeval in de resterende dagen.
+  const mRem=Math.max(0,(1-F)*theta);
+  const vRem=(1-F)**2*varTheta+c*F*(1-F)*theta**2;
+  if(mRem<=0)return Object.assign(flat,{theta});
+  // Kans dat er niets meer bijkomt: Poisson met het verwachte aantal resterende aankopen
+  const p0=nTx>0?Math.min(0.95,Math.exp(-nTx*(1-F))):0;
+  const mPos=mRem/(1-p0);
+  const vPos=Math.max(0.01*mPos**2,(vRem+mRem**2)/(1-p0)-mPos**2);
+  // Kleine-steekproefcorrectie: een spreiding geschat uit weinig maanden onderschat de staarten
+  // (Student-t). ν = effectief aantal maanden − 1; zonder historiek ν = 2.
+  const nu=lvl?Math.max(1,lvl.nEff-1):2;
+  const sig=Math.min(1.6,Math.sqrt(Math.log(1+vPos/mPos**2))*(1+0.9/nu));
+  const mu=Math.log(mPos)-sig*sig/2;
+  return{
+    point:spent+mRem,
+    mean:spent+mRem,
+    q:a=>a<=p0?spent:spent+Math.exp(mu+_probit((a-p0)/(1-p0))*sig),
+    pOver:b=>b<spent?1:(1-p0)*(1-normCdf((Math.log(Math.max(1e-6,b-spent))-mu)/sig)),
+    theta,
+    sdRem:Math.sqrt(vRem)
+  };
+}
+
 function calcMonthEndForecast(){
   const pace=calcPace();
   const m=mkd();
@@ -3465,56 +3599,31 @@ function calcMonthEndForecast(){
   const{dayOfMonth,daysInMonth,pctElapsed,isCurrentMonth}=pace;
   if(!isCurrentMonth||dayOfMonth===0)return null;
 
-  // 1. Naïeve extrapolatie op dagelijkse uitgavensnelheid
   const dailyRate=spent/dayOfMonth;
   const naiveProjection=dailyRate*daysInMonth;
-
-  // 2. Historisch gemiddelde + std (Bessel-gecorrigeerd via calcStats)
   const hist=getMonthHistory(12);
-  const histSpent=hist.map(h=>h.spent).filter(v=>v>0);
-  const stats=calcStats(histSpent);
-  const hasHistory=stats.n>=3;
+  const lvl=_fcLevel(hist.map((h,i)=>({v:h.spent,age:i+1})));
+  const hasHistory=!!lvl&&lvl.n>=3;
+  const prof=_fcProfile();
+  const F=prof.F(pctElapsed);
+  const r=_fcCore(spent,F,lvl,prof.c,prof.nTx);
 
-  // 3. Adaptieve weging: vroeg in de maand meer historisch anker, laat in de maand meer
-  //    het werkelijke tempo. Geen ondergrens meer op het historische gewicht: aan het einde
-  //    van de maand weet je het antwoord al en voegt de historiek niets meer toe.
-  const histWeight=hasHistory?0.55*(1-pctElapsed):0;
-  const blend=hasHistory
-    ?(1-histWeight)*naiveProjection+histWeight*stats.mean
-    :naiveProjection;
-  // Wat al uitgegeven is, kan niet meer verdwijnen: de prognose ligt daar nooit onder.
-  const point=Math.max(spent,blend);
+  const point=Math.max(spent,r.point);
+  const p10=Math.max(spent,r.q(0.10)),p90=Math.max(point,r.q(0.90));
+  const low=Math.max(spent,r.q(0.1587)),high=Math.max(point,r.q(0.8413));
+  const pOverBudget=budget>0?Math.max(0,Math.min(1,r.pOver(budget))):null;
 
-  // 4. Onzekerheid: krimpt naarmate de maand vordert
-  // Vroeg: volledige historische std. Laat: gereduceerd naar nog-te-bestedingen.
-  // Modelleer als σ * sqrt(1 - pctElapsed) — onzekerheid neemt af met sqrt-tijd.
-  const baseStd=hasHistory?stats.std:point*0.18;
-  const uncertainty=baseStd*Math.sqrt(Math.max(0.10,1-pctElapsed));
-
-  // 5. Percentielen via normale verdeling: P10, P50 (=point), P90
-  // Z-waarden: P10≈-1.282, P90≈+1.282
-  const p10=Math.max(spent,point-1.282*uncertainty);
-  const p90=point+1.282*uncertainty;
-  const low=Math.max(spent,point-uncertainty);
-  const high=point+uncertainty;
-
-  // 6. Kans op budgetoverschrijding: P(eindtotaal > budget)
-  // = 1 - Φ((budget - point) / uncertainty)
-  let pOverBudget=null;
-  if(budget>0&&uncertainty>0){
-    pOverBudget=1-normCdf((budget-point)/uncertainty);
-    pOverBudget=Math.max(0,Math.min(1,pOverBudget));
-  }
-
-  // 7. Burn-day: dag waarop budget bereikt wordt bij huidig tempo
+  // Budget-dag: wanneer raak je het budget bij je eigen ritme en het verwachte niveau?
   let burnDay=null;
   if(budget>0&&dailyRate>0){
-    const d=Math.ceil(budget/dailyRate);
-    if(d<=daysInMonth)burnDay=d;
+    if(spent>=budget)burnDay=dayOfMonth;
+    else for(let d=dayOfMonth+1;d<=daysInMonth;d++){
+      const exp=spent+(prof.F(d/daysInMonth)-F)*r.theta;
+      if(exp>=budget){burnDay=d;break;}
+    }
   }
 
-  // 8. Onderliggende prognose: sluit grootste uitschieter deze maand uit
-  // Detecteer outlier: transactie >= 25% van totaal én >= 2× mediaan van overige tx
+  // Onderliggende prognose: zonder de grootste uitschieter van deze maand
   let underlyingPoint=null,outlierTx=null;
   const curTxs=getAllTransactions(m);
   if(curTxs.length>=4&&spent>50){
@@ -3526,13 +3635,8 @@ function calcMonthEndForecast(){
       const big=curTxs.find(t=>t.amount===max);
       if(big){
         outlierTx=big;
-        // Herbereken zonder uitschieter
-        const cleanSpent=spent-max;
-        const cleanRate=cleanSpent/dayOfMonth;
-        const cleanNaive=cleanRate*daysInMonth;
-        underlyingPoint=hasHistory
-          ?Math.round((1-histWeight)*cleanNaive+histWeight*stats.mean)
-          :Math.round(cleanNaive);
+        // Zelfde model, alsof die ene uitgave er nooit was
+        underlyingPoint=Math.round(_fcCore(spent-max,F,lvl,prof.c,prof.nTx).point);
       }
     }
   }
@@ -3543,17 +3647,18 @@ function calcMonthEndForecast(){
     high:Math.round(high),
     p10:Math.round(p10),
     p90:Math.round(p90),
-    pOverBudget,         // 0..1 of null
-    burnDay,             // dag van de maand of null
-    underlyingPoint,     // prognose zonder uitschieter, of null
-    outlierTx,           // de uitschieter-transactie, of null
+    pOverBudget,
+    burnDay,
+    underlyingPoint,
+    outlierTx,
     dailyRate,
     naiveProjection:Math.round(naiveProjection),
     daysLeft:daysInMonth-dayOfMonth+1,
     hasHistory,
-    histMean:stats.mean,
-    histStd:stats.std,
-    uncertainty:Math.round(uncertainty)
+    histMean:lvl?lvl.L:0,
+    histStd:lvl?lvl.S:0,
+    uncertainty:Math.round(r.sdRem||0),
+    rhythm:prof.nMonths>0?F:null   // deel van de maand dat je normaal al uitgegeven hebt
   };
 }
 
@@ -3578,32 +3683,27 @@ function calcDailyAllowance(){
   };
 }
 
-// Per-categorie maandeinde-schatting
+// Per categorie: hetzelfde model, met de eigen historiek van de categorie en jouw globale ritme
+// (een ritme per categorie is op enkele transacties per maand te grillig om te leren).
 function calcCatForecasts(){
   const pace=calcPace();
   const m=mkd();
   if(!pace.isCurrentMonth||pace.dayOfMonth===0)return[];
+  const prof=_fcProfile();
+  const F=prof.F(pace.pctElapsed);
   return S.categories.filter(c=>c.type==='monthly').map(cat=>{
     const spent=getCatSpent(cat.id,m);
     const budget=cat.budget;
-    // Historische data voor deze categorie
-    const histVals=[];
-    for(let i=1;i<=6;i++){
+    const series=[];
+    for(let i=1;i<=12;i++){
       const d=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-i,1);
-      const v=getCatSpent(cat.id,mkd(d));
-      if(v>0)histVals.push(v);
+      series.push({v:getCatSpent(cat.id,mkd(d)),age:i});
     }
-    const stats=calcStats(histVals);
-    const dailyRate=spent/pace.dayOfMonth;
-    const naive=Math.round(dailyRate*pace.daysInMonth);
-    // Zelfde adaptieve wegingsstrategie als calcMonthEndForecast
-    const histWeight=stats.n>=2?Math.max(0.20, 0.55*(1-pace.pctElapsed)):0;
-    const projected=stats.n>=2
-      ? Math.round((1-histWeight)*naive + histWeight*stats.mean)
-      : naive;
+    const lvl=_fcLevel(series);
+    const projected=Math.round(Math.max(spent,_fcCore(spent,F,lvl,prof.c,null).point));
     const overBudget=budget>0&&projected>budget;
     const overshoot=budget>0?projected-budget:0;
-    return{cat,spent,budget,projected,overBudget,overshoot,histMean:stats.mean};
+    return{cat,spent,budget,projected,overBudget,overshoot,histMean:lvl?lvl.L:0};
   }).filter(c=>c.spent>0||c.budget>0);
 }
 
@@ -5151,7 +5251,7 @@ function updateOvCategories(){
     insight=`<strong>${overCats.map(c=>esc(c.name)).join(', ')}</strong> over budget. Totaal: <strong>+${fmt(Math.round(overshoot))}</strong>.`;
     insightColor='var(--r)';
   } else if(fc&&totalBudget>0&&fc.point>totalBudget){
-    insight=`Op huidig tempo eindig je op <strong>${fmt(fc.point)}</strong> — <strong>+${fmt(fc.point-totalBudget)}</strong> over budget.`;
+    insight=`Volgens de prognose eindig je op <strong>${fmt(fc.point)}</strong> — <strong>+${fmt(fc.point-totalBudget)}</strong> over budget.`;
     insightColor='var(--w)';
   } else if(fastCats.length){
     insight=`<strong>${esc(fastCats[0].name)}</strong> gaat sneller dan verwacht voor dag ${pace.dayOfMonth}.`;
@@ -6566,7 +6666,7 @@ function renderFcSignals(){
     if(pct>=70){
       signals.push({type:'warning',icon:'alert',
         title:`${pct}% kans dat je over budget gaat`,
-        body:`Op basis van je historische variatie (±${fmtN(fc.uncertainty)}) en huidig tempo. Prognose ${fmtNeg(fc.point)} tegenover budget ${fmtN(budget)}.`});
+        body:`Op basis van je eigen ritme in de maand en hoe sterk je maanden schommelen (±${fmtN(fc.uncertainty)}). Prognose ${fmtNeg(fc.point)} tegenover budget ${fmtN(budget)}.`});
     } else if(pct<=15&&fc.point<budget){
       signals.push({type:'success',icon:'check',
         title:`${100-pct}% kans dat je binnen budget blijft`,
@@ -6578,7 +6678,7 @@ function renderFcSignals(){
   if(fc&&fc.burnDay!=null&&budget>0&&pace.pctElapsed>0.15&&fc.burnDay<pace.daysInMonth-1){
     const daysAfter=pace.daysInMonth-fc.burnDay;
     signals.push({type:'warning',icon:'zap',
-      title:`Bij huidig tempo: budget op ${fc.burnDay} ${getMonthName(pace)}`,
+      title:`Verwacht: budget op ${fc.burnDay} ${getMonthName(pace)}`,
       body:`Dat is <strong>${daysAfter} dag${daysAfter!==1?'en':''}</strong> vóór maandeinde. Tempo verlagen of accepteren dat je over budget gaat.`});
   }
 
@@ -6735,7 +6835,7 @@ function renderDayHero(){
   const stats=calcStats(hist.map(h=>h.spent));
   let tempoHTML='';
   if(stats.n>=2&&pace.pctElapsed>0.05){
-    const expectedNow=stats.mean*pace.pctElapsed;
+    const expectedNow=stats.mean*_fcProfile().F(pace.pctElapsed); // jouw ritme, niet lineair
     const tempoPct=expectedNow>0?Math.round((spent/expectedNow-1)*100):0;
     const isSlower=tempoPct<-10;
     const isFaster=tempoPct>10;
@@ -6838,7 +6938,7 @@ function renderMonthBand(){
     ${budgetLabelLeft!==null?`<span style="position:absolute;left:${budgetLabelLeft}%;transform:translateX(-50%);white-space:nowrap">${fmt(budget)} budget</span>`:''}
     <span style="position:absolute;right:0">${fmt(fc.high)}</span>
   </div>
-  ${fc.hasHistory?`<div class="fc-conf-note" style="margin-top:6px">Historisch gem. ${fmt(Math.round(fc.histMean))} · σ ${fmt(Math.round(fc.histStd||0))}</div>`:'<div class="fc-conf-note" style="margin-top:6px">Te weinig data voor betrouwbare prognose.</div>'}
+  ${fc.hasHistory?`<div class="fc-conf-note" style="margin-top:6px" title="Robuust: uitschietermaanden afgetopt, recente maanden wegen zwaarder">Gewone maand ${fmt(Math.round(fc.histMean))} · σ ${fmt(Math.round(fc.histStd||0))}</div>`:'<div class="fc-conf-note" style="margin-top:6px">Te weinig data voor betrouwbare prognose.</div>'}
   `;
 }
 
@@ -7001,7 +7101,7 @@ function renderStatsSection(){
   if(!isCurrentMonth){
     siText='Enkel voor lopende maand';
   } else if(stats.n>=3&&pace.pctElapsed>0.05){
-    const expectedNow=stats.mean*pace.pctElapsed;
+    const expectedNow=stats.mean*_fcProfile().F(pace.pctElapsed); // jouw ritme, niet lineair
     if(expectedNow>0){
       seasonIdx=Math.round((curSpent/expectedNow-1)*100);
       siVal=(seasonIdx>0?'+':'')+seasonIdx+'%';

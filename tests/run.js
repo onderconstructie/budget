@@ -321,6 +321,46 @@ test('geen scriptfouten bij navigatie door alle schermen en modals', async ({ pa
   eq(errors, []);
 });
 
+test('prognose: leert je ritme, robuust voor uitschieters, banden kloppen', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const m = mkd(new Date()), cats = S.categories.filter(c => c.type === 'monthly'), echt = calcPace;
+    const zet = (d, n) => { window.calcPace = () => ({ dayOfMonth: d, daysInMonth: n, pctElapsed: d / n, isCurrentMonth: true, daysLeft: n - d + 1 }); _invalidateCaches(); };
+    const vulMaand = bedrag => { S.monthlyData[m] = {}; cats.forEach(c => { S.monthlyData[m][c.id] = bedrag * (c.budget / getMonthBudget()); }); _invalidateCaches(); };
+    const niveau = _fcLevel(getMonthHistory(12).map((h, i) => ({ v: h.spent, age: i + 1 }))).L;
+
+    // 1. Iemand die 60% in de eerste 4 dagen uitgeeft: herschrijf de (fictieve) historiek zo
+    const verleden = S.transactions.filter(t => t.month < m);
+    verleden.forEach((t, i) => { const d = new Date(t.ts); d.setDate(i % 5 < 3 ? 1 + (i % 4) : 8 + (i % 20)); t.ts = d.getTime(); });
+    _invalidateCaches();
+    const F4 = _fcProfile().F(4 / 30);
+    zet(4, 30); vulMaand(niveau * F4);           // een doorsnee maand, op dag 4
+    const vroeg = calcMonthEndForecast();
+    const lineair = getMonthSpent(m) / (4 / 30);  // wat lineair doortrekken zou geven
+
+    // 2. Eén extreme maand (5×) in de historiek mag het niveau nauwelijks verschuiven
+    const vorige = mkd(new Date(new Date().getFullYear(), new Date().getMonth() - 3, 1));
+    const bewaard = JSON.parse(JSON.stringify(S.monthlyData[vorige]));
+    cats.forEach(c => { S.monthlyData[vorige][c.id] = (S.monthlyData[vorige][c.id] || 0) * 5; }); _invalidateCaches();
+    const metUitschieter = _fcLevel(getMonthHistory(12).map((h, i) => ({ v: h.spent, age: i + 1 }))).L;
+    S.monthlyData[vorige] = bewaard; _invalidateCaches();
+
+    // 3. Banden: p10 ≤ punt ≤ p90, kans boven budget daalt als het budget stijgt, laat in de maand is "niets meer" mogelijk
+    zet(15, 30); vulMaand(niveau * 0.5);
+    const mid = calcMonthEndForecast();
+    const kansen = [0.6, 0.9, 1.1, 1.5].map(f => _fcCore(getMonthSpent(m), _fcProfile().F(0.5), _fcLevel(getMonthHistory(12).map((h, i) => ({ v: h.spent, age: i + 1 }))), _fcProfile().c, _fcProfile().nTx).pOver(niveau * f));
+    zet(29, 30); vulMaand(niveau);
+    const laat = calcMonthEndForecast();
+    window.calcPace = echt; _invalidateCaches();
+    return { F4, vroeg: vroeg.point / niveau, lineair: lineair / niveau, verschuiving: metUitschieter / niveau,
+      banden: mid.p10 <= mid.point && mid.point <= mid.p90, kansen, laatOnder: laat.p10 - getMonthSpent(m) };
+  });
+  ok(r.F4 > 0.35, `ritme niet geleerd: F(dag 4) = ${r.F4.toFixed(2)}`);
+  ok(r.vroeg > 0.8 && r.vroeg < 1.3, `vroege prognose ${r.vroeg.toFixed(2)}× het niveau (lineair zou ${r.lineair.toFixed(2)}× geven)`);
+  ok(r.verschuiving < 1.15, `één uitschietermaand verschuift het niveau met ${((r.verschuiving - 1) * 100).toFixed(0)}%`);
+  ok(r.banden, 'p10 ≤ punt ≤ p90 geschonden');
+  ok(r.kansen.every((k, i) => i === 0 || k <= r.kansen[i - 1] + 1e-9), 'kans boven budget moet dalen met hoger budget: ' + r.kansen.map(k => k.toFixed(2)));
+  ok(Math.abs(r.laatOnder) < 0.5, 'op dag 29 moet "niets meer uitgeven" binnen de band vallen (p10 = besteed)');
+});
 test('app-installatie: manifest geldig, service worker actief, opent offline', async ({ page }) => {
   const man = await page.evaluate(async () => {
     const href = document.querySelector('link[rel=manifest]').href;
