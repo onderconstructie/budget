@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#fffcfd">
+<!-- Installeerbaar als app (startscherm). manifest + sw.js + icons/ staan naast dit bestand.
+     Statusbalk 'default': licht en zonder overlap met de inhoud. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Buddy">
+<meta name="color-scheme" content="light">
 <!-- Content Security Policy: beperkt waar code en data vandaan mogen komen.
      'unsafe-inline' nodig voor inline scripts/styles in deze single-file app.
      Geen 'unsafe-eval': de rekenbalk gebruikt een eigen parser, geen Function()/eval.
@@ -1331,7 +1340,7 @@ body{font-family:var(--sans);background:var(--s0);color:var(--n0);line-height:1.
 <div class="set-section"><div class="set-title">Gevaarlijk</div><div class="set-list">
 <div class="set-row danger" id="s-reset"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Alles wissen</span></div>
 </div></div>
-<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.069</div>
+<div style="text-align:center;padding:20px 0 8px;font-size:11.5px;color:var(--n3);font-family:var(--mono);letter-spacing:.5px">v2026.070</div>
 <div class="set-section" id="disclaimer-section">
   <div class="set-title">Disclaimer</div>
   <p class="set-note" style="font-size:11.5px;line-height:1.6;color:var(--n3)">
@@ -8652,6 +8661,12 @@ document.addEventListener('keydown',e=>{
 
 initAnalyticsTabs()}
 document.addEventListener('DOMContentLoaded',bootstrap);
+// === APP-INSTALLATIE (service worker) ===
+// Registreert sw.js zodat de geïnstalleerde app ook offline opent. Enkel onder https of localhost;
+// bij openen als lokaal bestand (file://) gebeurt er niets en werkt de app gewoon zoals voorheen.
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+}
 </script>
 </div>
 <!-- VAULT SETUP MODAL — passphrase aanmaken/wijzigen/uitschakelen -->

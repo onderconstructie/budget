@@ -321,11 +321,31 @@ test('geen scriptfouten bij navigatie door alle schermen en modals', async ({ pa
   eq(errors, []);
 });
 
+test('app-installatie: manifest geldig, service worker actief, opent offline', async ({ page }) => {
+  const man = await page.evaluate(async () => {
+    const href = document.querySelector('link[rel=manifest]').href;
+    const m = await (await fetch(href)).json();
+    const icons = await Promise.all(m.icons.map(async i => (await fetch(new URL(i.src, href))).ok));
+    return { display: m.display, start: m.start_url, maskable: m.icons.some(i => i.purpose === 'maskable'), big: m.icons.some(i => i.sizes === '512x512'), icons };
+  });
+  eq(man, { display: 'standalone', start: './', maskable: true, big: true, icons: [true, true, true] }, 'manifest');
+  const active = await page.evaluate(async () => { const r = await navigator.serviceWorker.ready; return !!r.active; });
+  ok(active, 'service worker niet actief');
+  // Herladen zonder netwerk: de app moet uit de cache komen en de data uit localStorage tonen
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.context().setOffline(true);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  const r = await page.evaluate(() => ({ init: !!S.init, dash: document.getElementById('dashboard').classList.contains('active') }));
+  await page.context().setOffline(false);
+  eq(r, { init: true, dash: true }, 'offline opstart');
+});
+
 (async () => {
   const server = http.createServer((req, res) => {
     const f = path.join(ROOT, req.url === '/' ? 'index.html' : decodeURIComponent(req.url.split('?')[0]));
     if (!f.startsWith(ROOT) || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
-    res.writeHead(200, { 'content-type': f.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream' }); res.end(fs.readFileSync(f));
+    const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.webmanifest': 'application/manifest+json', '.png': 'image/png' };
+    res.writeHead(200, { 'content-type': types[path.extname(f)] || 'application/octet-stream' }); res.end(fs.readFileSync(f));
   });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const port = server.address().port; const url = `http://127.0.0.1:${port}/index.html`;
